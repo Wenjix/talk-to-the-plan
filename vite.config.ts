@@ -13,6 +13,11 @@ export default defineConfig({
       '/health': {
         target: 'http://127.0.0.1:3001',
       },
+      '/api/boson': {
+        target: 'https://hackathon.boson.ai',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/boson/, ''),
+      },
     },
   },
 })
