@@ -73,7 +73,7 @@ describe('generate (pipeline e2e with mock provider)', () => {
       edges,
       session: mockSession,
       lanes: mockLanes,
-      apiKeys: { mistral: '', gemini: '', anthropic: '', openai: '' }, // empty = mock provider
+      apiKeys: { mistral: '', anthropic: '' }, // empty = mock provider
     })
 
     expect(result.success).toBe(true)
@@ -92,7 +92,7 @@ describe('generate (pipeline e2e with mock provider)', () => {
       edges,
       session: mockSession,
       lanes: mockLanes,
-      apiKeys: { mistral: '', gemini: '', anthropic: '', openai: '' },
+      apiKeys: { mistral: '', anthropic: '' },
       onChunk: (delta) => chunks.push(delta),
     })
 
@@ -112,7 +112,7 @@ describe('generate (pipeline e2e with mock provider)', () => {
       edges,
       session: mockSession,
       lanes: mockLanes,
-      apiKeys: { mistral: '', gemini: '', anthropic: '', openai: '' },
+      apiKeys: { mistral: '', anthropic: '' },
     })
 
     expect(result.success).toBe(true)
@@ -131,7 +131,7 @@ describe('generate (pipeline e2e with mock provider)', () => {
       edges,
       session: sessionWithBadLane,
       lanes: mockLanes,
-      apiKeys: { mistral: '', gemini: '', anthropic: '', openai: '' },
+      apiKeys: { mistral: '', anthropic: '' },
     })
 
     expect(result.success).toBe(true)
@@ -149,7 +149,7 @@ describe('generate (pipeline e2e with mock provider)', () => {
       edges,
       session: mockSession,
       lanes: mockLanes,
-      apiKeys: { mistral: '', gemini: '', anthropic: '', openai: '' },
+      apiKeys: { mistral: '', anthropic: '' },
     })
 
     expect(result.feedback).toBe('')

@@ -53,9 +53,9 @@ export class StreamAccumulator {
 
 /**
  * Parse SSE lines from a text chunk.
- * Returns extracted data payloads (text content from Gemini SSE format).
+ * Returns extracted text payloads from SSE data events.
  *
- * Gemini streaming format:
+ * Expected SSE format:
  *   data: {"candidates":[{"content":{"parts":[{"text":"..."}]}}]}
  *   data: [DONE]
  */
@@ -70,7 +70,7 @@ export function parseSSEChunk(chunk: string): string[] {
 
       try {
         const parsed = JSON.parse(data);
-        // Gemini streaming format: candidates[0].content.parts[0].text
+        // SSE format: candidates[0].content.parts[0].text
         const text = parsed?.candidates?.[0]?.content?.parts?.[0]?.text;
         if (text) {
           results.push(text);

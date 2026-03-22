@@ -8,8 +8,8 @@ import { generatePairs, extractPlanSummary, triggerSynthesis } from '../../store
 // Mock the settings store to avoid IndexedDB in tests
 // ---------------------------------------------------------------------------
 vi.mock('../../persistence/settings-store', () => ({
-  loadSettings: vi.fn().mockResolvedValue({ geminiApiKey: '', mistralApiKey: '', anthropicApiKey: '', openaiApiKey: '' }),
-  resolveApiKeys: vi.fn().mockReturnValue({ mistral: '', gemini: '', anthropic: '', openai: '' }),
+  loadSettings: vi.fn().mockResolvedValue({ mistralApiKey: '', anthropicApiKey: '' }),
+  resolveApiKeys: vi.fn().mockReturnValue({ mistral: '', anthropic: '' }),
 }));
 
 // ---------------------------------------------------------------------------

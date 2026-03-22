@@ -25,7 +25,7 @@ export function ApiKeyPrompt({ onSaved }: ApiKeyPromptProps) {
       <h3 style={{ color: '#e0e0e0', marginBottom: 8 }}>Mistral API Key</h3>
       <p style={{ color: '#8888aa', fontSize: '0.85rem', marginBottom: 16 }}>
         Enter your Mistral API key to enable AI-powered exploration.
-        Additional provider keys (Gemini, Anthropic, OpenAI) can be configured in Settings.
+        Additional provider keys (Anthropic) can be configured in Settings.
         Without keys, mock responses will be used.
       </p>
       <input

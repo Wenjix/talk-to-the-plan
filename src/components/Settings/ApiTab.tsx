@@ -3,12 +3,6 @@ import type { AppSettings } from '../../persistence/settings-store.ts';
 import { hasEnvFallback } from '../../persistence/settings-store.ts';
 import styles from './Settings.module.css';
 
-function getGeminiKeyStatus(key: string): 'not-set' | 'valid' | 'invalid' {
-  if (!key) return 'not-set';
-  if (key.startsWith('AI') && key.length > 20) return 'valid';
-  return 'invalid';
-}
-
 function getMistralKeyStatus(key: string): 'not-set' | 'valid' | 'invalid' {
   if (!key) return 'not-set';
   if (key.length >= 20) return 'valid';
@@ -18,13 +12,6 @@ function getMistralKeyStatus(key: string): 'not-set' | 'valid' | 'invalid' {
 function getAnthropicKeyStatus(key: string): 'not-set' | 'valid' | 'invalid' {
   if (!key) return 'not-set';
   if (key.startsWith('sk-ant-') && key.length > 20) return 'valid';
-  if (key.length >= 20) return 'valid';
-  return 'invalid';
-}
-
-function getOpenAIKeyStatus(key: string): 'not-set' | 'valid' | 'invalid' {
-  if (!key) return 'not-set';
-  if (key.startsWith('sk-') && key.length > 20) return 'valid';
   if (key.length >= 20) return 'valid';
   return 'invalid';
 }
@@ -119,9 +106,7 @@ function ApiKeyField({
 
 export function ApiTab({ settings, onUpdate }: { settings: AppSettings; onUpdate: (partial: Partial<AppSettings>) => void }) {
   const mistralStatus = getMistralKeyStatus(settings.mistralApiKey);
-  const geminiStatus = getGeminiKeyStatus(settings.geminiApiKey);
   const anthropicStatus = getAnthropicKeyStatus(settings.anthropicApiKey);
-  const openaiStatus = getOpenAIKeyStatus(settings.openaiApiKey);
   const eigenStatus = getVoiceServiceKeyStatus(settings.eigenApiKey);
   const bosonStatus = getVoiceServiceKeyStatus(settings.bosonApiKey);
   const showEigenEnvFallback = !!(import.meta.env?.VITE_EIGEN_API_KEY as string | undefined);
@@ -130,7 +115,7 @@ export function ApiTab({ settings, onUpdate }: { settings: AppSettings; onUpdate
   return (
     <div>
       <ApiKeyField
-        legend="Mistral API Key (Expansive lane)"
+        legend="Mistral API Key"
         value={settings.mistralApiKey}
         onChange={(v) => onUpdate({ mistralApiKey: v })}
         placeholder="Enter Mistral API key"
@@ -141,18 +126,7 @@ export function ApiTab({ settings, onUpdate }: { settings: AppSettings; onUpdate
       />
 
       <ApiKeyField
-        legend="Gemini API Key (Analytical lane)"
-        value={settings.geminiApiKey}
-        onChange={(v) => onUpdate({ geminiApiKey: v })}
-        placeholder="AIza..."
-        ariaLabel="Gemini API key"
-        status={geminiStatus}
-        testId="gemini-key-status"
-        showEnvFallback={hasEnvFallback('gemini')}
-      />
-
-      <ApiKeyField
-        legend="Anthropic API Key (Pragmatic lane)"
+        legend="Anthropic API Key"
         value={settings.anthropicApiKey}
         onChange={(v) => onUpdate({ anthropicApiKey: v })}
         placeholder="sk-ant-..."
@@ -160,17 +134,6 @@ export function ApiTab({ settings, onUpdate }: { settings: AppSettings; onUpdate
         status={anthropicStatus}
         testId="anthropic-key-status"
         showEnvFallback={hasEnvFallback('anthropic')}
-      />
-
-      <ApiKeyField
-        legend="OpenAI API Key (Socratic lane)"
-        value={settings.openaiApiKey}
-        onChange={(v) => onUpdate({ openaiApiKey: v })}
-        placeholder="sk-..."
-        ariaLabel="OpenAI API key"
-        status={openaiStatus}
-        testId="openai-key-status"
-        showEnvFallback={hasEnvFallback('openai')}
       />
 
       <fieldset className={styles.fieldset}>

@@ -12,15 +12,13 @@ import { MAX_DIALOGUE_TURNS, addUserTurn } from '../../store/dialogue-actions';
 vi.mock('../../persistence/settings-store', () => ({
   loadSettings: vi.fn().mockResolvedValue({
     mistralApiKey: '',
-    geminiApiKey: '',
     anthropicApiKey: '',
-    openaiApiKey: '',
     challengeDepth: 'balanced',
     autoSaveEnabled: true,
     animationsEnabled: true,
     theme: 'light',
   }),
-  resolveApiKeys: vi.fn().mockReturnValue({ mistral: '', gemini: '', anthropic: '', openai: '' }),
+  resolveApiKeys: vi.fn().mockReturnValue({ mistral: '', anthropic: '' }),
 }));
 
 // Mock providers to avoid real API calls from concludeDialogue
