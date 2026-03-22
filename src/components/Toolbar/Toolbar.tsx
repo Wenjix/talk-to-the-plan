@@ -7,6 +7,8 @@ import { usePlanTalkStore } from '../../store/plan-talk-store.ts';
 import { toggleTerminal } from '../../store/terminal-actions.ts';
 import { saveSession } from '../../persistence/hooks.ts';
 import { Settings } from '../Settings/Settings.tsx';
+import type { TabId } from '../Settings/Settings.tsx';
+import { PersonaSelector } from '../PersonaSelector/PersonaSelector.tsx';
 import styles from './Toolbar.module.css';
 
 const STATUS_META: Record<SessionStatus, { className: string; hint: string }> = {
@@ -28,7 +30,7 @@ export function Toolbar() {
   const unifiedPlan = useSemanticStore(s => s.unifiedPlan);
   const openPlanTalk = usePlanTalkStore(s => s.open);
   const terminalOpen = useViewStore(s => s.terminalOpen);
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsState, setSettingsState] = useState<{ open: boolean; initialTab?: TabId }>({ open: false });
 
   const handleWorkspaceClick = useCallback(() => {
     saveSession().catch(() => {});
@@ -99,16 +101,26 @@ export function Toolbar() {
               Talk to Plan
             </button>
           )}
+          {session && uiMode === 'exploring' && (
+            <PersonaSelector
+              onOpenPersonaSettings={() => setSettingsState({ open: true, initialTab: 'personas' })}
+            />
+          )}
           <button
             className={styles.settingsButton}
-            onClick={() => setSettingsOpen(true)}
+            onClick={() => setSettingsState({ open: true })}
             aria-label="Open settings"
           >
             &#x2699;
           </button>
         </div>
       </div>
-      {settingsOpen && <Settings onClose={() => setSettingsOpen(false)} />}
+      {settingsState.open && (
+        <Settings
+          onClose={() => setSettingsState({ open: false })}
+          initialTab={settingsState.initialTab}
+        />
+      )}
     </>
   );
 }

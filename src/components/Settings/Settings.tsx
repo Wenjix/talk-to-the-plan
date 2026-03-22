@@ -5,22 +5,25 @@ import { useSessionStore } from '../../store/session-store.ts';
 import { GeneralTab } from './GeneralTab.tsx';
 import { ApiTab } from './ApiTab.tsx';
 import { DisplayTab } from './DisplayTab.tsx';
+import { PersonasTab } from './PersonasTab.tsx';
 import styles from './Settings.module.css';
 
-type TabId = 'general' | 'api' | 'display';
+export type TabId = 'general' | 'api' | 'personas' | 'display';
 
 const TABS: readonly { id: TabId; label: string }[] = [
   { id: 'general', label: 'General' },
   { id: 'api', label: 'API' },
+  { id: 'personas', label: 'Personas' },
   { id: 'display', label: 'Display' },
 ];
 
 interface SettingsProps {
   onClose: () => void;
+  initialTab?: TabId;
 }
 
-export function Settings({ onClose }: SettingsProps) {
-  const [activeTab, setActiveTab] = useState<TabId>('general');
+export function Settings({ onClose, initialTab }: SettingsProps) {
+  const [activeTab, setActiveTab] = useState<TabId>(initialTab ?? 'general');
   const [settings, setSettings] = useState<AppSettings>(
     AppSettingsSchema.parse({})
   );
@@ -101,6 +104,9 @@ export function Settings({ onClose }: SettingsProps) {
           )}
           {activeTab === 'api' && (
             <ApiTab settings={settings} onUpdate={handleUpdate} />
+          )}
+          {activeTab === 'personas' && (
+            <PersonasTab settings={settings} onUpdate={handleUpdate} />
           )}
           {activeTab === 'display' && (
             <DisplayTab settings={settings} onUpdate={handleUpdate} />
