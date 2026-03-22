@@ -7,6 +7,7 @@ export function buildVoiceSystemPrompt(
   nodes: SemanticNode[],
   edges: SemanticEdge[],
   sessionTopic: string,
+  language: 'English' | 'Chinese' = 'English',
 ): string {
   const node = nodes.find((n) => n.id === nodeId);
   const context = compileContext(nodeId, nodes, edges);
@@ -33,12 +34,12 @@ export function buildVoiceSystemPrompt(
   lines.push('Based on what the user says, choose ONE tool call.');
   lines.push('');
   lines.push('PATH TYPE MAPPING — match the user\'s spoken intent to one of these:');
-  lines.push('- Clarifying, refining, sharpening the question → path_type: "clarify"');
-  lines.push('- Going deeper, digging in, wanting specifics/details → path_type: "go-deeper"');
-  lines.push('- Challenging, pushing back, questioning assumptions → path_type: "challenge"');
-  lines.push('- Making actionable, applying, practical steps → path_type: "apply"');
-  lines.push('- Connecting ideas, linking, cross-referencing → path_type: "connect"');
-  lines.push('- Unexpected angle, creative pivot, surprise → path_type: "surprise"');
+  lines.push('- Clarifying, refining, sharpening the question / 澄清、细化问题 → path_type: "clarify"');
+  lines.push('- Going deeper, digging in, wanting specifics/details / 深入探讨、追问细节 → path_type: "go-deeper"');
+  lines.push('- Challenging, pushing back, questioning assumptions / 质疑、挑战假设 → path_type: "challenge"');
+  lines.push('- Making actionable, applying, practical steps / 落地执行、实际操作 → path_type: "apply"');
+  lines.push('- Connecting ideas, linking, cross-referencing / 关联想法、交叉引用 → path_type: "connect"');
+  lines.push('- Unexpected angle, creative pivot, surprise / 意外视角、创意转变 → path_type: "surprise"');
   lines.push('');
   lines.push('TOOL SELECTION:');
   lines.push('- Explore further → branch_exploration (use the path type mapping above)');
@@ -58,6 +59,12 @@ export function buildVoiceSystemPrompt(
   lines.push('<tool_call>{"name": "branch_exploration", "arguments": {"path_type": "go-deeper", "question": "How does X specifically impact Y?"}}</tool_call>');
   lines.push('');
   lines.push(formatToolsForPrompt());
+
+  if (language === 'Chinese') {
+    lines.push('');
+    lines.push('The user may speak in Mandarin Chinese (中文). Understand their intent regardless of language.');
+    lines.push('For voice_response messages, respond in Chinese. JSON keys and tool names must remain in English.');
+  }
 
   return lines.join('\n');
 }

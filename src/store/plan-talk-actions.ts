@@ -11,6 +11,7 @@ import { transcribeAudio, EigenSTTError, textToSpeech } from '../services/voice/
 import { audioPlayback } from '../services/voice/audio-playback';
 import { telemetry } from '../services/telemetry/collector';
 import { stripMarkdown } from '../utils/strip-markdown';
+import { withLanguage } from '../generation/prompts/language';
 
 /**
  * Try to extract a complete "understanding" value from partial JSON.
@@ -142,7 +143,10 @@ export async function analyzeReflection(transcriptText: string, source: 'voice' 
 
     // Read fresh turns from store (includes the userTurn we just added)
     const allTurns = usePlanTalkStore.getState().turns;
-    const prompt = buildPlanReflectionPrompt(allTurns, unifiedPlan, session.topic);
+    const prompt = withLanguage(
+      buildPlanReflectionPrompt(allTurns, unifiedPlan, session.topic),
+      settings.voiceLanguage,
+    );
 
     let accumulated = '';
     let ttsStarted = false;

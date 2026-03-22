@@ -507,6 +507,7 @@ export async function runJob(
       lanes: sessionLanes,
       apiKeys,
       personaModelConfig,
+      language: settings.voiceLanguage,
       onChunk: (delta: string) => {
         pendingChunk += delta;
         if (!chunkRafScheduled) {

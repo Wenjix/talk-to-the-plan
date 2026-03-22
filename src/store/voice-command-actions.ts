@@ -90,9 +90,8 @@ export async function stopAndProcessVoiceCommand(): Promise<void> {
 
     const { nodes, edges } = useSemanticStore.getState();
     const topic = useSessionStore.getState().session?.topic ?? '';
-    const systemPrompt = buildVoiceSystemPrompt(targetNodeId, nodes, edges, topic);
-
     const settings = await loadSettings();
+    const systemPrompt = buildVoiceSystemPrompt(targetNodeId, nodes, edges, topic, settings.voiceLanguage);
     const bosonKey = resolveBosonApiKey(settings);
 
     if (!bosonKey) {

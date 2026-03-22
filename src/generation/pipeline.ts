@@ -8,6 +8,7 @@ import type {
 import type { ApiKeys, PersonaModelConfig } from './providers/types';
 import { compileContext } from '../core/graph/context-compiler';
 import { buildPrompt } from './prompts';
+import { withLanguage, type VoiceLanguage } from './prompts/language';
 import { getProviderForPersona } from './providers';
 import { parseAndValidate } from '../core/validation/schema-gates';
 import { rateLimiter } from './rate-limiter';
@@ -21,6 +22,7 @@ export interface GenerateOptions {
   lanes: ModelLane[];
   apiKeys: ApiKeys;
   personaModelConfig?: PersonaModelConfig;
+  language?: VoiceLanguage;
   onChunk?: (delta: string) => void;
 }
 
@@ -46,12 +48,10 @@ export async function generate(
   const targetLane = options.lanes.find(l => l.id === targetNode?.laneId);
   const personaId = targetLane?.personaId ?? 'analytical';
 
-  // 3. Build prompt with context + persona
-  const prompt = buildPrompt(
-    options.jobType,
-    context,
-    options.session,
-    personaId,
+  // 3. Build prompt with context + persona + language
+  const prompt = withLanguage(
+    buildPrompt(options.jobType, context, options.session, personaId),
+    options.language ?? 'English',
   );
 
   // 4. Acquire rate limiter token before calling provider

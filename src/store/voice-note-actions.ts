@@ -136,7 +136,7 @@ export async function transcribeVoiceNote(noteId: string): Promise<void> {
       return;
     }
 
-    const transcript = await transcribeAudio(blobEntry.blob, eigenKey);
+    const transcript = await transcribeAudio(blobEntry.blob, eigenKey, settings.voiceLanguage);
     useVoiceNoteStore.getState().updateNote(noteId, { transcript, transcriptStatus: 'done' });
 
     const updated = useVoiceNoteStore.getState().notes.find((n) => n.id === noteId);

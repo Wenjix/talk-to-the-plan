@@ -95,7 +95,7 @@ export function DialoguePanel({ nodeId, onClose, onSendMessage, onConclude, isGe
           return;
         }
 
-        const transcript = await transcribeAudio(blob, eigenKey);
+        const transcript = await transcribeAudio(blob, eigenKey, settings.voiceLanguage);
         setIsTranscribing(false);
         if (transcript.trim()) {
           onSendMessage(transcript.trim(), mode, 'voice');

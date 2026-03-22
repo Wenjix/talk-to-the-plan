@@ -6,6 +6,8 @@ import { useToastStore } from './toast-store';
 import { generateId } from '../utils/ids';
 import { compileContext } from '../core/graph/context-compiler';
 import { buildDialoguePrompt, buildConcludeSynthesisPrompt } from '../generation/prompts/dialogue';
+import { withLanguage } from '../generation/prompts/language';
+import { stripMarkdown } from '../utils/strip-markdown';
 import { getProviderForPersona } from '../generation/providers';
 import type { ApiKeys } from '../generation/providers/types';
 import { parseAndValidate } from '../core/validation/schema-gates';
@@ -91,11 +93,14 @@ export async function generateDialogueResponse(
   // Compile context
   const context = compileContext(nodeId, nodes, edges);
 
-  // Build dialogue prompt
-  const prompt = buildDialoguePrompt(mode, turns, context, effectiveDepth);
-
   // Get provider (routed by node's lane persona)
   const settings = await loadSettings();
+
+  // Build dialogue prompt with language support
+  const prompt = withLanguage(
+    buildDialoguePrompt(mode, turns, context, effectiveDepth),
+    settings.voiceLanguage,
+  );
   const apiKeys = resolveApiKeys(settings);
   const provider = resolveProviderForNode(nodeId, nodes, apiKeys);
 
@@ -154,7 +159,7 @@ export async function generateDialogueResponse(
   // Non-blocking TTS generation for AI turn
   const eigenKey = resolveEigenApiKey(settings);
   if (eigenKey && settings.voiceTtsEnabled) {
-    textToSpeech(aiTurn.content, eigenKey, settings.voiceTtsVoiceId || undefined)
+    textToSpeech(stripMarkdown(aiTurn.content), eigenKey, settings.voiceTtsVoiceId || undefined)
       .then((blob) => {
         // Store blob for replay and auto-play (bounded cache)
         boundedTtsSet(aiTurn.id, blob);
@@ -207,9 +212,11 @@ export async function concludeDialogue(nodeId: string): Promise<void> {
   if (turns.length === 0) throw new Error('No dialogue turns to synthesize');
 
   const context = compileContext(nodeId, nodes, edges);
-  const prompt = buildConcludeSynthesisPrompt(turns, context, node.answer);
-
   const settings = await loadSettings();
+  const prompt = withLanguage(
+    buildConcludeSynthesisPrompt(turns, context, node.answer),
+    settings.voiceLanguage,
+  );
   const apiKeys = resolveApiKeys(settings);
   const provider = resolveProviderForNode(nodeId, nodes, apiKeys);
   const raw = await provider.generate(prompt);
