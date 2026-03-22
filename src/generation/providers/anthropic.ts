@@ -20,9 +20,9 @@ export class AnthropicProvider implements GenerationProvider {
   private apiKey: string;
   private model: string;
 
-  constructor(apiKey: string) {
+  constructor(apiKey: string, model?: string) {
     this.apiKey = apiKey;
-    this.model = PROVIDER_MODELS.anthropic;
+    this.model = model ?? PROVIDER_MODELS.anthropic;
   }
 
   async generate(prompt: string): Promise<string> {
