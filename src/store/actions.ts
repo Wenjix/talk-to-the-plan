@@ -606,6 +606,9 @@ export async function runJob(
       // Transition job: retrying -> running (retry)
       useJobStore.getState().updateJobState(job.id, { type: 'RETRY' });
 
+      // Clear stream buffer before retry so partial text doesn't accumulate
+      useViewStore.getState().clearStream(job.targetNodeId);
+
       // Recursive retry — release slot first (runJob will re-acquire),
       // then re-enter. Use slotReleased flag to prevent double-release in finally.
       const retryJob = useJobStore.getState().getJob(job.id);
