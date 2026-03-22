@@ -1,14 +1,14 @@
-.fuda-connector {
+.parallax-connector {
   stroke: var(--connector-stroke);
   stroke-width: 2;
   transition: stroke 0.2s;
 }
 
-.fuda-connector:hover {
+.parallax-connector:hover {
   stroke: var(--connector-stroke-hover);
 }
 
-.fuda-edge-label {
+.parallax-edge-label {
   color: #fff;
   font-size: 0.55rem;
   font-weight: 700;

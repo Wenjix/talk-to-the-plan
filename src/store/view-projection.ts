@@ -5,8 +5,8 @@ import { getDescendantIds } from './view-store';
 
 export type ExplorationCardNode = Node<SemanticNode, 'explorationCard'>;
 export type RFNode = ExplorationCardNode;
-export type FudaEdgeData = { pathType?: string; pathAccent?: string };
-export type RFEdge = Edge<FudaEdgeData>;
+export type ParallaxEdgeData = { pathType?: string; pathAccent?: string };
+export type RFEdge = Edge<ParallaxEdgeData>;
 
 const PATH_ACCENTS: Record<PathType, string> = {
   'clarify': '#5b8def',
@@ -86,7 +86,7 @@ export function projectToReactFlow(
         id: se.id,
         source: se.sourceNodeId,
         target: se.targetNodeId,
-        type: 'fudaConnector',
+        type: 'parallaxConnector',
         data: {
           pathType: pathType,
           pathAccent: pathType ? PATH_ACCENTS[pathType] : undefined,

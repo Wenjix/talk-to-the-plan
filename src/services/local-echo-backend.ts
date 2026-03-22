@@ -9,7 +9,7 @@ const BUILT_IN_COMMANDS: Record<string, (args: string[], ctx: LocalEchoBackend) 
       '  help         Show this message',
       '  clear        Clear the terminal',
       '  echo         Print arguments',
-      '  env          Show FUDA session variables',
+      '  env          Show Parallax session variables',
       '  history      Show command history',
       '  date         Show current date/time',
       '  whoami       Show current user',
@@ -80,7 +80,7 @@ export class LocalEchoBackend implements ITerminalBackend {
     this.state = 'ready';
     this.events.onStateChange('ready');
     this.events.onOutput(
-      '\x1b[1;36mFUDA Terminal\x1b[0m (local echo mode)\r\n' +
+      '\x1b[1;36mParallax Terminal\x1b[0m (local echo mode)\r\n' +
       'Type \x1b[1mhelp\x1b[0m for available commands.\r\n\r\n',
     );
     this.printPrompt();

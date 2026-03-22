@@ -1,8 +1,9 @@
 {
-  "name": "talk-to-the-plan",
+  "name": "parallax",
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "packageManager": "pnpm@10.27.0",
   "scripts": {
     "dev": "vite",
     "dev:server": "tsx --env-file=.env --watch server/pty-server.ts",

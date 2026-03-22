@@ -1,16 +1,16 @@
 import { openDB, type IDBPDatabase } from 'idb';
 import type { StoreNames, StoreValue, IndexNames, IndexKey } from 'idb';
-import { type FudaDB, DB_NAME, DB_VERSION } from './schema';
+import { type ParallaxDB, DB_NAME, DB_VERSION } from './schema';
 
 // ---------------------------------------------------------------------------
 // Database singleton
 // ---------------------------------------------------------------------------
 
-let dbPromise: Promise<IDBPDatabase<FudaDB>> | null = null;
+let dbPromise: Promise<IDBPDatabase<ParallaxDB>> | null = null;
 
-export function getDB(): Promise<IDBPDatabase<FudaDB>> {
+export function getDB(): Promise<IDBPDatabase<ParallaxDB>> {
   if (!dbPromise) {
-    dbPromise = openDB<FudaDB>(DB_NAME, DB_VERSION, {
+    dbPromise = openDB<ParallaxDB>(DB_NAME, DB_VERSION, {
       upgrade(db, oldVersion) {
         if (oldVersion < 1) {
           // v1 stores
@@ -30,10 +30,6 @@ export function getDB(): Promise<IDBPDatabase<FudaDB>> {
           promotions.createIndex('by-session', 'sessionId');
           promotions.createIndex('by-lane', 'laneId');
 
-          const lanePlans = db.createObjectStore('lanePlans', { keyPath: 'id' });
-          lanePlans.createIndex('by-session', 'sessionId');
-          lanePlans.createIndex('by-lane', 'laneId');
-
           const unifiedPlans = db.createObjectStore('unifiedPlans', { keyPath: 'id' });
           unifiedPlans.createIndex('by-session', 'sessionId');
 
@@ -52,10 +48,18 @@ export function getDB(): Promise<IDBPDatabase<FudaDB>> {
         }
 
         if (oldVersion < 3) {
-          // Remove deprecated lanePlans store
-          if (db.objectStoreNames.contains('lanePlans')) {
-            db.deleteObjectStore('lanePlans');
+          // Remove deprecated lanePlans store (cast needed — store no longer in schema type)
+          if ((db.objectStoreNames as DOMStringList).contains('lanePlans')) {
+            (db as unknown as { deleteObjectStore(name: string): void }).deleteObjectStore('lanePlans');
           }
+        }
+
+        if (oldVersion < 4) {
+          const voiceNotes = db.createObjectStore('voiceNotes', { keyPath: 'id' });
+          voiceNotes.createIndex('by-session', 'sessionId');
+          voiceNotes.createIndex('by-node', 'nodeId');
+
+          db.createObjectStore('voiceNoteBlobs', { keyPath: 'id' });
         }
       },
     });
@@ -68,22 +72,22 @@ export function getDB(): Promise<IDBPDatabase<FudaDB>> {
 // ---------------------------------------------------------------------------
 
 /** Insert or update an entity in a store. Returns the key. */
-export async function putEntity<Name extends StoreNames<FudaDB>>(
+export async function putEntity<Name extends StoreNames<ParallaxDB>>(
   storeName: Name,
-  entity: StoreValue<FudaDB, Name>,
+  entity: StoreValue<ParallaxDB, Name>,
 ): Promise<string> {
   const db = await getDB();
-  // StoreKey<FudaDB, Name> is always `string` for our schema, but idb
+  // StoreKey<ParallaxDB, Name> is always `string` for our schema, but idb
   // returns IDBValidKey. We cast to keep the call-site ergonomic.
   const key = (await db.put(storeName, entity)) as string;
   return key;
 }
 
 /** Retrieve a single entity by primary key. Returns `undefined` if not found. */
-export async function getEntity<Name extends StoreNames<FudaDB>>(
+export async function getEntity<Name extends StoreNames<ParallaxDB>>(
   storeName: Name,
   key: string,
-): Promise<StoreValue<FudaDB, Name> | undefined> {
+): Promise<StoreValue<ParallaxDB, Name> | undefined> {
   const db = await getDB();
   const entity = await db.get(storeName, key);
   // Basic sanity check: every entity must have an `id` field.
@@ -95,19 +99,19 @@ export async function getEntity<Name extends StoreNames<FudaDB>>(
 
 /** Retrieve all entities matching an index value. */
 export async function getAllByIndex<
-  Name extends StoreNames<FudaDB>,
-  Idx extends IndexNames<FudaDB, Name>,
+  Name extends StoreNames<ParallaxDB>,
+  Idx extends IndexNames<ParallaxDB, Name>,
 >(
   storeName: Name,
   indexName: Idx,
-  key: IndexKey<FudaDB, Name, Idx>,
-): Promise<StoreValue<FudaDB, Name>[]> {
+  key: IndexKey<ParallaxDB, Name, Idx>,
+): Promise<StoreValue<ParallaxDB, Name>[]> {
   const db = await getDB();
   return db.getAllFromIndex(storeName, indexName, key);
 }
 
 /** Delete a single entity by primary key. */
-export async function deleteEntity<Name extends StoreNames<FudaDB>>(
+export async function deleteEntity<Name extends StoreNames<ParallaxDB>>(
   storeName: Name,
   key: string,
 ): Promise<void> {
@@ -120,14 +124,15 @@ export async function deleteEntity<Name extends StoreNames<FudaDB>>(
 // ---------------------------------------------------------------------------
 
 export interface SessionEnvelope {
-  session: StoreValue<FudaDB, 'sessions'>;
-  lanes: StoreValue<FudaDB, 'lanes'>[];
-  nodes: StoreValue<FudaDB, 'nodes'>[];
-  edges: StoreValue<FudaDB, 'edges'>[];
-  promotions: StoreValue<FudaDB, 'promotions'>[];
-  unifiedPlans: StoreValue<FudaDB, 'unifiedPlans'>[];
-  dialogueTurns: StoreValue<FudaDB, 'dialogueTurns'>[];
-  planTalkTurns: StoreValue<FudaDB, 'planTalkTurns'>[];
+  session: StoreValue<ParallaxDB, 'sessions'>;
+  lanes: StoreValue<ParallaxDB, 'lanes'>[];
+  nodes: StoreValue<ParallaxDB, 'nodes'>[];
+  edges: StoreValue<ParallaxDB, 'edges'>[];
+  promotions: StoreValue<ParallaxDB, 'promotions'>[];
+  unifiedPlans: StoreValue<ParallaxDB, 'unifiedPlans'>[];
+  dialogueTurns: StoreValue<ParallaxDB, 'dialogueTurns'>[];
+  planTalkTurns: StoreValue<ParallaxDB, 'planTalkTurns'>[];
+  voiceNotes: StoreValue<ParallaxDB, 'voiceNotes'>[];
 }
 
 /**
@@ -139,7 +144,7 @@ export async function loadSessionEnvelope(
 ): Promise<SessionEnvelope> {
   const db = await getDB();
 
-  const [session, lanes, nodes, edges, promotions, unifiedPlans, dialogueTurns, planTalkTurns] =
+  const [session, lanes, nodes, edges, promotions, unifiedPlans, dialogueTurns, planTalkTurns, voiceNotes] =
     await Promise.all([
       db.get('sessions', sessionId),
       db.getAllFromIndex('lanes', 'by-session', sessionId),
@@ -149,11 +154,12 @@ export async function loadSessionEnvelope(
       db.getAllFromIndex('unifiedPlans', 'by-session', sessionId),
       db.getAllFromIndex('dialogueTurns', 'by-session', sessionId),
       db.getAllFromIndex('planTalkTurns', 'by-session', sessionId),
+      db.getAllFromIndex('voiceNotes', 'by-session', sessionId),
     ]);
 
   if (!session) {
     throw new Error(`Session not found: ${sessionId}`);
   }
 
-  return { session, lanes, nodes, edges, promotions, unifiedPlans, dialogueTurns, planTalkTurns };
+  return { session, lanes, nodes, edges, promotions, unifiedPlans, dialogueTurns, planTalkTurns, voiceNotes };
 }

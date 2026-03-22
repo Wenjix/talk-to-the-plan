@@ -8,5 +8,5 @@ export const nodeTypes: NodeTypes = {
 };
 
 export const edgeTypes: EdgeTypes = {
-  fudaConnector: Connector,
+  parallaxConnector: Connector,
 };

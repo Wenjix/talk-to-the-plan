@@ -9,9 +9,10 @@ import type {
   DialogueTurn,
   GenerationJob,
   PlanTalkTurn,
+  VoiceNote,
 } from '../core/types';
 
-export interface FudaDB extends DBSchema {
+export interface ParallaxDB extends DBSchema {
   sessions: {
     key: string;
     value: PlanningSession;
@@ -56,7 +57,16 @@ export interface FudaDB extends DBSchema {
     value: PlanTalkTurn;
     indexes: { 'by-session': string; 'by-unified-plan': string };
   };
+  voiceNotes: {
+    key: string;
+    value: VoiceNote;
+    indexes: { 'by-session': string; 'by-node': string };
+  };
+  voiceNoteBlobs: {
+    key: string;
+    value: { id: string; blob: Blob };
+  };
 }
 
 export const DB_NAME = 'fuda-plan';
-export const DB_VERSION = 3;
+export const DB_VERSION = 4;

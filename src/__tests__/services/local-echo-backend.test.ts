@@ -41,7 +41,7 @@ describe('LocalEchoBackend', () => {
     await backend.connect({ cols: 80, rows: 24, events: mocks.events });
 
     const fullOutput = mocks.output.join('');
-    expect(fullOutput).toContain('FUDA Terminal');
+    expect(fullOutput).toContain('Parallax Terminal');
     expect(fullOutput).toContain('local echo mode');
     expect(fullOutput).toContain('help');
   });

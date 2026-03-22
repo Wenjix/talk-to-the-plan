@@ -1,10 +1,10 @@
-# Talk to the Plan
+# Parallax
 
 An audio-native exploration canvas for brainstorming, researching, and generating usable plans. Built for the **Boson AI Hackathon**.
 
 ## What it does
 
-Talk to the Plan is an interactive planning tool where you explore ideas through a visual graph of questions and insights. You start by entering a topic, and the system generates six follow-up questions along a **Conversation Compass** — clarify, go deeper, challenge, apply, connect, or surprise. From there, you branch out, answer questions, promote key insights, and synthesize everything into a structured plan.
+Parallax is an interactive planning tool where you explore ideas through a visual graph of questions and insights. You start by entering a topic, and the system generates six follow-up questions along a **Conversation Compass** — clarify, go deeper, challenge, apply, connect, or surprise. From there, you branch out, answer questions, promote key insights, and synthesize everything into a structured plan.
 
 ### AI Personas
 

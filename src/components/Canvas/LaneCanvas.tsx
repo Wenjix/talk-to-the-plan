@@ -26,7 +26,20 @@ export function LaneCanvas({ laneId }: LaneCanvasProps) {
   const [rfNodes, setRfNodes] = useState<Node[]>([]);
 
   useEffect(() => {
-    setRfNodes(nodes);
+    setRfNodes(prev => {
+      const prevMap = new Map(prev.map(n => [n.id, n]));
+      return nodes.map(n => {
+        const existing = prevMap.get(n.id);
+        if (!existing) return n;
+        // Preserve React Flow's measured dimensions to avoid "uninitialized node" warning
+        return {
+          ...n,
+          width: existing.width,
+          height: existing.height,
+          measured: existing.measured,
+        };
+      });
+    });
   }, [nodes]);
 
   const onNodesChange = useCallback<OnNodesChange>((changes) => {
@@ -103,7 +116,7 @@ export function LaneCanvas({ laneId }: LaneCanvasProps) {
       onNodeContextMenu={onNodeContextMenu}
       onInit={onInit}
       minZoom={0.5}
-      defaultEdgeOptions={{ type: 'fudaConnector' }}
+      defaultEdgeOptions={{ type: 'parallaxConnector' }}
       proOptions={{ hideAttribution: true }}
     >
       <Background color="var(--canvas-dot, #1a1a2e)" gap={20} />

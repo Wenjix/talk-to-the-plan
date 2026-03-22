@@ -8,7 +8,7 @@ import { toggleTerminal } from './store/terminal-actions';
 import { addUserTurn, generateDialogueResponse, concludeDialogue } from './store/dialogue-actions';
 import { usePlanTalkStore } from './store/plan-talk-store';
 import { TopicInput } from './components/TopicInput/TopicInput';
-import { FudaCanvas } from './components/Canvas/FudaCanvas';
+import { ParallaxCanvas } from './components/Canvas/ParallaxCanvas';
 import { PlanPanel } from './components/PlanPanel/PlanPanel';
 import { DialoguePanel } from './components/DialoguePanel/DialoguePanel';
 import { SessionList } from './components/SessionList/SessionList';
@@ -131,7 +131,7 @@ function App() {
         {(uiMode === 'compass' || uiMode === 'exploring') && (
           <div className="exploring-layout">
             <div className="exploring-content">
-              <FudaCanvas />
+              <ParallaxCanvas />
               {terminalOpen && <TerminalDrawer />}
             </div>
             {planPanelOpen && (

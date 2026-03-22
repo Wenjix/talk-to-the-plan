@@ -11,11 +11,11 @@ export function Connector(props: EdgeProps) {
 
   return (
     <>
-      <BaseEdge id={id} path={edgePath} className="fuda-connector" />
+      <BaseEdge id={id} path={edgePath} className="parallax-connector" />
       {pathType && accent && (
         <EdgeLabelRenderer>
           <div
-            className="fuda-edge-label"
+            className="parallax-edge-label"
             style={{
               position: 'absolute',
               transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,

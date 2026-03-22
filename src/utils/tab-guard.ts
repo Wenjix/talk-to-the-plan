@@ -19,7 +19,7 @@ export function startTabGuard(): { tabId: string; cleanup: () => void } {
       const age = Date.now() - parsed.timestamp;
       if (age < HEARTBEAT_INTERVAL * 3) {
         // Another tab is active
-        console.warn('Another FUDA Plan tab is active');
+        console.warn('Another Parallax tab is active');
       }
     } catch {
       // Corrupted entry, ignore

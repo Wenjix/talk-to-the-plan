@@ -45,7 +45,7 @@ export function Toolbar() {
             type="button"
             title="Back to sessions"
           >
-            FUDA
+            PARALLAX
           </button>
           {session && (
             <>
