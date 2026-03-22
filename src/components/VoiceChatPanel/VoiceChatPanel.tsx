@@ -23,7 +23,7 @@ export function VoiceChatPanel({ position }: Props) {
 
   const nodes = useSemanticStore((s) => s.nodes);
   const node = nodeId ? nodes.find((n) => n.id === nodeId) : null;
-  const nodeLabel = node?.data?.answer?.slice(0, 40) ?? 'Node';
+  const nodeLabel = node?.answer?.summary?.slice(0, 40) ?? 'Node';
 
   const [playingTurnId, setPlayingTurnId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);

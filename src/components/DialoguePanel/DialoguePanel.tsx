@@ -102,8 +102,7 @@ export function DialoguePanel({ nodeId, onClose, onSendMessage, onConclude, isGe
         }
       } catch {
         setIsTranscribing(false);
-        recorderRef.current?.destroy();
-        recorderRef.current = null;
+        recorder.destroy();
       }
     } else {
       // Start recording

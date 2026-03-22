@@ -1,9 +1,9 @@
 import { BaseEdge, EdgeLabelRenderer, getSmoothStepPath } from '@xyflow/react';
 import type { EdgeProps } from '@xyflow/react';
-import type { ParallaxEdgeData } from '../../store/view-projection';
+import type { RFEdge } from '../../store/view-projection';
 import './Connector.css';
 
-export function Connector(props: EdgeProps<ParallaxEdgeData>) {
+export function Connector(props: EdgeProps<RFEdge>) {
   const { sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, id, data } = props;
   const [edgePath, labelX, labelY] = getSmoothStepPath({ sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition });
 
