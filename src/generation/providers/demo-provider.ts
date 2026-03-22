@@ -48,24 +48,24 @@ function pickAnswer(prompt: string): { summary: string; bullets: string[] } {
 function buildPathQuestions(prompt: string): object {
   const topic = extractTopicHint(prompt);
   return {
-    questions: [
-      { question: `What specific aspects of ${topic} need further clarification before we can proceed?`, pathType: 'clarify' },
-      { question: `What are the underlying mechanisms that make ${topic} work the way it does?`, pathType: 'go-deeper' },
-      { question: `What assumptions about ${topic} might be wrong or incomplete?`, pathType: 'challenge' },
-      { question: `How would ${topic} play out in a real-world scenario with resource constraints?`, pathType: 'apply' },
-      { question: `How does ${topic} relate to adjacent fields or parallel developments?`, pathType: 'connect' },
-      { question: `What if the conventional wisdom about ${topic} is fundamentally backwards?`, pathType: 'surprise' },
-    ],
+    paths: {
+      'clarify': `What specific aspects of ${topic} need further clarification before we can proceed?`,
+      'go-deeper': `What are the underlying mechanisms that make ${topic} work the way it does?`,
+      'challenge': `What assumptions about ${topic} might be wrong or incomplete?`,
+      'apply': `How would ${topic} play out in a real-world scenario with resource constraints?`,
+      'connect': `How does ${topic} relate to adjacent fields or parallel developments?`,
+      'surprise': `What if the conventional wisdom about ${topic} is fundamentally backwards?`,
+    },
   };
 }
 
 function buildBranches(prompt: string): object {
   const topic = extractTopicHint(prompt);
   return {
-    questions: [
-      { question: `How do we measure the real-world impact of ${topic} beyond surface metrics?`, pathType: 'go-deeper' },
-      { question: `What are the strongest counterarguments to the current approach on ${topic}?`, pathType: 'challenge' },
-      { question: `How might ${topic} evolve over the next 3-5 years given current trends?`, pathType: 'connect' },
+    branches: [
+      { question: `How do we measure the real-world impact of ${topic} beyond surface metrics?`, pathType: 'go-deeper', quality: { novelty: 0.8, specificity: 0.7, challenge: 0.5 } },
+      { question: `What are the strongest counterarguments to the current approach on ${topic}?`, pathType: 'challenge', quality: { novelty: 0.7, specificity: 0.8, challenge: 0.9 } },
+      { question: `How might ${topic} evolve over the next 3-5 years given current trends?`, pathType: 'connect', quality: { novelty: 0.9, specificity: 0.6, challenge: 0.4 } },
     ],
   };
 }
