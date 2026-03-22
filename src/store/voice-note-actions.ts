@@ -7,6 +7,8 @@ import { transcribeAudio } from '../services/voice/eigen-client';
 import { audioPlayback } from '../services/voice/audio-playback';
 import { putEntity, deleteEntity, getEntity } from '../persistence/repository';
 import { loadSettings, resolveEigenApiKey } from '../persistence/settings-store';
+import { useSemanticStore } from './semantic-store';
+import { promoteNode } from './promotion-actions';
 import type { VoiceNote } from '../core/types';
 
 const MAX_RECORDING_MS = 120_000; // 2 minutes
@@ -110,6 +112,12 @@ export async function stopVoiceNoteRecording(): Promise<void> {
   ]);
 
   useVoiceNoteRecordingStore.getState().clear();
+
+  // Auto-promote the node when a voice note is attached
+  const node = useSemanticStore.getState().getNode(nodeId);
+  if (node && node.fsmState === 'resolved' && !node.promoted) {
+    promoteNode(nodeId, 'actionable_detail', 'Voice note attached');
+  }
 
   // Background transcription (fire-and-forget)
   transcribeVoiceNote(noteId).catch(() => {});
