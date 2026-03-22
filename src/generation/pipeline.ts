@@ -5,7 +5,7 @@ import type {
   PlanningSession,
   ModelLane,
 } from '../core/types';
-import type { ApiKeys } from './providers/types';
+import type { ApiKeys, PersonaModelConfig } from './providers/types';
 import { compileContext } from '../core/graph/context-compiler';
 import { buildPrompt } from './prompts';
 import { getProviderForPersona } from './providers';
@@ -20,6 +20,7 @@ export interface GenerateOptions {
   session: PlanningSession;
   lanes: ModelLane[];
   apiKeys: ApiKeys;
+  personaModelConfig?: PersonaModelConfig;
   onChunk?: (delta: string) => void;
 }
 
@@ -57,7 +58,7 @@ export async function generate(
   await rateLimiter.acquire();
 
   // 5. Call provider (resolved per persona → provider mapping)
-  const provider = getProviderForPersona(personaId, options.apiKeys);
+  const provider = getProviderForPersona(personaId, options.apiKeys, options.personaModelConfig);
   const raw = options.onChunk
     ? await provider.generateStream(prompt, options.onChunk)
     : await provider.generate(prompt);

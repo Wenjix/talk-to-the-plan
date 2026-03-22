@@ -12,6 +12,7 @@ import { DEFAULT_LANES } from '../core/types/lane';
 import { nodeTransition } from '../core/fsm/node-fsm';
 import { generate } from '../generation/pipeline';
 import type { GenerateResult } from '../generation/pipeline';
+import type { PersonaModelConfig } from '../generation/providers/types';
 import { generateId } from '../utils/ids';
 import { loadSettings, resolveApiKeys } from '../persistence/settings-store';
 import { isOnline } from '../utils/online-status';
@@ -157,61 +158,6 @@ export async function explore(
 
   // Fire and forget
   void runJob(job, session);
-}
-
-// ---------------------------------------------------------------------------
-// 2b. exploreAllLanes — create root nodes for all lanes
-// NOTE: Currently unused (quadrant view disabled). Preserved for re-enablement.
-// ---------------------------------------------------------------------------
-
-export async function exploreAllLanes(
-  session: PlanningSession,
-  topic: string,
-): Promise<void> {
-  const lanes = useSemanticStore.getState().lanes;
-  if (lanes.length === 0) {
-    throw new Error('No lanes available — create a session first');
-  }
-
-  const timestamp = now();
-
-  for (let laneIndex = 0; laneIndex < lanes.length; laneIndex++) {
-    const lane = lanes[laneIndex];
-    const rootNode: SemanticNode = {
-      id: generateId(),
-      sessionId: session.id,
-      laneId: lane.id,
-      parentId: null,
-      nodeType: 'root',
-      pathType: 'clarify',
-      question: topic,
-      fsmState: 'generating',
-      promoted: false,
-      depth: 0,
-      createdAt: timestamp,
-      updatedAt: timestamp,
-    };
-
-    useSemanticStore.getState().addNode(rootNode);
-
-    // Each pane has its own viewport, so all roots start at origin
-    const viewNode: ViewNodeState = {
-      semanticId: rootNode.id,
-      position: { x: 0, y: 0 },
-      isCollapsed: false,
-      isAnswerVisible: false,
-      isNew: true,
-      spawnIndex: 0,
-    };
-    useViewStore.getState().setViewNode(rootNode.id, viewNode);
-
-    const job = makeJob(session.id, rootNode.id, 'path_questions');
-
-    // Fire and forget per-lane generation
-    void runJob(job, session);
-  }
-
-  useSessionStore.getState().setUIMode('exploring');
 }
 
 // ---------------------------------------------------------------------------
@@ -534,6 +480,7 @@ export async function runJob(
     // Load API keys from persisted settings
     const settings = await loadSettings();
     const apiKeys = resolveApiKeys(settings);
+    const personaModelConfig = settings.personaModelConfig as PersonaModelConfig;
 
     // Check online status before attempting generation
     if (!isOnline()) {
@@ -559,6 +506,7 @@ export async function runJob(
       session,
       lanes: sessionLanes,
       apiKeys,
+      personaModelConfig,
       onChunk: (delta: string) => {
         pendingChunk += delta;
         if (!chunkRafScheduled) {
