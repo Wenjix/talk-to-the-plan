@@ -19,6 +19,7 @@ export function VoicePane() {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingElapsed, setRecordingElapsed] = useState(0);
   const [eigenApiKey, setEigenApiKey] = useState('');
+  const [voiceLanguage, setVoiceLanguage] = useState('English');
   const [voiceInputMode, setVoiceInputMode] = useState<'hold_to_talk' | 'toggle'>('hold_to_talk');
   const scrollRef = useRef<HTMLDivElement>(null);
   const recorderRef = useRef<VoiceRecorder | null>(null);
@@ -31,6 +32,7 @@ export function VoicePane() {
   useEffect(() => {
     loadSettings().then((settings: AppSettings) => {
       setEigenApiKey(resolveEigenApiKey(settings));
+      setVoiceLanguage(settings.voiceLanguage);
       setVoiceInputMode(settings.voiceInputMode);
     });
   }, []);
@@ -92,7 +94,7 @@ export function VoicePane() {
       recorderRef.current.destroy();
       recorderRef.current = null;
       telemetry.track('voice_recording_stopped');
-      await transcribeAndAnalyze(blob, eigenApiKey);
+      await transcribeAndAnalyze(blob, eigenApiKey, voiceLanguage);
     } catch {
       recorderRef.current?.destroy();
       recorderRef.current = null;

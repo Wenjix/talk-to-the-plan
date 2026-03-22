@@ -183,6 +183,17 @@ export function ApiTab({ settings, onUpdate }: { settings: AppSettings; onUpdate
           Auto-play AI responses
         </label>
         <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+          Voice language:
+          <select
+            value={settings.voiceLanguage}
+            onChange={(e) => onUpdate({ voiceLanguage: e.target.value as 'English' | 'Chinese' })}
+            aria-label="Voice language"
+          >
+            <option value="English">English</option>
+            <option value="Chinese">Chinese (Mandarin)</option>
+          </select>
+        </label>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
           Voice input mode:
           <select
             value={settings.voiceInputMode}

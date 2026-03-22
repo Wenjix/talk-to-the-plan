@@ -18,6 +18,7 @@ export const AppSettingsSchema = z.object({
   autoSaveEnabled: z.boolean().default(true),
   animationsEnabled: z.boolean().default(true),
   theme: ThemeSchema,
+  voiceLanguage: z.enum(['English', 'Chinese']).default('English'),
   voiceInputMode: z.enum(['hold_to_talk', 'toggle']).default('hold_to_talk'),
   voiceTtsEnabled: z.boolean().default(true),
   voiceAutoPlayAi: z.boolean().default(true),
