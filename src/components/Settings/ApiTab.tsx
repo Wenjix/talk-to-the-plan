@@ -29,6 +29,12 @@ function getOpenAIKeyStatus(key: string): 'not-set' | 'valid' | 'invalid' {
   return 'invalid';
 }
 
+function getVoiceServiceKeyStatus(key: string): 'not-set' | 'valid' | 'invalid' {
+  if (!key) return 'not-set';
+  if (key.length >= 20) return 'valid';
+  return 'invalid';
+}
+
 const STATUS_LABELS = {
   'not-set': 'Not set',
   valid: 'Valid format',
@@ -61,9 +67,20 @@ interface ApiKeyFieldProps {
   status: 'not-set' | 'valid' | 'invalid';
   testId: string;
   showEnvFallback: boolean;
+  helpText?: string;
 }
 
-function ApiKeyField({ legend, value, onChange, placeholder, ariaLabel, status, testId, showEnvFallback }: ApiKeyFieldProps) {
+function ApiKeyField({
+  legend,
+  value,
+  onChange,
+  placeholder,
+  ariaLabel,
+  status,
+  testId,
+  showEnvFallback,
+  helpText,
+}: ApiKeyFieldProps) {
   const [show, setShow] = useState(false);
 
   return (
@@ -93,6 +110,9 @@ function ApiKeyField({ legend, value, onChange, placeholder, ariaLabel, status, 
       <div className={`${styles.statusIndicator} ${statusClass(status)}`} data-testid={testId}>
         {STATUS_LABELS[status]}
       </div>
+      {helpText ? (
+        <p style={{ color: 'var(--text-muted, #999)', fontSize: '0.85rem', margin: '0.25rem 0 0' }}>{helpText}</p>
+      ) : null}
     </fieldset>
   );
 }
@@ -102,6 +122,10 @@ export function ApiTab({ settings, onUpdate }: { settings: AppSettings; onUpdate
   const geminiStatus = getGeminiKeyStatus(settings.geminiApiKey);
   const anthropicStatus = getAnthropicKeyStatus(settings.anthropicApiKey);
   const openaiStatus = getOpenAIKeyStatus(settings.openaiApiKey);
+  const eigenStatus = getVoiceServiceKeyStatus(settings.eigenApiKey);
+  const bosonStatus = getVoiceServiceKeyStatus(settings.bosonApiKey);
+  const showEigenEnvFallback = !!(import.meta.env?.VITE_EIGEN_API_KEY as string | undefined);
+  const showBosonEnvFallback = !!(import.meta.env?.VITE_BOSON_API_KEY as string | undefined);
 
   return (
     <div>
@@ -150,6 +174,31 @@ export function ApiTab({ settings, onUpdate }: { settings: AppSettings; onUpdate
       />
 
       <fieldset className={styles.fieldset}>
+        <legend className={styles.legend}>Voice Services</legend>
+        <ApiKeyField
+          legend="Eigen AI"
+          value={settings.eigenApiKey}
+          onChange={(v) => onUpdate({ eigenApiKey: v })}
+          placeholder="Enter Eigen AI API key"
+          ariaLabel="Eigen AI API key"
+          status={eigenStatus}
+          testId="eigen-key-status"
+          showEnvFallback={showEigenEnvFallback}
+        />
+        <ApiKeyField
+          legend="Boson AI (Audio Understanding)"
+          value={settings.bosonApiKey}
+          onChange={(v) => onUpdate({ bosonApiKey: v })}
+          placeholder="Enter Boson AI API key"
+          ariaLabel="Boson AI API key"
+          status={bosonStatus}
+          testId="boson-key-status"
+          showEnvFallback={showBosonEnvFallback}
+          helpText="Used for voice commands on the exploration canvas."
+        />
+      </fieldset>
+
+      <fieldset className={styles.fieldset}>
         <legend className={styles.legend}>Voice / TTS</legend>
         <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
           <input
@@ -186,13 +235,13 @@ export function ApiTab({ settings, onUpdate }: { settings: AppSettings; onUpdate
           type="text"
           value={settings.voiceTtsVoiceId}
           onChange={(e) => onUpdate({ voiceTtsVoiceId: e.target.value })}
-          placeholder="Voice ID (Eigen integration pending)"
+          placeholder="Linda (default)"
           disabled={!settings.voiceTtsEnabled}
           aria-label="TTS Voice ID"
           style={{ marginBottom: '0.5rem' }}
         />
         <p style={{ color: 'var(--text-muted, #999)', fontSize: '0.85rem', margin: '0.25rem 0 0' }}>
-          Voice powered by Eigen AI (Higgs Audio). Eigen and Boson API key fields will be added with the voice integration.
+          Voice powered by Eigen AI (Higgs Audio). Configure Boson AI separately for exploration canvas voice commands.
         </p>
       </fieldset>
     </div>

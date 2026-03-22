@@ -102,3 +102,82 @@
   opacity: 0.3;
   cursor: not-allowed;
 }
+
+/* Center mic button */
+.micCenter {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid var(--card-border);
+  background: var(--bg-secondary);
+  color: var(--text-muted);
+  cursor: pointer;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  transition: all 0.15s;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  z-index: 1;
+}
+
+.micCenter:hover:not(:disabled) {
+  border-color: var(--accent-color, #5b8def);
+  color: var(--accent-color, #5b8def);
+  transform: scale(1.08);
+}
+
+.micCenter:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.micRecording {
+  border-color: var(--severity-high, #ef4444);
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--severity-high, #ef4444);
+  animation: radialMicPulse 1.2s ease-in-out infinite;
+}
+
+.micProcessing {
+  border-color: var(--accent-color, #5b8def);
+  background: rgba(91, 141, 239, 0.1);
+  color: var(--accent-color, #5b8def);
+}
+
+.micSuccess {
+  border-color: #4faf7b;
+  background: rgba(79, 175, 123, 0.2);
+  color: #4faf7b;
+  animation: micFlash 0.4s ease-out;
+}
+
+.micError {
+  border-color: var(--severity-high, #ef4444);
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--severity-high, #ef4444);
+  animation: micFlash 0.4s ease-out;
+}
+
+.micSpinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid transparent;
+  border-top-color: var(--accent-color, #5b8def);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes radialMicPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+}
+
+@keyframes micFlash {
+  0% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
