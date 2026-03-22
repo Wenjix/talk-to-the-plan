@@ -48,4 +48,15 @@ Configure via the in-app Settings panel (gear icon) or environment variables (co
 
 ## Tech stack
 
-React 19, TypeScript, Vite 7, Zustand, XY Flow, Zod 4, IndexedDB, Vitest
+| Layer | Technology | Purpose |
+|-------|-----------|---------|
+| Framework | React 19, TypeScript 5.9 | UI components and type safety |
+| Build | Vite 7 | Dev server and production bundling |
+| State | Zustand 5 | Lightweight store management |
+| Canvas | XY Flow 12 (@xyflow/react) | Node graph rendering and interaction |
+| Validation | Zod 4 | Runtime schema validation for LLM responses |
+| Persistence | IndexedDB (idb 8) | Local session and settings storage |
+| Voice | Eigen AI (Higgs Audio), Boson AI | ASR, TTS, and audio understanding |
+| LLMs | Mistral, Anthropic | Multi-provider generation with per-persona routing |
+| Terminal | xterm.js 6, node-pty | Embedded terminal for freeform exploration |
+| Testing | Vitest 4, Testing Library | Unit and component tests |
