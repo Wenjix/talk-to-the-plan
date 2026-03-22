@@ -17,6 +17,29 @@
   50% { opacity: 0; }
 }
 
+.streaming-answer {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.streaming-answer-summary {
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.streaming-answer-bullets {
+  font-size: 0.8rem;
+  line-height: 1.5;
+  padding-left: 16px;
+  color: var(--card-bullet-text);
+}
+
+.streaming-answer-bullets li {
+  margin-bottom: 4px;
+}
+
 .status-badge {
   display: inline-block;
   padding: 2px 8px;

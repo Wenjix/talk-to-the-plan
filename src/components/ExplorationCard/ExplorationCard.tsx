@@ -3,7 +3,7 @@ import type { NodeProps, Node } from '@xyflow/react';
 import { Handle, Position } from '@xyflow/react';
 import type { SemanticNode, PromotionReason } from '../../core/types';
 import { StatusBadge } from '../shared/StatusBadge';
-import { StreamingText } from '../shared/StreamingText';
+import { StreamingAnswer } from '../shared/StreamingAnswer';
 import { PromotionBadge } from '../PromotionBadge/PromotionBadge';
 import { PromotionModal } from '../PromotionBadge/PromotionModal';
 import { useViewStore } from '../../store/view-store';
@@ -140,10 +140,10 @@ function ExplorationCardInner({ data, id }: NodeProps<ExplorationCardNodeType>) 
 
       <div className={styles.question}>{node.question}</div>
 
-      {/* Show streaming text during generation */}
+      {/* Show streaming text during generation — progressively parsed */}
       {isStreaming && streamBuffer && (
         <div className={styles.answer}>
-          <StreamingText text={streamBuffer} isStreaming={true} />
+          <StreamingAnswer text={streamBuffer} isStreaming={true} />
         </div>
       )}
 
