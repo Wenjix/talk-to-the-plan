@@ -24,6 +24,8 @@ interface VoiceChatState {
   clearNodeHistory(nodeId: string): void;
 }
 
+const MAX_TURNS_PER_NODE = 50;
+
 export const useVoiceChatStore = create<VoiceChatState>()((set) => ({
   turnsByNode: {},
   ttsBlobs: {},
@@ -33,12 +35,11 @@ export const useVoiceChatStore = create<VoiceChatState>()((set) => ({
   addTurn: (partial) => {
     const id = generateId();
     const turn: VoiceChatTurn = { ...partial, id, createdAt: new Date().toISOString() };
-    set((s) => ({
-      turnsByNode: {
-        ...s.turnsByNode,
-        [turn.nodeId]: [...(s.turnsByNode[turn.nodeId] ?? []), turn],
-      },
-    }));
+    set((s) => {
+      const existing = s.turnsByNode[turn.nodeId] ?? [];
+      const updated = [...existing, turn].slice(-MAX_TURNS_PER_NODE);
+      return { turnsByNode: { ...s.turnsByNode, [turn.nodeId]: updated } };
+    });
     return id;
   },
 

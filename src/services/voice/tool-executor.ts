@@ -38,10 +38,18 @@ interface ParsedToolCall {
 
 function parseToolCall(responseText: string): ParsedToolCall | null {
   // Try XML-wrapped format first
-  const match = responseText.match(/<tool_call>([\s\S]*?)<\/tool_call>/);
-  const jsonStr = match
-    ? match[1].trim()
-    : responseText.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+  const xmlMatch = responseText.match(/<tool_call>([\s\S]*?)<\/tool_call>/);
+  let jsonStr: string;
+
+  if (xmlMatch) {
+    jsonStr = xmlMatch[1].trim();
+  } else {
+    // Strip think tags, then extract JSON object from mixed text
+    const cleaned = responseText.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return null;
+    jsonStr = jsonMatch[0];
+  }
 
   try {
     const parsed = JSON.parse(jsonStr);
@@ -89,6 +97,7 @@ export async function executeToolCall(
   if (!toolCall) {
     const cleaned = responseText
       .replace(/<think>[\s\S]*?<\/think>/g, '')
+      .replace(/\{[\s\S]*\}/g, '')
       .trim();
     return {
       toolName: 'voice_response',

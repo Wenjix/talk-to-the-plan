@@ -45,6 +45,13 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api\/eigen/, ''),
         configure: proxyLogger('eigen-proxy'),
       },
+      '/api/mistral': {
+        target: 'https://api.mistral.ai',
+        changeOrigin: true,
+        timeout: 120_000,
+        rewrite: (path) => path.replace(/^\/api\/mistral/, ''),
+        configure: proxyLogger('mistral-proxy'),
+      },
     },
   },
 })

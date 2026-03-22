@@ -5,7 +5,7 @@ export class MistralProvider extends OpenAICompatibleProvider {
   constructor(apiKey: string, model?: string) {
     super(
       apiKey,
-      'https://api.mistral.ai/v1/chat/completions',
+      '/api/mistral/v1/chat/completions',
       model ?? PROVIDER_MODELS.mistral,
       'Mistral API',
     );

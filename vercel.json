@@ -11,6 +11,10 @@
       "destination": "https://hackathon.boson.ai/:path*"
     },
     {
+      "source": "/api/mistral/:path*",
+      "destination": "https://api.mistral.ai/:path*"
+    },
+    {
       "source": "/((?!assets|vite\\.svg|pcm-processor\\.js).*)",
       "destination": "/index.html"
     }
