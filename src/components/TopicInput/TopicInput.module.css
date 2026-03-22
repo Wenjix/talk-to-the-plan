@@ -29,10 +29,18 @@
 }
 
 .tagline {
-  font-size: 1.15rem;
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.subtitle {
+  font-size: 0.9rem;
   font-weight: 400;
   color: var(--text-muted);
-  margin-bottom: 36px;
+  margin-bottom: 32px;
   line-height: 1.5;
 }
 

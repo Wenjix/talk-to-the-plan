@@ -1,6 +1,6 @@
 # Parallax
 
-An audio-native exploration canvas for brainstorming, researching, and generating usable plans. Built for the **Boson AI Hackathon**.
+Think and talk in parallax. An audio-native AI canvas for exploring ideas — speak your thoughts, branch in six directions, and see them from four distinct perspectives. Built for the **Boson AI Hackathon**.
 
 ## What it does
 

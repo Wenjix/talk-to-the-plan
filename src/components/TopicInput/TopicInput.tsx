@@ -45,7 +45,8 @@ export function TopicInput() {
           <span className={styles.diamond}>&#x25C6;</span>
           PARALLAX
         </div>
-        <p className={styles.tagline}>See your ideas from every angle</p>
+        <p className={styles.tagline}>Think and talk in parallax.</p>
+        <p className={styles.subtitle}>Speak your ideas, branch in six directions, and explore from four AI perspectives.</p>
 
         <div className={styles.inputGroup}>
           <textarea
