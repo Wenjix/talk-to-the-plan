@@ -48,7 +48,7 @@ const PlanSectionKeySchema = z.enum([
 // --- Gap Card ---
 
 export const PlanGapCardSchema = z.object({
-  id: UUIDSchema,
+  id: z.string().default(''),
   sectionKey: PlanSectionKeySchema,
   severity: GapSeveritySchema,
   title: z.string().min(1),
@@ -61,7 +61,7 @@ export type PlanGapCard = z.infer<typeof PlanGapCardSchema>;
 // --- Proposed Plan Edit ---
 
 export const ProposedPlanEditSchema = z.object({
-  id: UUIDSchema,
+  id: z.string().default(''),
   sectionKey: PlanSectionKeySchema,
   operation: PlanEditOperationSchema,
   targetHeading: z.string().optional(),
@@ -69,7 +69,7 @@ export const ProposedPlanEditSchema = z.object({
   draftContent: z.array(z.string()).optional(),
   confidence: z.number().min(0).max(1),
   reason: z.string().min(1),
-  approved: z.boolean(),
+  approved: z.boolean().default(false),
 });
 export type ProposedPlanEdit = z.infer<typeof ProposedPlanEditSchema>;
 

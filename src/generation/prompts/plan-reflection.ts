@@ -74,7 +74,6 @@ Return JSON matching this exact schema:
 {
   "understanding": "...",
   "gapCards": [{
-    "id": "<uuid>",
     "sectionKey": "goals|assumptions|strategy|milestones|risks|nextActions",
     "severity": "high|medium|low",
     "title": "...",
@@ -83,7 +82,6 @@ Return JSON matching this exact schema:
     "rationale": "..."
   }],
   "proposedEdits": [{
-    "id": "<uuid>",
     "sectionKey": "goals|assumptions|strategy|milestones|risks|nextActions",
     "operation": "add_section|update_section|remove_section|update_content_bullet",
     "targetHeading": "...",

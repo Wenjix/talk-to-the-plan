@@ -176,6 +176,8 @@ export async function analyzeReflection(transcriptText: string, source: 'voice' 
     const parsed = JSON.parse(jsonMatch[0]);
     const result = PlanReflectionResponseSchema.safeParse(parsed);
     if (!result.success) {
+      console.warn('[PlanTalk] schema validation failed:', result.error.issues);
+      console.warn('[PlanTalk] parsed response:', JSON.stringify(parsed).slice(0, 500));
       usePlanTalkStore.getState().setError('Could not generate structured edits this turn. Please try again.');
       usePlanTalkStore.getState().setTurnState('error');
       usePlanTalkStore.getState().setStreamingResponse('');
@@ -183,6 +185,10 @@ export async function analyzeReflection(transcriptText: string, source: 'voice' 
     }
 
     const data = result.data;
+
+    // Assign stable UUIDs — LLM-generated IDs are not reliable
+    for (const card of data.gapCards) card.id = generateId();
+    for (const edit of data.proposedEdits) edit.id = generateId();
 
     // Add AI turn with the pre-generated ID
     const aiTurn: PlanTalkTurn = {
@@ -236,12 +242,13 @@ export async function transcribeRealtimeAndAnalyze(transcriptText: string): Prom
 /**
  * Record audio, transcribe via Eigen ASR, then analyze.
  */
-export async function transcribeAndAnalyze(audioBlob: Blob, apiKey: string): Promise<void> {
+export async function transcribeAndAnalyze(audioBlob: Blob, apiKey: string, language: string = 'English'): Promise<void> {
   usePlanTalkStore.getState().setTurnState('transcribing');
   usePlanTalkStore.getState().setError(null);
 
   try {
-    const text = await transcribeAudio(audioBlob, apiKey);
+    const text = await transcribeAudio(audioBlob, apiKey, language);
+    usePlanTalkStore.getState().setTurnState('idle');
     await analyzeReflection(text, 'voice');
   } catch (err) {
     const message = err instanceof EigenSTTError
