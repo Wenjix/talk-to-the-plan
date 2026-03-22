@@ -7,7 +7,13 @@ import { buildPlanReflectionPrompt } from '../generation/prompts/plan-reflection
 import { PlanReflectionResponseSchema } from '../core/types';
 import type { PlanTalkTurn, PlanSectionKey, StructuredPlan, PlanSection, UnifiedPlan } from '../core/types';
 import { generateId } from '../utils/ids';
-import { transcribeAudio, ElevenLabsSTTError, textToSpeech, ElevenLabsTTSError } from '../services/voice/elevenlabs-client';
+// Temporary stubs until Eigen client is implemented
+async function transcribeAudio(_blob: Blob, _apiKey: string): Promise<string> {
+  throw new Error('Voice transcription not yet implemented — Eigen integration pending');
+}
+async function textToSpeech(_text: string, _apiKey: string, _voiceId?: string): Promise<Blob> {
+  throw new Error('Text-to-speech not yet implemented — Eigen integration pending');
+}
 import { audioPlayback } from '../services/voice/audio-playback';
 import { telemetry } from '../services/telemetry/collector';
 
@@ -162,8 +168,8 @@ export async function analyzeReflection(transcriptText: string, source: 'voice' 
           ttsStarted = true;
           usePlanTalkStore.getState().setUnderstanding(understanding);
           // Start TTS immediately without waiting for gap cards/edits
-          if (settings.voiceTtsEnabled && settings.elevenLabsApiKey) {
-            generateTts(aiTurnId, understanding, settings.elevenLabsApiKey, settings.voiceTtsVoiceId, settings.voiceAutoPlayAi);
+          if (settings.voiceTtsEnabled && settings.eigenApiKey) {
+            generateTts(aiTurnId, understanding, settings.eigenApiKey, settings.voiceTtsVoiceId, settings.voiceAutoPlayAi);
           }
         }
       }
@@ -207,8 +213,8 @@ export async function analyzeReflection(transcriptText: string, source: 'voice' 
     telemetry.track('voice_turn_completed', { source, turnId: aiTurn.id });
 
     // If TTS wasn't started during streaming (understanding extraction failed), start it now
-    if (!ttsStarted && settings.voiceTtsEnabled && settings.elevenLabsApiKey) {
-      generateTts(aiTurn.id, data.understanding, settings.elevenLabsApiKey, settings.voiceTtsVoiceId, settings.voiceAutoPlayAi);
+    if (!ttsStarted && settings.voiceTtsEnabled && settings.eigenApiKey) {
+      generateTts(aiTurn.id, data.understanding, settings.eigenApiKey, settings.voiceTtsVoiceId, settings.voiceAutoPlayAi);
     }
   } catch (err) {
     usePlanTalkStore.getState().setError(err instanceof Error ? err.message : 'Analysis failed');
@@ -234,8 +240,7 @@ export async function transcribeRealtimeAndAnalyze(transcriptText: string): Prom
 }
 
 /**
- * Record audio, transcribe via ElevenLabs STT, then analyze.
- * Kept as fallback if WebSocket STT is unavailable.
+ * Record audio, transcribe via Eigen ASR, then analyze.
  */
 export async function transcribeAndAnalyze(audioBlob: Blob, apiKey: string): Promise<void> {
   usePlanTalkStore.getState().setTurnState('transcribing');
@@ -245,7 +250,7 @@ export async function transcribeAndAnalyze(audioBlob: Blob, apiKey: string): Pro
     const text = await transcribeAudio(audioBlob, apiKey);
     await analyzeReflection(text, 'voice');
   } catch (err) {
-    const message = err instanceof ElevenLabsSTTError
+    const message = err instanceof Error
       ? err.message
       : 'Transcription failed. Please try again.';
     usePlanTalkStore.getState().setError(message);

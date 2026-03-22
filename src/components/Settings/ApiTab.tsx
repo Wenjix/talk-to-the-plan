@@ -29,13 +29,6 @@ function getOpenAIKeyStatus(key: string): 'not-set' | 'valid' | 'invalid' {
   return 'invalid';
 }
 
-function getElevenLabsKeyStatus(key: string): 'not-set' | 'valid' | 'invalid' {
-  if (!key) return 'not-set';
-  if (/^[a-f0-9]{32}$/i.test(key)) return 'valid';
-  if (key.length >= 20) return 'valid'; // Some keys differ in format
-  return 'invalid';
-}
-
 const STATUS_LABELS = {
   'not-set': 'Not set',
   valid: 'Valid format',
@@ -105,13 +98,10 @@ function ApiKeyField({ legend, value, onChange, placeholder, ariaLabel, status, 
 }
 
 export function ApiTab({ settings, onUpdate }: { settings: AppSettings; onUpdate: (partial: Partial<AppSettings>) => void }) {
-  const [showElevenLabs, setShowElevenLabs] = useState(false);
-
   const mistralStatus = getMistralKeyStatus(settings.mistralApiKey);
   const geminiStatus = getGeminiKeyStatus(settings.geminiApiKey);
   const anthropicStatus = getAnthropicKeyStatus(settings.anthropicApiKey);
   const openaiStatus = getOpenAIKeyStatus(settings.openaiApiKey);
-  const elevenLabsStatus = getElevenLabsKeyStatus(settings.elevenLabsApiKey);
 
   return (
     <div>
@@ -160,34 +150,6 @@ export function ApiTab({ settings, onUpdate }: { settings: AppSettings; onUpdate
       />
 
       <fieldset className={styles.fieldset}>
-        <legend className={styles.legend}>ElevenLabs API Key</legend>
-        <div className={styles.inputGroup}>
-          <input
-            className={styles.textInput}
-            type={showElevenLabs ? 'text' : 'password'}
-            value={settings.elevenLabsApiKey}
-            onChange={(e) => onUpdate({ elevenLabsApiKey: e.target.value })}
-            placeholder="Enter ElevenLabs API key"
-            aria-label="ElevenLabs API key"
-          />
-          <button
-            type="button"
-            className={styles.toggleButton}
-            onClick={() => setShowElevenLabs((v) => !v)}
-            aria-label={showElevenLabs ? 'Hide API key' : 'Show API key'}
-          >
-            {showElevenLabs ? 'Hide' : 'Show'}
-          </button>
-        </div>
-        <div className={`${styles.statusIndicator} ${statusClass(elevenLabsStatus)}`} data-testid="elevenlabs-key-status">
-          {STATUS_LABELS[elevenLabsStatus]}
-        </div>
-        <p style={{ color: 'var(--text-muted, #999)', fontSize: '0.85rem', margin: '0.25rem 0 0' }}>
-          Voice transcription audio is sent to ElevenLabs when enabled.
-        </p>
-      </fieldset>
-
-      <fieldset className={styles.fieldset}>
         <legend className={styles.legend}>Voice / TTS</legend>
         <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
           <input
@@ -224,13 +186,13 @@ export function ApiTab({ settings, onUpdate }: { settings: AppSettings; onUpdate
           type="text"
           value={settings.voiceTtsVoiceId}
           onChange={(e) => onUpdate({ voiceTtsVoiceId: e.target.value })}
-          placeholder="21m00Tcm4TlvDq8ikWAM (default)"
+          placeholder="Voice ID (Eigen integration pending)"
           disabled={!settings.voiceTtsEnabled}
           aria-label="TTS Voice ID"
           style={{ marginBottom: '0.5rem' }}
         />
         <p style={{ color: 'var(--text-muted, #999)', fontSize: '0.85rem', margin: '0.25rem 0 0' }}>
-          AI responses are synthesized via ElevenLabs when TTS is enabled.
+          Voice powered by Eigen AI (Higgs Audio). Eigen and Boson API key fields will be added with the voice integration.
         </p>
       </fieldset>
     </div>

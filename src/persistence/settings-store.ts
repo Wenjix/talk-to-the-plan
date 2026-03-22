@@ -18,7 +18,6 @@ export const AppSettingsSchema = z.object({
   autoSaveEnabled: z.boolean().default(true),
   animationsEnabled: z.boolean().default(true),
   theme: ThemeSchema,
-  elevenLabsApiKey: z.string().default(''),
   voiceInputMode: z.enum(['hold_to_talk', 'toggle']).default('hold_to_talk'),
   voiceTtsEnabled: z.boolean().default(true),
   voiceAutoPlayAi: z.boolean().default(true),
