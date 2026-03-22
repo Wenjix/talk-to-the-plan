@@ -3,6 +3,13 @@ import type { KeyboardEvent } from 'react';
 import { createSession, explore } from '../../store/actions.ts';
 import styles from './TopicInput.module.css';
 
+const PERSONA_DOTS = [
+  { color: '#7B4FBF', label: 'Expansive' },
+  { color: '#4A90D9', label: 'Analytical' },
+  { color: '#3DAA6D', label: 'Pragmatic' },
+  { color: '#D94F4F', label: 'Socratic' },
+];
+
 export function TopicInput() {
   const [topic, setTopic] = useState('');
   const [loading, setLoading] = useState(false);
@@ -34,31 +41,46 @@ export function TopicInput() {
   return (
     <div className={styles.container}>
       <div className={styles.content}>
-        <h1 className={styles.title}>What would you like to plan?</h1>
-        <p className={styles.subtitle}>
-          Enter a topic or question to explore through multiple AI perspectives.
-        </p>
+        <div className={styles.brandMark}>
+          <span className={styles.diamond}>&#x25C6;</span>
+          PARALLAX
+        </div>
+        <p className={styles.tagline}>See your ideas from every angle</p>
+
         <div className={styles.inputGroup}>
           <textarea
             className={styles.input}
             value={topic}
             onChange={e => setTopic(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="e.g., Should we migrate from monolith to microservices?"
-            rows={3}
+            placeholder="What are you thinking about?"
+            rows={4}
             disabled={loading}
           />
           <div className={styles.footer}>
+            <div className={styles.perspectives}>
+              <div className={styles.dots}>
+                {PERSONA_DOTS.map(d => (
+                  <span
+                    key={d.label}
+                    className={styles.dot}
+                    style={{ background: d.color }}
+                    title={d.label}
+                  />
+                ))}
+              </div>
+              <span className={styles.perspectiveLabel}>4 perspectives</span>
+            </div>
             <span className={styles.charCount}>
-              {topic.trim().length}/10 min
+              {topic.trim().length}/10
             </span>
             {error && <span className={styles.error}>{error}</span>}
             <button
-              className={styles.startBtn}
+              className={styles.exploreBtn}
               onClick={handleSubmit}
               disabled={!isValid || loading}
             >
-              {loading ? 'Starting...' : 'Start Exploring'}
+              {loading ? 'Starting...' : 'Explore \u2192'}
             </button>
           </div>
         </div>
