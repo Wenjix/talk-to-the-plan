@@ -1,37 +1,28 @@
 # Parallax
 
-Think and talk in parallax. An audio-native AI canvas for exploring ideas — speak your thoughts, branch in six directions, and see them from four distinct perspectives. Built for the **Boson AI x Eigen AI Hackathon**.
+**Think and talk in parallax.** An audio-native AI canvas for exploring ideas — speak your thoughts, branch in six directions, and see them from four distinct perspectives.
 
-## What it does
+Built for the **Boson AI x Eigen AI Hackathon**.
 
-Parallax is an interactive planning tool where you explore ideas through a visual graph of questions and insights. You start by entering a topic, and the system generates six follow-up questions along a **Conversation Compass** — clarify, go deeper, challenge, apply, connect, or surprise. From there, you branch out, answer questions, promote key insights, and synthesize everything into a structured plan.
+## The problem
 
-### AI Personas
+AI brainstorming today is a tunnel. One chat. One voice. No peripheral vision. You scroll deeper into the same thread and lose sight of the bigger picture.
 
-Each exploration lane is driven by an AI persona with a distinct thinking style. Personas can be individually mapped to different LLM providers and models via Settings:
+## What Parallax does
 
-| Persona | Style | Default Provider |
-|---------|-------|-----------------|
-| Expansive | Broad, creative, divergent thinking | Mistral |
-| Analytical | Structured, evidence-based, rigorous | Mistral |
-| Pragmatic | Action-oriented, real-world constraints | Anthropic |
-| Socratic | Questioning, dialectic, assumption-testing | Anthropic |
+Parallax turns brainstorming into a visual exploration. Enter a topic and branch out across six paths — clarify, go deeper, challenge, apply, connect, or surprise. Four AI personas think alongside you, each with a distinct style:
 
-### Core Features
+- **Expansive** — big-picture, creative, divergent
+- **Analytical** — structured, evidence-based, rigorous
+- **Pragmatic** — action-oriented, real-world constraints
+- **Socratic** — questioning, assumption-testing
 
-- **Exploration Canvas** — Visual graph (XY Flow) where each node is a question or insight; branch in 6 compass directions via radial menu
-- **Dialogue Mode** — Multi-turn dialectic conversations on any node (up to 20 turns with auto-conclude)
-- **Node Promotion** — Mark key insights with reasons (reframe, actionable, risk, challenge, cross-link) to feed into plan generation
-- **Lane Plans** — Generate structured plans per persona from promoted nodes
-- **Plan Synthesis** — Pairwise map-reduce across lane plans to produce a unified plan that resolves contradictions and surfaces synergies
-- **Talk to Plan** — Voice-driven plan reflection: speak your thoughts about the plan, and the AI analyzes gaps and proposes edits
-- **Vibe Terminal** — Built-in xterm.js terminal with node-pty backend; send any node to the terminal for freeform exploration
-- **Session Management** — Multiple sessions persisted to IndexedDB with auto-save
+Speak directly to any node through voice commands. Promote key insights. Generate a structured plan from everything you've explored.
 
-### Voice Integration (Higgs Audio)
+## Voice integration (Higgs Audio)
 
-- **Eigen AI** (Higgs ASR V3.0 + TTS V2.5) for speech-to-text and text-to-speech in the Talk to Plan modal
-- **Boson AI** (Higgs Audio Understanding V3.5) for voice-driven canvas manipulation — speak to a node through the radial menu to branch, promote insights, or start dialogues
+- **Eigen AI** (Higgs ASR V3.0 + TTS V2.5) — speech-to-text and text-to-speech
+- **Boson AI** (Higgs Audio Understanding V3.5) — voice-driven canvas commands: speak to branch, promote, or start dialogues
 
 ## Setup
 
@@ -42,45 +33,19 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:5173` in your browser.
+Open `http://localhost:5173`. Works without API keys using a built-in demo provider.
 
-The app works without any API keys using a built-in **demo provider** that returns realistic placeholder responses. To use real LLM and voice services, configure API keys via the in-app Settings panel or environment variables.
+## API keys
 
-### API Keys
-
-Keys can be set in two ways (Settings panel takes precedence over env vars):
-
-1. **Settings panel** (gear icon in toolbar) — stored in IndexedDB, persists across sessions
-2. **Environment variables** — copy `.env.example` to `.env` and fill in values
+Configure via the in-app Settings panel (gear icon) or environment variables (copy `.env.example` to `.env`):
 
 | Key | Provider | Purpose |
 |-----|----------|---------|
-| `VITE_MISTRAL_API_KEY` | Mistral | LLM for exploration and plan generation (default provider) |
-| `VITE_ANTHROPIC_API_KEY` | Anthropic | LLM for exploration and plan generation |
-| `VITE_EIGEN_API_KEY` | Eigen AI | Voice transcription (ASR) and text-to-speech (TTS) |
-| `VITE_BOSON_API_KEY` | Boson AI | Audio understanding for voice canvas commands |
+| `VITE_MISTRAL_API_KEY` | Mistral | LLM generation (default) |
+| `VITE_ANTHROPIC_API_KEY` | Anthropic | LLM generation |
+| `VITE_EIGEN_API_KEY` | Eigen AI | Voice transcription + TTS |
+| `VITE_BOSON_API_KEY` | Boson AI | Voice canvas commands |
 
-At minimum, you need one LLM key (Mistral or Anthropic) to use real AI responses. Without any keys, the demo provider is used automatically.
+## Tech stack
 
-## Scripts
-
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start Vite dev server |
-| `npm run dev:full` | Start PTY server + Vite concurrently |
-| `npm run build` | Production build |
-| `npm run test` | Run Vitest test suite |
-| `npm run test:watch` | Run tests in watch mode |
-| `npm run lint` | ESLint check |
-| `npm run format` | Prettier formatting |
-
-## Tech Stack
-
-- **Frontend:** React 19, TypeScript, Vite 7
-- **State:** Zustand (semantic, session, job, view, and plan-talk stores)
-- **Canvas:** XY Flow (@xyflow/react)
-- **Validation:** Zod 4 (schemas for all LLM response types)
-- **Persistence:** IndexedDB (via idb)
-- **Voice:** Eigen AI (Higgs Audio), Boson AI (Higgs Audio Understanding)
-- **Terminal:** xterm.js with node-pty backend
-- **Testing:** Vitest + Testing Library
+React 19, TypeScript, Vite 7, Zustand, XY Flow, Zod 4, IndexedDB, Vitest
