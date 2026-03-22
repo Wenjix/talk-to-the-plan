@@ -174,22 +174,24 @@ describe('DemoProvider', () => {
     const result = await provider.generate('Generate follow-up questions to branch from this');
     expect(() => JSON.parse(result)).not.toThrow();
     const parsed = JSON.parse(result);
-    expect(parsed.questions).toBeDefined();
-    expect(Array.isArray(parsed.questions)).toBe(true);
-    expect(parsed.questions.length).toBeGreaterThan(0);
-    expect(parsed.questions[0]).toHaveProperty('question');
-    expect(parsed.questions[0]).toHaveProperty('pathType');
+    expect(parsed.branches).toBeDefined();
+    expect(Array.isArray(parsed.branches)).toBe(true);
+    expect(parsed.branches.length).toBeGreaterThan(0);
+    expect(parsed.branches[0]).toHaveProperty('question');
+    expect(parsed.branches[0]).toHaveProperty('pathType');
+    expect(parsed.branches[0]).toHaveProperty('quality');
   });
 
   it('generate returns valid JSON for path_questions prompt', async () => {
     const result = await provider.generate('Generate path_questions for the Conversation Compass');
     const parsed = JSON.parse(result);
-    expect(parsed.questions).toBeDefined();
-    expect(parsed.questions.length).toBe(6);
-    const pathTypes = parsed.questions.map((q: { pathType: string }) => q.pathType);
-    expect(pathTypes).toContain('clarify');
-    expect(pathTypes).toContain('go-deeper');
-    expect(pathTypes).toContain('challenge');
+    expect(parsed.paths).toBeDefined();
+    expect(parsed.paths['clarify']).toBeDefined();
+    expect(parsed.paths['go-deeper']).toBeDefined();
+    expect(parsed.paths['challenge']).toBeDefined();
+    expect(parsed.paths['apply']).toBeDefined();
+    expect(parsed.paths['connect']).toBeDefined();
+    expect(parsed.paths['surprise']).toBeDefined();
   });
 
   it('generate returns valid JSON for dialogue_turn prompt', async () => {
