@@ -10,9 +10,19 @@ export interface ChunkResult {
 }
 
 const CHUNK_DURATION_SEC = 4;
+const RMS_SILENCE_THRESHOLD = 0.01;
 const BITS_PER_SAMPLE = 16;
 const NUM_CHANNELS = 1;
 const WAV_HEADER_SIZE = 44;
+
+/** RMS energy of a Float32 audio segment. Used to skip silent chunks. */
+function rmsEnergy(segment: Float32Array): number {
+  let sum = 0;
+  for (let i = 0; i < segment.length; i++) {
+    sum += segment[i] * segment[i];
+  }
+  return Math.sqrt(sum / segment.length);
+}
 
 function float32ToInt16(samples: Float32Array): Int16Array {
   const out = new Int16Array(samples.length);
@@ -78,12 +88,14 @@ export function chunkPcmBuffer(samples: Float32Array, sampleRate: number): Chunk
   const chunkSamples = CHUNK_DURATION_SEC * sampleRate;
   const chunks: AudioChunk[] = [];
 
-  for (let offset = 0, index = 0; offset < samples.length; offset += chunkSamples, index++) {
+  for (let offset = 0; offset < samples.length; offset += chunkSamples) {
     const end = Math.min(offset + chunkSamples, samples.length);
     const segment = samples.subarray(offset, end);
+    if (rmsEnergy(segment) < RMS_SILENCE_THRESHOLD) continue;
+    const chunkIndex = chunks.length;
     const pcm = float32ToInt16(segment);
-    const dataUrl = encodeWavChunk(pcm, sampleRate, index);
-    chunks.push({ index, dataUrl });
+    const dataUrl = encodeWavChunk(pcm, sampleRate, chunkIndex);
+    chunks.push({ index: chunkIndex, dataUrl });
   }
 
   return {

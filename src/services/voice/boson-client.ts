@@ -21,10 +21,9 @@ const PROXY_URL = '/api/boson/v1/chat/completions';
 const MODEL_PRIMARY = 'higgs-audio-understanding-v3.5-Hackathon';
 const MODEL_FALLBACK = 'higgs-audio-understanding-v3-Hackathon';
 const STOP_SEQUENCES = ['<|eot_id|>', '<|endoftext|>', '<|audio_eos|>', '<|im_end|>'];
-// Boson docs show "extra_body": {"skip_special_tokens": false} in the JSON payload.
-// In the OpenAI Python SDK, extra_body is a client abstraction that merges into the
-// top-level body, but for direct fetch calls we nest it as the docs specify.
-const EXTRA_BODY = { extra_body: { skip_special_tokens: false } };
+// The OpenAI Python SDK uses extra_body as a kwarg that merges into the top-level
+// JSON body. For direct fetch, skip_special_tokens belongs at the top level.
+const EXTRA_BODY = { skip_special_tokens: false };
 
 interface BosonMessage {
   role: string;
