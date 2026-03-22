@@ -66,5 +66,8 @@ export function buildVoiceSystemPrompt(
     lines.push('For voice_response messages, respond in Chinese. JSON keys and tool names must remain in English.');
   }
 
+  lines.push('');
+  lines.push('Use Thinking.');
+
   return lines.join('\n');
 }
