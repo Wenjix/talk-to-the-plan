@@ -1,12 +1,22 @@
 import type { Node, Edge } from '@xyflow/react';
-import type { SemanticNode, SemanticEdge, NodeType } from '../core/types';
+import type { SemanticNode, SemanticEdge, NodeType, PathType } from '../core/types';
 import type { ViewNodeState } from './view-store';
 import { getDescendantIds } from './view-store';
 
 export type ExplorationCardNode = Node<SemanticNode, 'explorationCard'>;
 export type PlanCardNode = Node<SemanticNode, 'planCard'>;
 export type RFNode = ExplorationCardNode | PlanCardNode;
-export type RFEdge = Edge<Record<string, never>>;
+export type FudaEdgeData = { pathType?: string; pathAccent?: string };
+export type RFEdge = Edge<FudaEdgeData>;
+
+const PATH_ACCENTS: Record<PathType, string> = {
+  'clarify': '#5b8def',
+  'go-deeper': '#7b4fbf',
+  'challenge': '#d94f4f',
+  'apply': '#4faf7b',
+  'connect': '#d4a017',
+  'surprise': '#e07baf',
+};
 
 export function getComponentType(nodeType: NodeType): string {
   switch (nodeType) {
@@ -67,14 +77,25 @@ export function projectToReactFlow(
       } as RFNode;
     });
 
+  // Build a lookup for target node pathType
+  const nodeMap = new Map(laneNodes.map(n => [n.id, n]));
+
   const edges: RFEdge[] = laneEdges
     .filter(se => !hiddenIds.has(se.sourceNodeId) && !hiddenIds.has(se.targetNodeId))
-    .map(se => ({
-      id: se.id,
-      source: se.sourceNodeId,
-      target: se.targetNodeId,
-      type: 'fudaConnector',
-    }));
+    .map(se => {
+      const targetNode = nodeMap.get(se.targetNodeId);
+      const pathType = targetNode?.pathType;
+      return {
+        id: se.id,
+        source: se.sourceNodeId,
+        target: se.targetNodeId,
+        type: 'fudaConnector',
+        data: {
+          pathType: pathType,
+          pathAccent: pathType ? PATH_ACCENTS[pathType] : undefined,
+        },
+      };
+    });
 
   return { nodes, edges };
 }
