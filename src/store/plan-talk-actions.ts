@@ -7,13 +7,7 @@ import { buildPlanReflectionPrompt } from '../generation/prompts/plan-reflection
 import { PlanReflectionResponseSchema } from '../core/types';
 import type { PlanTalkTurn, PlanSectionKey, StructuredPlan, PlanSection, UnifiedPlan } from '../core/types';
 import { generateId } from '../utils/ids';
-// Temporary stubs until Eigen client is implemented
-async function transcribeAudio(_blob: Blob, _apiKey: string): Promise<string> {
-  throw new Error('Voice transcription not yet implemented — Eigen integration pending');
-}
-async function textToSpeech(_text: string, _apiKey: string, _voiceId?: string): Promise<Blob> {
-  throw new Error('Text-to-speech not yet implemented — Eigen integration pending');
-}
+import { transcribeAudio, EigenSTTError, textToSpeech } from '../services/voice/eigen-client';
 import { audioPlayback } from '../services/voice/audio-playback';
 import { telemetry } from '../services/telemetry/collector';
 
@@ -250,7 +244,7 @@ export async function transcribeAndAnalyze(audioBlob: Blob, apiKey: string): Pro
     const text = await transcribeAudio(audioBlob, apiKey);
     await analyzeReflection(text, 'voice');
   } catch (err) {
-    const message = err instanceof Error
+    const message = err instanceof EigenSTTError
       ? err.message
       : 'Transcription failed. Please try again.';
     usePlanTalkStore.getState().setError(message);

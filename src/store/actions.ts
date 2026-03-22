@@ -22,7 +22,7 @@ import { useSessionStore } from './session-store';
 import { useJobStore } from './job-store';
 import { useViewStore } from './view-store';
 import type { ViewNodeState } from './view-store';
-import { getNewChildPosition, NODE_WIDTH, HORIZONTAL_GAP } from '../utils/layout';
+import { getNewChildPosition } from '../utils/layout';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -256,6 +256,7 @@ export async function answerNode(nodeId: string): Promise<void> {
 export async function branchFromNode(
   nodeId: string,
   pathType: PathType,
+  question?: string,
 ): Promise<void> {
   const parentNode = useSemanticStore.getState().getNode(nodeId);
   if (!parentNode) {
@@ -297,7 +298,7 @@ export async function branchFromNode(
     parentId: parentNode.id,
     nodeType: 'exploration',
     pathType,
-    question: `Exploring "${pathType}" from: ${parentNode.question}`,
+    question: question || `Exploring "${pathType}" from: ${parentNode.question}`,
     fsmState: 'generating',
     promoted: false,
     depth: parentNode.depth + 1,
@@ -642,7 +643,7 @@ export async function runJob(
 
     // Clear the stream buffer now that generation is done
     useViewStore.getState().clearStream(job.targetNodeId);
-  } catch (_error) {
+  } catch {
     const currentJob = useJobStore.getState().getJob(job.id);
     const canRetry =
       !!currentJob && currentJob.attempts + 1 < currentJob.maxAttempts;
