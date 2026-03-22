@@ -1,6 +1,6 @@
 # Parallax
 
-Think and talk in parallax. An audio-native AI canvas for exploring ideas — speak your thoughts, branch in six directions, and see them from four distinct perspectives. Built for the **Boson AI Hackathon**.
+Think and talk in parallax. An audio-native AI canvas for exploring ideas — speak your thoughts, branch in six directions, and see them from four distinct perspectives. Built for the **Boson AI x Eigen AI Hackathon**.
 
 ## What it does
 
