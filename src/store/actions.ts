@@ -480,7 +480,7 @@ export async function runJob(
     // Load API keys from persisted settings
     const settings = await loadSettings();
     const apiKeys = resolveApiKeys(settings);
-    const personaModelConfig = settings.personaModelConfig as PersonaModelConfig;
+    const personaModelConfig = settings.personaModelConfig as unknown as PersonaModelConfig;
 
     // Check online status before attempting generation
     if (!isOnline()) {

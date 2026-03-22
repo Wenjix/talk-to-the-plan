@@ -7,13 +7,6 @@ export interface GenerationProvider {
 
 export type ProviderId = 'mistral' | 'anthropic';
 
-export const PERSONA_PROVIDER_MAP: Record<PersonaId, ProviderId> = {
-  expansive: 'mistral',
-  analytical: 'mistral',
-  pragmatic: 'anthropic',
-  socratic: 'anthropic',
-};
-
 export const PROVIDER_MODELS: Record<ProviderId, string> = {
   mistral: 'mistral-large-2512',
   anthropic: 'claude-sonnet-4-6',

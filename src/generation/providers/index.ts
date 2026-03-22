@@ -7,7 +7,7 @@ import { AnthropicProvider } from './anthropic';
 
 export type { GenerationProvider, PersonaModelConfig } from './types';
 export type { ProviderId, ApiKeys } from './types';
-export { PERSONA_PROVIDER_MAP, DEFAULT_PROVIDER_ID, PROVIDER_MODELS, AVAILABLE_MODELS, DEFAULT_PERSONA_MODEL_CONFIG } from './types';
+export { DEFAULT_PROVIDER_ID, PROVIDER_MODELS, AVAILABLE_MODELS, DEFAULT_PERSONA_MODEL_CONFIG } from './types';
 
 // Cache per (providerId, apiKey, model) tuple
 const providerCache = new Map<string, GenerationProvider>();

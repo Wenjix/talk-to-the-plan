@@ -2,8 +2,6 @@ import { openDB, type IDBPDatabase } from 'idb';
 import type { DBSchema } from 'idb';
 import { z } from 'zod';
 import type { ProviderId, ApiKeys } from '../generation/providers/types';
-import { PersonaIdSchema } from '../core/types/lane';
-
 const SETTINGS_DB_NAME = 'fuda-settings';
 const SETTINGS_DB_VERSION = 1;
 
@@ -24,7 +22,7 @@ export const AppSettingsSchema = z.object({
   voiceAutoPlayAi: z.boolean().default(true),
   voiceTtsVoiceId: z.string().default(''),
   personaModelConfig: z.record(
-    PersonaIdSchema,
+    z.string(),
     z.object({
       providerId: z.enum(['mistral', 'anthropic']),
       modelId: z.string(),
