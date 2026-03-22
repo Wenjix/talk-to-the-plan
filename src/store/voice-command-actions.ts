@@ -1,4 +1,5 @@
 import { useVoiceCommandStore } from './voice-command-store';
+import { useVoiceNoteRecordingStore } from './voice-note-recording-store';
 import { useSemanticStore } from './semantic-store';
 import { useSessionStore } from './session-store';
 import { loadSettings, resolveEigenApiKey, resolveBosonApiKey } from '../persistence/settings-store';
@@ -9,6 +10,7 @@ import { buildVoiceSystemPrompt } from '../services/voice/voice-prompt';
 import { executeToolCall } from '../services/voice/tool-executor';
 import { textToSpeech } from '../services/voice/eigen-client';
 import { audioPlayback } from '../services/voice/audio-playback';
+import { useVoiceChatStore } from './voice-chat-store';
 
 let activeRecorder: BufferedPCMRecorder | null = null;
 let startPromise: Promise<void> | null = null;
@@ -17,6 +19,9 @@ let cancelledDuringStart = false;
 export async function startVoiceCommand(nodeId: string): Promise<void> {
   const store = useVoiceCommandStore.getState();
   if (store.isRecording || store.isProcessing || startPromise || activeRecorder) return;
+
+  // Cross-check: don't start if voice note recording is active
+  if (useVoiceNoteRecordingStore.getState().isRecording) return;
 
   cancelledDuringStart = false;
 
@@ -98,16 +103,39 @@ export async function stopAndProcessVoiceCommand(): Promise<void> {
       { audioChunks: chunkResult.chunks, systemPrompt },
       bosonKey,
     );
+    console.log('[VoiceCmd] boson response:', responseText.slice(0, 300));
 
     const result = await executeToolCall(responseText, targetNodeId);
+    console.log('[VoiceCmd] tool result:', result.toolName, result.success, result.message.slice(0, 200));
     useVoiceCommandStore.getState().setResult(result);
 
-    // Non-blocking TTS confirmation
+    // Store turns in voice chat history
+    const chatStore = useVoiceChatStore.getState();
+    chatStore.addTurn({ nodeId: targetNodeId, speaker: 'user', text: 'Voice command' });
+    const aiTurnId = chatStore.addTurn({
+      nodeId: targetNodeId,
+      speaker: 'ai',
+      text: result.message,
+      toolName: result.toolName,
+    });
+    chatStore.openPanel(targetNodeId);
+
+    // Non-blocking TTS with blob storage for replay
     const eigenKey = resolveEigenApiKey(settings);
     if (eigenKey && settings.voiceTtsEnabled) {
-      textToSpeech(result.message, eigenKey, settings.voiceTtsVoiceId || undefined)
-        .then((blob) => audioPlayback.play(blob))
-        .catch(() => {});
+      chatStore.setTtsTurnStatus(aiTurnId, 'loading');
+      const ttsText = result.message.length > 500
+        ? result.message.slice(0, 497) + '...'
+        : result.message;
+      textToSpeech(ttsText, eigenKey, settings.voiceTtsVoiceId || undefined)
+        .then((blob) => {
+          chatStore.setTtsBlob(aiTurnId, blob);
+          chatStore.setTtsTurnStatus(aiTurnId, 'ready');
+          audioPlayback.play(blob);
+        })
+        .catch(() => {
+          chatStore.setTtsTurnStatus(aiTurnId, 'failed');
+        });
     }
   } catch (err) {
     useVoiceCommandStore.getState().setError(

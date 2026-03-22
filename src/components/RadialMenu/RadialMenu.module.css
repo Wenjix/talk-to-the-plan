@@ -181,3 +181,24 @@
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* Dimmed state during voice note recording */
+.dimmed {
+  opacity: 0.25;
+  pointer-events: none;
+  filter: grayscale(0.5);
+}
+
+/* Duration timer below center mic during voice note recording */
+.noteTimer {
+  position: absolute;
+  top: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--severity-high, #ef4444);
+  pointer-events: none;
+  white-space: nowrap;
+}

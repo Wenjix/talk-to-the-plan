@@ -1,36 +1,40 @@
 import { useEffect, useRef, useCallback, useMemo, useState } from 'react';
 import { useRadialMenuStore } from '../../store/radial-menu-store';
 import { useVoiceCommandStore } from '../../store/voice-command-store';
+import { useVoiceNoteRecordingStore } from '../../store/voice-note-recording-store';
 import { branchFromNode } from '../../store/actions';
 import { startVoiceCommand, stopAndProcessVoiceCommand, cancelVoiceCommand } from '../../store/voice-command-actions';
+import { startVoiceNoteRecording, stopVoiceNoteRecording, cancelVoiceNoteRecording } from '../../store/voice-note-actions';
 import { loadSettings, resolveBosonApiKey } from '../../persistence/settings-store';
 import { useToastStore } from '../../store/toast-store';
 import type { PathType } from '../../core/types';
 import styles from './RadialMenu.module.css';
 
-const RADIUS = 110;
+const RADIUS = 140;
 const BUTTON_SIZE = 46;
 const BUTTON_RADIUS = BUTTON_SIZE / 2;
 const BUFFER = 8;
 const MIC_SIZE = 48;
 
 interface PathConfig {
-  path: PathType;
+  path: PathType | 'voice-note';
   label: string;
   hint: string;
   angle: number; // degrees — distributed as bottom arc
   accent: string;
-  group: 'explore' | 'evaluate';
+  group: 'explore' | 'evaluate' | 'annotate';
+  type: 'branch' | 'voiceNote';
 }
 
-// Bottom semicircle arc: 200° to 340° (6 buttons evenly spaced at 28° intervals)
+// Bottom semicircle arc: 200° to 344° (7 buttons evenly spaced at 24° intervals)
 const PATHS: PathConfig[] = [
-  { path: 'clarify',    label: 'Clarify',    hint: 'Sharpen the question',    angle: 200, accent: '#5b8def', group: 'explore' },
-  { path: 'go-deeper',  label: 'Deeper',     hint: 'Dig into specifics',      angle: 228, accent: '#7b4fbf', group: 'explore' },
-  { path: 'surprise',   label: 'Surprise',   hint: 'Unexpected angle',        angle: 256, accent: '#e07baf', group: 'explore' },
-  { path: 'challenge',  label: 'Challenge',  hint: 'Push back on this',       angle: 284, accent: '#d94f4f', group: 'evaluate' },
-  { path: 'apply',      label: 'Apply',      hint: 'Make it actionable',      angle: 312, accent: '#4faf7b', group: 'evaluate' },
-  { path: 'connect',    label: 'Connect',    hint: 'Link to other ideas',     angle: 340, accent: '#d4a017', group: 'evaluate' },
+  { path: 'clarify',    label: 'Clarify',    hint: 'Sharpen the question',    angle: 200, accent: '#5b8def', group: 'explore',   type: 'branch' },
+  { path: 'go-deeper',  label: 'Deeper',     hint: 'Dig into specifics',      angle: 224, accent: '#7b4fbf', group: 'explore',   type: 'branch' },
+  { path: 'surprise',   label: 'Surprise',   hint: 'Unexpected angle',        angle: 248, accent: '#e07baf', group: 'explore',   type: 'branch' },
+  { path: 'challenge',  label: 'Challenge',  hint: 'Push back on this',       angle: 272, accent: '#d94f4f', group: 'evaluate',  type: 'branch' },
+  { path: 'apply',      label: 'Apply',      hint: 'Make it actionable',      angle: 296, accent: '#4faf7b', group: 'evaluate',  type: 'branch' },
+  { path: 'connect',    label: 'Connect',    hint: 'Link to other ideas',     angle: 320, accent: '#d4a017', group: 'evaluate',  type: 'branch' },
+  { path: 'voice-note', label: 'Note',       hint: 'Attach voice note',       angle: 344, accent: '#e67e22', group: 'annotate',  type: 'voiceNote' },
 ];
 
 function clamp(min: number, val: number, max: number) {
@@ -50,6 +54,9 @@ export function RadialMenu() {
   const lastResult = useVoiceCommandStore(s => s.lastResult);
   const voiceError = useVoiceCommandStore(s => s.error);
 
+  const isRecordingNote = useVoiceNoteRecordingStore(s => s.isRecording);
+  const noteElapsedMs = useVoiceNoteRecordingStore(s => s.elapsedMs);
+
   const [hasBosonKey, setHasBosonKey] = useState(false);
   const micPressedRef = useRef(false);
 
@@ -61,7 +68,7 @@ export function RadialMenu() {
       : 'idle';
 
   const isDisabled = targetFsmState !== 'resolved';
-  const micDisabled = isDisabled || !hasBosonKey || isProcessing;
+  const micDisabled = isDisabled || !hasBosonKey || isProcessing || isRecordingNote;
 
   const margin = RADIUS + BUTTON_RADIUS + BUFFER;
 
@@ -112,11 +119,33 @@ export function RadialMenu() {
     }
   }, [voiceError]);
 
-  const handleSelect = useCallback((pathType: PathType) => {
+  const handleSelect = useCallback((p: PathConfig) => {
     if (isDisabled || !targetNodeId) return;
-    void branchFromNode(targetNodeId, pathType);
+    if (p.type === 'voiceNote') {
+      // Guard: don't start voice note if voice command is active
+      if (isRecording || isProcessing) return;
+      void startVoiceNoteRecording(targetNodeId);
+      return; // don't close — menu transforms to recording state
+    }
+    void branchFromNode(targetNodeId, p.path as PathType);
     close();
-  }, [isDisabled, targetNodeId, close]);
+  }, [isDisabled, targetNodeId, close, isRecording, isProcessing]);
+
+  // Auto-save voice note on backdrop close
+  const handleBackdropClose = useCallback(() => {
+    if (isRecordingNote) {
+      void stopVoiceNoteRecording();
+    }
+    close();
+  }, [close, isRecordingNote]);
+
+  // Handle stop button click during voice note recording
+  const handleNoteStop = useCallback(() => {
+    void stopVoiceNoteRecording().then(() => {
+      useToastStore.getState().addToast('Voice note saved', 'success');
+      setTimeout(close, 800);
+    });
+  }, [close]);
 
   const handleMicPointerDown = useCallback(() => {
     if (micDisabled || !targetNodeId) return;
@@ -142,7 +171,9 @@ export function RadialMenu() {
     if (!isOpen) return;
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (isRecording) {
+        if (isRecordingNote) {
+          cancelVoiceNoteRecording();
+        } else if (isRecording) {
           cancelVoiceCommand();
         }
         close();
@@ -150,7 +181,7 @@ export function RadialMenu() {
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [isOpen, close, isRecording]);
+  }, [isOpen, close, isRecording, isRecordingNote]);
 
   // Focus first button on open
   useEffect(() => {
@@ -159,6 +190,13 @@ export function RadialMenu() {
       first?.focus();
     }
   }, [isOpen]);
+
+  const noteTimerLabel = useMemo(() => {
+    const secs = Math.floor(noteElapsedMs / 1000);
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m}:${String(s).padStart(2, '0')}`;
+  }, [noteElapsedMs]);
 
   if (!isOpen) return null;
 
@@ -182,7 +220,7 @@ export function RadialMenu() {
 
   return (
     <>
-      <div className={styles.backdrop} onClick={close} />
+      <div className={styles.backdrop} onClick={handleBackdropClose} />
 
       <div
         ref={containerRef}
@@ -190,28 +228,50 @@ export function RadialMenu() {
         role="menu"
         style={{ left: cx, top: cy }}
       >
-        {/* Center mic button */}
-        <button
-          className={`${styles.micCenter} ${micStateClass}`}
-          style={{
-            width: MIC_SIZE,
-            height: MIC_SIZE,
-            left: -MIC_SIZE / 2,
-            top: -MIC_SIZE / 2,
-          }}
-          disabled={micDisabled}
-          type="button"
-          aria-label={micAriaLabel}
-          onPointerDown={handleMicPointerDown}
-          onPointerUp={handleMicPointerUp}
-          onPointerLeave={handleMicPointerLeave}
-        >
-          {isProcessing ? (
-            <span className={styles.micSpinner} />
-          ) : (
-            '\uD83C\uDF99'
-          )}
-        </button>
+        {/* Center button: mic (voice command) or stop (voice note recording) */}
+        {isRecordingNote ? (
+          <button
+            className={`${styles.micCenter} ${styles.micRecording}`}
+            style={{
+              width: MIC_SIZE,
+              height: MIC_SIZE,
+              left: -MIC_SIZE / 2,
+              top: -MIC_SIZE / 2,
+            }}
+            type="button"
+            aria-label={`Recording voice note — ${noteTimerLabel} — click to stop`}
+            onClick={handleNoteStop}
+          >
+            {'\u25A0'}
+          </button>
+        ) : (
+          <button
+            className={`${styles.micCenter} ${micStateClass}`}
+            style={{
+              width: MIC_SIZE,
+              height: MIC_SIZE,
+              left: -MIC_SIZE / 2,
+              top: -MIC_SIZE / 2,
+            }}
+            disabled={micDisabled}
+            type="button"
+            aria-label={micAriaLabel}
+            onPointerDown={handleMicPointerDown}
+            onPointerUp={handleMicPointerUp}
+            onPointerLeave={handleMicPointerLeave}
+          >
+            {isProcessing ? (
+              <span className={styles.micSpinner} />
+            ) : (
+              '\uD83C\uDF99'
+            )}
+          </button>
+        )}
+
+        {/* Duration timer below center during voice note recording */}
+        {isRecordingNote && (
+          <span className={styles.noteTimer}>{noteTimerLabel}</span>
+        )}
 
         {PATHS.map((p, i) => {
           const rad = (p.angle * Math.PI) / 180;
@@ -222,7 +282,7 @@ export function RadialMenu() {
             <button
               key={p.path}
               role="menuitem"
-              className={`${styles.button} ${isDisabled ? styles.disabled : ''}`}
+              className={`${styles.button} ${isDisabled ? styles.disabled : ''} ${isRecordingNote ? styles.dimmed : ''}`}
               style={{
                 left: x,
                 top: y,
@@ -239,11 +299,11 @@ export function RadialMenu() {
                   });
                 }
               }}
-              aria-disabled={isDisabled}
+              aria-disabled={isDisabled || isRecordingNote}
               aria-label={`${p.label}: ${p.hint}`}
               title={p.hint}
               tabIndex={0}
-              onClick={() => handleSelect(p.path)}
+              onClick={() => !isRecordingNote && handleSelect(p)}
             >
               {p.label}
             </button>
