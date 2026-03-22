@@ -395,7 +395,7 @@ export function buildVoiceSystemPrompt(
 
 Prompt structure:
 ```
-You are a voice-driven planning assistant for the FUDA exploration canvas.
+You are a voice-driven planning assistant for the Parallax exploration canvas.
 The user is examining a specific node and speaking a command.
 
 Session topic: {sessionTopic}
