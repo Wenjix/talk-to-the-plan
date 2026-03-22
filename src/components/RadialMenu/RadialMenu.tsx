@@ -8,26 +8,29 @@ import { useToastStore } from '../../store/toast-store';
 import type { PathType } from '../../core/types';
 import styles from './RadialMenu.module.css';
 
-const RADIUS = 80;
-const BUTTON_SIZE = 44;
+const RADIUS = 110;
+const BUTTON_SIZE = 46;
 const BUTTON_RADIUS = BUTTON_SIZE / 2;
 const BUFFER = 8;
-const MIC_SIZE = 52;
+const MIC_SIZE = 48;
 
 interface PathConfig {
   path: PathType;
   label: string;
-  angle: number; // degrees
+  hint: string;
+  angle: number; // degrees — distributed as bottom arc
   accent: string;
+  group: 'explore' | 'evaluate';
 }
 
+// Bottom semicircle arc: 200° to 340° (6 buttons evenly spaced at 28° intervals)
 const PATHS: PathConfig[] = [
-  { path: 'clarify',    label: 'Clarify',    angle: 270, accent: '#5b8def' },
-  { path: 'go-deeper',  label: 'Deeper',     angle: 330, accent: '#7b4fbf' },
-  { path: 'challenge',  label: 'Challenge',  angle: 30,  accent: '#d94f4f' },
-  { path: 'apply',      label: 'Apply',      angle: 90,  accent: '#4faf7b' },
-  { path: 'connect',    label: 'Connect',    angle: 150, accent: '#d4a017' },
-  { path: 'surprise',   label: 'Surprise',   angle: 210, accent: '#e07baf' },
+  { path: 'clarify',    label: 'Clarify',    hint: 'Sharpen the question',    angle: 200, accent: '#5b8def', group: 'explore' },
+  { path: 'go-deeper',  label: 'Deeper',     hint: 'Dig into specifics',      angle: 228, accent: '#7b4fbf', group: 'explore' },
+  { path: 'surprise',   label: 'Surprise',   hint: 'Unexpected angle',        angle: 256, accent: '#e07baf', group: 'explore' },
+  { path: 'challenge',  label: 'Challenge',  hint: 'Push back on this',       angle: 284, accent: '#d94f4f', group: 'evaluate' },
+  { path: 'apply',      label: 'Apply',      hint: 'Make it actionable',      angle: 312, accent: '#4faf7b', group: 'evaluate' },
+  { path: 'connect',    label: 'Connect',    hint: 'Link to other ideas',     angle: 340, accent: '#d4a017', group: 'evaluate' },
 ];
 
 function clamp(min: number, val: number, max: number) {
@@ -227,7 +230,7 @@ export function RadialMenu() {
                 height: BUTTON_SIZE,
                 backgroundColor: p.accent,
                 borderColor: p.accent,
-                transitionDelay: `${i * 30}ms`,
+                transitionDelay: `${i * 40}ms`,
               }}
               ref={(el) => {
                 if (el) {
@@ -237,7 +240,8 @@ export function RadialMenu() {
                 }
               }}
               aria-disabled={isDisabled}
-              aria-label={p.label}
+              aria-label={`${p.label}: ${p.hint}`}
+              title={p.hint}
               tabIndex={0}
               onClick={() => handleSelect(p.path)}
             >
