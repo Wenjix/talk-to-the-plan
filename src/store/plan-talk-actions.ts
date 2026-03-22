@@ -10,6 +10,7 @@ import { generateId } from '../utils/ids';
 import { transcribeAudio, EigenSTTError, textToSpeech } from '../services/voice/eigen-client';
 import { audioPlayback } from '../services/voice/audio-playback';
 import { telemetry } from '../services/telemetry/collector';
+import { stripMarkdown } from '../utils/strip-markdown';
 
 /**
  * Try to extract a complete "understanding" value from partial JSON.
@@ -339,7 +340,7 @@ async function generateTts(
 ): Promise<void> {
   usePlanTalkStore.getState().setTtsTurnStatus(turnId, 'loading');
   try {
-    const blob = await textToSpeech(text, apiKey, voiceId || undefined);
+    const blob = await textToSpeech(stripMarkdown(text), apiKey, voiceId || undefined);
     // Guard: if the store was cleared (modal closed) while awaiting, bail out
     if (!usePlanTalkStore.getState().turns.find((t) => t.id === turnId)) return;
     usePlanTalkStore.getState().setTtsBlob(turnId, blob);

@@ -37,22 +37,18 @@ interface ParsedToolCall {
 }
 
 function parseToolCall(responseText: string): ParsedToolCall | null {
-  // Try XML-wrapped format first
-  const xmlMatch = responseText.match(/<tool_call>([\s\S]*?)<\/tool_call>/);
-  let jsonStr: string;
+  // Strip all wrapper tags — Boson may omit closing tags
+  const cleaned = responseText
+    .replace(/<think>[\s\S]*?<\/think>/g, '')
+    .replace(/<\/?tool_call>/g, '')
+    .trim();
 
-  if (xmlMatch) {
-    jsonStr = xmlMatch[1].trim();
-  } else {
-    // Strip think tags, then extract JSON object from mixed text
-    const cleaned = responseText.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
-    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) return null;
-    jsonStr = jsonMatch[0];
-  }
+  // Extract JSON object from mixed text
+  const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) return null;
 
   try {
-    const parsed = JSON.parse(jsonStr);
+    const parsed = JSON.parse(jsonMatch[0]);
     if (typeof parsed.name !== 'string') return null;
 
     // Support both OpenAI-style { name, arguments: {...} } and flat-field
@@ -97,6 +93,7 @@ export async function executeToolCall(
   if (!toolCall) {
     const cleaned = responseText
       .replace(/<think>[\s\S]*?<\/think>/g, '')
+      .replace(/<\/?tool_call>/g, '')
       .replace(/\{[\s\S]*\}/g, '')
       .trim();
     return {

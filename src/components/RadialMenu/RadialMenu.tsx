@@ -86,17 +86,6 @@ export function RadialMenu() {
     });
   }, [isOpen]);
 
-  // Auto-close after successful result
-  useEffect(() => {
-    if (lastResult?.success) {
-      const timer = setTimeout(() => {
-        useVoiceCommandStore.getState().clear();
-        close();
-      }, 1200);
-      return () => clearTimeout(timer);
-    }
-  }, [lastResult, close]);
-
   // Toast and auto-clear on failed result
   useEffect(() => {
     if (lastResult && !lastResult.success) {
@@ -131,21 +120,12 @@ export function RadialMenu() {
     close();
   }, [isDisabled, targetNodeId, close, isRecording, isProcessing]);
 
-  // Auto-save voice note on backdrop close
-  const handleBackdropClose = useCallback(() => {
-    if (isRecordingNote) {
-      void stopVoiceNoteRecording();
-    }
-    close();
-  }, [close, isRecordingNote]);
-
   // Handle stop button click during voice note recording
   const handleNoteStop = useCallback(() => {
     void stopVoiceNoteRecording().then(() => {
       useToastStore.getState().addToast('Voice note saved', 'success');
-      setTimeout(close, 800);
     });
-  }, [close]);
+  }, []);
 
   const handleMicPointerDown = useCallback(() => {
     if (micDisabled || !targetNodeId) return;
@@ -220,8 +200,6 @@ export function RadialMenu() {
 
   return (
     <>
-      <div className={styles.backdrop} onClick={handleBackdropClose} />
-
       <div
         ref={containerRef}
         className={styles.container}

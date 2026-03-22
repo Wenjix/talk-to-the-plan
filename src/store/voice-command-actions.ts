@@ -11,6 +11,7 @@ import { executeToolCall } from '../services/voice/tool-executor';
 import { textToSpeech } from '../services/voice/eigen-client';
 import { audioPlayback } from '../services/voice/audio-playback';
 import { useVoiceChatStore } from './voice-chat-store';
+import { stripMarkdown } from '../utils/strip-markdown';
 
 let activeRecorder: BufferedPCMRecorder | null = null;
 let startPromise: Promise<void> | null = null;
@@ -124,9 +125,10 @@ export async function stopAndProcessVoiceCommand(): Promise<void> {
     const eigenKey = resolveEigenApiKey(settings);
     if (eigenKey && settings.voiceTtsEnabled) {
       chatStore.setTtsTurnStatus(aiTurnId, 'loading');
-      const ttsText = result.message.length > 500
-        ? result.message.slice(0, 497) + '...'
-        : result.message;
+      const cleaned = stripMarkdown(result.message);
+      const ttsText = cleaned.length > 500
+        ? cleaned.slice(0, 497) + '...'
+        : cleaned;
       textToSpeech(ttsText, eigenKey, settings.voiceTtsVoiceId || undefined)
         .then((blob) => {
           chatStore.setTtsBlob(aiTurnId, blob);
