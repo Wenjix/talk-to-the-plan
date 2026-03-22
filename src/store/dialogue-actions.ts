@@ -9,7 +9,9 @@ import { buildDialoguePrompt, buildConcludeSynthesisPrompt } from '../generation
 import { getProviderForPersona } from '../generation/providers';
 import type { ApiKeys } from '../generation/providers/types';
 import { parseAndValidate } from '../core/validation/schema-gates';
-import { loadSettings, resolveApiKeys } from '../persistence/settings-store';
+import { loadSettings, resolveApiKeys, resolveEigenApiKey } from '../persistence/settings-store';
+import { textToSpeech } from '../services/voice/eigen-client';
+import { audioPlayback } from '../services/voice/audio-playback';
 
 export const MAX_DIALOGUE_TURNS = 20;
 
@@ -17,7 +19,7 @@ export const MAX_DIALOGUE_TURNS = 20;
  * Add a user turn to the dialogue.
  * If the dialogue has reached MAX_DIALOGUE_TURNS, auto-concludes instead.
  */
-export function addUserTurn(nodeId: string, content: string, mode: DialecticMode): DialogueTurn {
+export function addUserTurn(nodeId: string, content: string, mode: DialecticMode, source?: 'voice' | 'typed'): DialogueTurn {
   const session = useSessionStore.getState().session;
   if (!session) throw new Error('No active session');
 
@@ -39,6 +41,7 @@ export function addUserTurn(nodeId: string, content: string, mode: DialecticMode
     speaker: 'user',
     dialecticMode: mode,
     content,
+    ...(source ? { source } : {}),
     createdAt: new Date().toISOString(),
   };
 
@@ -147,7 +150,46 @@ export async function generateDialogueResponse(
   };
 
   useSemanticStore.getState().addDialogueTurn(aiTurn);
+
+  // Non-blocking TTS generation for AI turn
+  const eigenKey = resolveEigenApiKey(settings);
+  if (eigenKey && settings.voiceTtsEnabled) {
+    textToSpeech(aiTurn.content, eigenKey, settings.voiceTtsVoiceId || undefined)
+      .then((blob) => {
+        // Store blob for replay and auto-play (bounded cache)
+        boundedTtsSet(aiTurn.id, blob);
+        audioPlayback.play(blob).catch(() => {});
+      })
+      .catch(() => {});
+  }
+
   return aiTurn;
+}
+
+/** TTS blob cache for dialogue turns, keyed by turn ID. Bounded to last 20 entries. */
+const MAX_TTS_CACHE = 20;
+export const dialogueTtsBlobs = new Map<string, Blob>();
+
+function boundedTtsSet(key: string, blob: Blob): void {
+  dialogueTtsBlobs.set(key, blob);
+  if (dialogueTtsBlobs.size > MAX_TTS_CACHE) {
+    // Remove oldest entry (first key in insertion order)
+    const oldest = dialogueTtsBlobs.keys().next().value;
+    if (oldest !== undefined) dialogueTtsBlobs.delete(oldest);
+  }
+}
+
+/** Replay TTS for a dialogue turn. */
+export function replayDialogueTts(turnId: string): void {
+  const blob = dialogueTtsBlobs.get(turnId);
+  if (blob) {
+    audioPlayback.play(blob).catch(() => {});
+  }
+}
+
+/** Clear TTS cache (call on session switch or dialogue panel close). */
+export function clearDialogueTtsCache(): void {
+  dialogueTtsBlobs.clear();
 }
 
 /**

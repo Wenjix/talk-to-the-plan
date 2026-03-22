@@ -25,6 +25,9 @@ export const SuggestedResponseSchema = z.object({
 });
 export type SuggestedResponse = z.infer<typeof SuggestedResponseSchema>;
 
+export const DialogueTurnSourceSchema = z.enum(['voice', 'typed']);
+export type DialogueTurnSource = z.infer<typeof DialogueTurnSourceSchema>;
+
 export const DialogueTurnSchema = z.object({
   id: UUIDSchema,
   sessionId: UUIDSchema,
@@ -34,6 +37,7 @@ export const DialogueTurnSchema = z.object({
   dialecticMode: DialecticModeSchema,
   turnType: TurnTypeSchema.optional(),
   content: z.string().min(1),
+  source: DialogueTurnSourceSchema.optional(),
   suggestedResponses: z.array(SuggestedResponseSchema).max(3).optional(),
   createdAt: ISODateTimeSchema,
 });

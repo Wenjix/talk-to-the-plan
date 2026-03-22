@@ -2,6 +2,10 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import type { DialecticMode, DialogueTurn } from '../../core/types';
 import { useSemanticStore } from '../../store/semantic-store';
 import { useViewStore } from '../../store/view-store';
+import { dialogueTtsBlobs, replayDialogueTts } from '../../store/dialogue-actions';
+import { VoiceRecorder, MicPermissionError } from '../../services/voice/media-recorder';
+import { transcribeAudio } from '../../services/voice/eigen-client';
+import { loadSettings, resolveEigenApiKey } from '../../persistence/settings-store';
 import styles from './DialoguePanel.module.css';
 
 const MODES: Array<{ id: DialecticMode; label: string; desc: string }> = [
@@ -14,7 +18,7 @@ const MODES: Array<{ id: DialecticMode; label: string; desc: string }> = [
 interface DialoguePanelProps {
   nodeId: string;
   onClose: () => void;
-  onSendMessage: (content: string, mode: DialecticMode) => void;
+  onSendMessage: (content: string, mode: DialecticMode, source?: 'voice' | 'typed') => void;
   onConclude: () => void;
   isGenerating: boolean;
 }
@@ -23,6 +27,11 @@ export function DialoguePanel({ nodeId, onClose, onSendMessage, onConclude, isGe
   const [mode, setMode] = useState<DialecticMode>('socratic');
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [isVoiceRecording, setIsVoiceRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [voiceElapsedMs, setVoiceElapsedMs] = useState(0);
+  const recorderRef = useRef<VoiceRecorder | null>(null);
+  const elapsedTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Get dialogue turns from semantic store
   // NOTE: The semantic store may not have getDialogueTurnsByNode yet (it's being added by another agent).
@@ -47,7 +56,7 @@ export function DialoguePanel({ nodeId, onClose, onSendMessage, onConclude, isGe
     const trimmed = input.trim();
     if (!trimmed || isGenerating) return;
     setInput('');
-    onSendMessage(trimmed, mode);
+    onSendMessage(trimmed, mode, 'typed');
   }, [input, mode, isGenerating, onSendMessage]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -58,8 +67,86 @@ export function DialoguePanel({ nodeId, onClose, onSendMessage, onConclude, isGe
   }, [handleSend]);
 
   const handleSuggestedClick = useCallback((text: string) => {
-    onSendMessage(text, mode);
+    onSendMessage(text, mode, 'typed');
   }, [mode, onSendMessage]);
+
+  // Voice recording: toggle
+  const handleMicToggle = useCallback(async () => {
+    if (isVoiceRecording) {
+      // Stop recording
+      if (!recorderRef.current) return;
+      const recorder = recorderRef.current;
+      recorderRef.current = null;
+      if (elapsedTimerRef.current) {
+        clearInterval(elapsedTimerRef.current);
+        elapsedTimerRef.current = null;
+      }
+      setIsVoiceRecording(false);
+      setIsTranscribing(true);
+
+      try {
+        const blob = await recorder.stop();
+        recorder.destroy();
+
+        const settings = await loadSettings();
+        const eigenKey = resolveEigenApiKey(settings);
+        if (!eigenKey) {
+          setIsTranscribing(false);
+          return;
+        }
+
+        const transcript = await transcribeAudio(blob, eigenKey);
+        setIsTranscribing(false);
+        if (transcript.trim()) {
+          onSendMessage(transcript.trim(), mode, 'voice');
+        }
+      } catch {
+        setIsTranscribing(false);
+        recorderRef.current?.destroy();
+        recorderRef.current = null;
+      }
+    } else {
+      // Start recording
+      const recorder = new VoiceRecorder();
+      try {
+        await recorder.start();
+        recorderRef.current = recorder;
+        setIsVoiceRecording(true);
+        setVoiceElapsedMs(0);
+        elapsedTimerRef.current = setInterval(() => {
+          if (recorderRef.current) {
+            setVoiceElapsedMs(recorderRef.current.getElapsedMs());
+          }
+        }, 100);
+      } catch (err) {
+        recorder.destroy();
+        if (err instanceof MicPermissionError) {
+          console.error('Dialogue: microphone permission denied');
+        }
+      }
+    }
+  }, [isVoiceRecording, mode, onSendMessage]);
+
+  // Cleanup recorder on unmount
+  useEffect(() => {
+    return () => {
+      if (recorderRef.current) {
+        recorderRef.current.destroy();
+        recorderRef.current = null;
+      }
+      if (elapsedTimerRef.current) {
+        clearInterval(elapsedTimerRef.current);
+        elapsedTimerRef.current = null;
+      }
+    };
+  }, []);
+
+  const voiceTimerLabel = (() => {
+    const secs = Math.floor(voiceElapsedMs / 1000);
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m}:${String(s).padStart(2, '0')}`;
+  })();
 
   return (
     <div className={styles.panel}>
@@ -91,6 +178,16 @@ export function DialoguePanel({ nodeId, onClose, onSendMessage, onConclude, isGe
               {turn.turnType && <span className={styles.turnType}>{turn.turnType}</span>}
             </div>
             <div className={styles.turnContent}>{turn.content}</div>
+            {/* TTS replay button for AI turns */}
+            {turn.speaker === 'ai' && dialogueTtsBlobs.has(turn.id) && (
+              <button
+                className={styles.replayBtn}
+                onClick={() => replayDialogueTts(turn.id)}
+                title="Replay"
+              >
+                {'\u25B6 Replay'}
+              </button>
+            )}
             {/* Suggested responses after AI turns */}
             {turn.speaker === 'ai' && turn.suggestedResponses && turn.suggestedResponses.length > 0 && (
               <div className={styles.suggestions}>
@@ -134,9 +231,9 @@ export function DialoguePanel({ nodeId, onClose, onSendMessage, onConclude, isGe
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Type your response..."
+          placeholder={isTranscribing ? 'Transcribing...' : 'Type your response...'}
           rows={2}
-          disabled={isGenerating}
+          disabled={isGenerating || isVoiceRecording || isTranscribing}
         />
         <div className={styles.inputActions}>
           <button
@@ -146,13 +243,23 @@ export function DialoguePanel({ nodeId, onClose, onSendMessage, onConclude, isGe
           >
             Conclude
           </button>
-          <button
-            className={styles.sendBtn}
-            onClick={handleSend}
-            disabled={!input.trim() || isGenerating}
-          >
-            Send
-          </button>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <button
+              className={`${styles.micBtn} ${isVoiceRecording ? styles.micBtnRecording : ''}`}
+              onClick={handleMicToggle}
+              disabled={isGenerating || isTranscribing}
+              title={isVoiceRecording ? `Recording ${voiceTimerLabel} — click to stop` : 'Speak your response'}
+            >
+              {isTranscribing ? '...' : isVoiceRecording ? `\u25A0 ${voiceTimerLabel}` : '\uD83C\uDF99'}
+            </button>
+            <button
+              className={styles.sendBtn}
+              onClick={handleSend}
+              disabled={!input.trim() || isGenerating}
+            >
+              Send
+            </button>
+          </div>
         </div>
       </div>
     </div>

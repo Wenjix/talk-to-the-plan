@@ -242,3 +242,57 @@
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+/* Voice mic button */
+.micBtn {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--dialogue-border);
+  background: var(--bg-secondary);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.micBtn:hover:not(:disabled) {
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
+
+.micBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.micBtnRecording {
+  border-color: var(--severity-high, #ef4444);
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--severity-high, #ef4444);
+  animation: dialogueMicPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes dialogueMicPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.3); }
+  50% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+}
+
+/* TTS replay button on AI turns */
+.replayBtn {
+  margin-top: 6px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--dialogue-border);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.65rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.replayBtn:hover {
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
