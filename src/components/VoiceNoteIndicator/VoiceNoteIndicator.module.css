@@ -1,0 +1,96 @@
+.indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 5px;
+  border: none;
+  border-radius: 4px;
+  background: rgba(230, 126, 34, 0.15);
+  color: #e67e22;
+  font-size: 0.6rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+  position: relative;
+}
+
+.indicator:hover {
+  background: rgba(230, 126, 34, 0.3);
+}
+
+.icon {
+  font-size: 0.7rem;
+}
+
+.dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 100;
+  min-width: 200px;
+  max-width: 280px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  padding: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.noteItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border-radius: 4px;
+  background: var(--bg-secondary);
+  font-size: 0.65rem;
+}
+
+.noteInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.noteMeta {
+  color: var(--text-muted);
+  font-size: 0.6rem;
+}
+
+.noteTranscript {
+  color: var(--text-primary);
+  font-size: 0.6rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.noteBtn {
+  border: none;
+  border-radius: 4px;
+  padding: 3px 6px;
+  font-size: 0.6rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--btn-secondary-bg);
+  color: var(--text-primary);
+  transition: background 0.1s;
+}
+
+.noteBtn:hover {
+  background: var(--btn-secondary-hover);
+}
+
+.deleteBtn {
+  composes: noteBtn;
+  color: var(--severity-high, #ef4444);
+}
+
+.deleteBtn:hover {
+  background: rgba(239, 68, 68, 0.15);
+}

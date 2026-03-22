@@ -5,6 +5,7 @@ import { useSemanticStore } from './semantic-store';
 import { useSessionStore } from './session-store';
 import { useViewStore } from './view-store';
 import { useJobStore } from './job-store';
+import { useVoiceNoteStore } from './voice-note-store';
 
 // ---------------------------------------------------------------------------
 // Concurrency guard — serializes session mutations to prevent interleaving
@@ -80,6 +81,7 @@ export async function deleteSession(sessionId: string): Promise<void> {
       useViewStore.getState().clear();
       useJobStore.getState().clear();
       useSessionStore.getState().clear();
+      useVoiceNoteStore.getState().clear();
     }
 
     // Delete the session envelope from IDB
@@ -91,6 +93,8 @@ export async function deleteSession(sessionId: string): Promise<void> {
       'unifiedPlans',
       'dialogueTurns',
       'jobs',
+      'planTalkTurns',
+      'voiceNotes',
     ] as const;
 
     const deletions = storeNames.map(async (storeName) => {
@@ -101,6 +105,12 @@ export async function deleteSession(sessionId: string): Promise<void> {
     });
 
     await Promise.all(deletions);
+
+    // Delete voice note blobs (not indexed by session, so use the voice note IDs)
+    const voiceNotes = await getAllByIndex('voiceNotes', 'by-session', sessionId);
+    await Promise.all(
+      voiceNotes.map((n) => deleteEntity('voiceNoteBlobs', (n as { id: string }).id)),
+    );
 
     // Finally delete the session itself
     await deleteEntity('sessions', sessionId);

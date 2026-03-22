@@ -1,6 +1,7 @@
 import { useSemanticStore } from '../store/semantic-store';
 import { useSessionStore } from '../store/session-store';
 import { usePlanTalkStore } from '../store/plan-talk-store';
+import { useVoiceNoteStore } from '../store/voice-note-store';
 import { putEntity, loadSessionEnvelope } from './repository';
 import {
   PlanningSessionSchema,
@@ -11,6 +12,7 @@ import {
   UnifiedPlanSchema,
   DialogueTurnSchema,
   PlanTalkTurnSchema,
+  VoiceNoteSchema,
 } from '../core/types';
 import type { z } from 'zod';
 
@@ -38,6 +40,7 @@ export async function saveSession(): Promise<void> {
     ...(unifiedPlan ? [putEntity('unifiedPlans', unifiedPlan)] : []),
     ...dialogueTurns.map(dt => putEntity('dialogueTurns', dt)),
     ...usePlanTalkStore.getState().turns.map(t => putEntity('planTalkTurns', t)),
+    ...useVoiceNoteStore.getState().notes.map(n => putEntity('voiceNotes', n)),
   ]);
 }
 
@@ -59,10 +62,12 @@ export function startAutoSave(): () => void {
   const unsub1 = useSemanticStore.subscribe(debouncedSave);
   const unsub2 = useSessionStore.subscribe(debouncedSave);
   const unsub3 = usePlanTalkStore.subscribe(debouncedSave);
+  const unsub4 = useVoiceNoteStore.subscribe(debouncedSave);
   return () => {
     unsub1();
     unsub2();
     unsub3();
+    unsub4();
     if (debounceTimer) clearTimeout(debounceTimer);
   };
 }
@@ -117,6 +122,7 @@ export async function restoreSession(sessionId: string): Promise<boolean> {
     const unifiedPlans = validateEntities(envelope.unifiedPlans, UnifiedPlanSchema, 'unifiedPlan');
     const dialogueTurns = validateEntities(envelope.dialogueTurns, DialogueTurnSchema, 'dialogueTurn');
     const planTalkTurns = validateEntities(envelope.planTalkTurns, PlanTalkTurnSchema, 'planTalkTurn');
+    const voiceNotes = validateEntities(envelope.voiceNotes, VoiceNoteSchema, 'voiceNote');
 
     // Hydrate session store
     useSessionStore.getState().setSession(session);
@@ -140,6 +146,9 @@ export async function restoreSession(sessionId: string): Promise<boolean> {
 
     // Hydrate plan talk store with persisted transcript turns
     usePlanTalkStore.getState().loadTurns(planTalkTurns);
+
+    // Hydrate voice note store
+    useVoiceNoteStore.getState().loadNotes(voiceNotes);
 
     return true;
   } catch {

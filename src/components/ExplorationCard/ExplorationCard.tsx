@@ -6,6 +6,7 @@ import { StatusBadge } from '../shared/StatusBadge';
 import { StreamingAnswer } from '../shared/StreamingAnswer';
 import { PromotionBadge } from '../PromotionBadge/PromotionBadge';
 import { PromotionModal } from '../PromotionBadge/PromotionModal';
+import { VoiceNoteIndicator } from '../VoiceNoteIndicator/VoiceNoteIndicator';
 import { useViewStore } from '../../store/view-store';
 import { useSemanticStore } from '../../store/semantic-store';
 import { answerNode } from '../../store/actions';
@@ -120,6 +121,7 @@ function ExplorationCardInner({ data, id }: NodeProps<ExplorationCardNodeType>) 
         {promotionReason && (
           <span className={styles.promotionTag}>{REASON_LABELS[promotionReason]}</span>
         )}
+        <VoiceNoteIndicator nodeId={id} />
         {hasChildren && (
           <button
             className={styles.collapseBtn}

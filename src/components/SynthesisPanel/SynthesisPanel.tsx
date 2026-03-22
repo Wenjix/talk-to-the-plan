@@ -16,7 +16,6 @@ function formatSectionName(key: string): string {
 }
 
 export function SynthesisPanel({
-  status,
   unifiedPlan,
   onEvidenceClick,
   onTalkToPlan,
