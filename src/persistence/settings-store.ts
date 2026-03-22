@@ -2,6 +2,7 @@ import { openDB, type IDBPDatabase } from 'idb';
 import type { DBSchema } from 'idb';
 import { z } from 'zod';
 import type { ProviderId, ApiKeys } from '../generation/providers/types';
+// Preserved as 'fuda-settings' for IndexedDB backward compatibility
 const SETTINGS_DB_NAME = 'fuda-settings';
 const SETTINGS_DB_VERSION = 1;
 

@@ -15,6 +15,6 @@ export const PlanningSessionSchema = z.object({
   challengeDepth: ChallengeDepthSchema.default('balanced'),
   activeLaneId: UUIDSchema,
   status: SessionStatusSchema.default('exploring'),
-  version: z.literal('fuda_v1'),
+  version: z.literal('fuda_v1'), // Preserved for IndexedDB/export backward compatibility
 });
 export type PlanningSession = z.infer<typeof PlanningSessionSchema>;

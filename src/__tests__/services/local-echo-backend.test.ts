@@ -79,7 +79,7 @@ describe('LocalEchoBackend', () => {
     backend.write('env\r');
 
     const fullOutput = mocks.output.join('');
-    expect(fullOutput).toContain('FUDA_SESSION_ID');
+    expect(fullOutput).toContain('PARALLAX_SESSION_ID');
     expect(fullOutput).toContain('local-echo');
   });
 
@@ -101,7 +101,7 @@ describe('LocalEchoBackend', () => {
     backend.write('whoami\r');
 
     const fullOutput = mocks.output.join('');
-    expect(fullOutput).toContain('fuda-user');
+    expect(fullOutput).toContain('parallax-user');
   });
 
   it('handles unknown command', async () => {

@@ -1,4 +1,4 @@
-const TAB_KEY = 'fuda_plan_active_tab';
+const TAB_KEY = 'parallax_active_tab';
 const HEARTBEAT_INTERVAL = 2000; // ms
 
 let intervalId: ReturnType<typeof setInterval> | null = null;

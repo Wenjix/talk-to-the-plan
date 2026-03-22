@@ -1,13 +1,14 @@
 import { BaseEdge, EdgeLabelRenderer, getSmoothStepPath } from '@xyflow/react';
 import type { EdgeProps } from '@xyflow/react';
+import type { ParallaxEdgeData } from '../../store/view-projection';
 import './Connector.css';
 
-export function Connector(props: EdgeProps) {
+export function Connector(props: EdgeProps<ParallaxEdgeData>) {
   const { sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, id, data } = props;
   const [edgePath, labelX, labelY] = getSmoothStepPath({ sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition });
 
-  const pathType = (data as Record<string, unknown> | undefined)?.pathType as string | undefined;
-  const accent = (data as Record<string, unknown> | undefined)?.pathAccent as string | undefined;
+  const pathType = data?.pathType;
+  const accent = data?.pathAccent;
 
   return (
     <>

@@ -68,5 +68,6 @@ export interface ParallaxDB extends DBSchema {
   };
 }
 
+// Preserved as 'fuda-plan' for IndexedDB backward compatibility — renaming would lose existing user data
 export const DB_NAME = 'fuda-plan';
 export const DB_VERSION = 4;

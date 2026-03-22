@@ -24,9 +24,9 @@ const BUILT_IN_COMMANDS: Record<string, (args: string[], ctx: LocalEchoBackend) 
 
   env: () =>
     [
-      'FUDA_SESSION_ID=(local)',
-      'FUDA_TERMINAL_BACKEND=local-echo',
-      'SHELL=/bin/fuda-sh',
+      'PARALLAX_SESSION_ID=(local)',
+      'PARALLAX_TERMINAL_BACKEND=local-echo',
+      'SHELL=/bin/parallax-sh',
       '',
     ].join('\r\n'),
 
@@ -37,7 +37,7 @@ const BUILT_IN_COMMANDS: Record<string, (args: string[], ctx: LocalEchoBackend) 
 
   date: () => new Date().toString() + '\r\n',
 
-  whoami: () => 'fuda-user\r\n',
+  whoami: () => 'parallax-user\r\n',
 
   vibe: () =>
     [
@@ -181,14 +181,14 @@ export class LocalEchoBackend implements ITerminalBackend {
       const output = handler(args, this);
       this.events!.onOutput(output);
     } else {
-      this.events!.onOutput(`fuda-sh: command not found: ${cmd}\r\n`);
+      this.events!.onOutput(`parallax-sh: command not found: ${cmd}\r\n`);
     }
 
     this.printPrompt();
   }
 
   private printPrompt(): void {
-    this.events?.onOutput('\x1b[1;32mfuda\x1b[0m:\x1b[1;34m~\x1b[0m$ ');
+    this.events?.onOutput('\x1b[1;32mparallax\x1b[0m:\x1b[1;34m~\x1b[0m$ ');
   }
 
   private handleHistoryUp(): void {

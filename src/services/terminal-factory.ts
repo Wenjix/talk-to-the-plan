@@ -23,7 +23,7 @@ function runtimeModeFromEnv(): TerminalRuntimeMode {
 const DEFAULT_CONFIG: TerminalFactoryConfig = {
   runtimeMode: runtimeModeFromEnv(),
   vibeBin: 'auto',
-  vibeHome: '/home/fuda/.vibe',
+  vibeHome: '/home/parallax/.vibe',
 };
 
 /**

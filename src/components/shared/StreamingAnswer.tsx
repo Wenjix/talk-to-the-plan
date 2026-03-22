@@ -41,21 +41,26 @@ function parsePartial(raw: string): PartialAnswer {
       .replace(/\\\\/g, '\\');
   }
 
-  // Extract complete bullets — only grab fully closed strings in the bullets array
+  // Extract complete bullets — only grab fully closed strings within the bullets array scope
   const bullets: string[] = [];
-  const bulletsStart = stripped.indexOf('"bullets"');
-  if (bulletsStart !== -1) {
-    const afterBullets = stripped.slice(bulletsStart);
-    // Match each complete string in the array
-    const bulletMatches = afterBullets.matchAll(/"((?:[^"\\]|\\.)*)"/g);
-    let first = true;
-    for (const m of bulletMatches) {
-      if (first) { first = false; continue; } // skip "bullets" key itself
-      const val = m[1]
-        .replace(/\\n/g, '\n')
-        .replace(/\\"/g, '"')
-        .replace(/\\\\/g, '\\');
-      if (val.length > 0) bullets.push(val);
+  const bulletsKeyIdx = stripped.indexOf('"bullets"');
+  if (bulletsKeyIdx !== -1) {
+    const bracketStart = stripped.indexOf('[', bulletsKeyIdx);
+    if (bracketStart !== -1) {
+      // Find the closing bracket, or use the rest of the string if still streaming
+      const bracketEnd = stripped.indexOf(']', bracketStart);
+      const arrayScope = bracketEnd !== -1
+        ? stripped.slice(bracketStart, bracketEnd + 1)
+        : stripped.slice(bracketStart);
+      // Match each complete quoted string within the array scope
+      const bulletMatches = arrayScope.matchAll(/"((?:[^"\\]|\\.)*)"/g);
+      for (const m of bulletMatches) {
+        const val = m[1]
+          .replace(/\\n/g, '\n')
+          .replace(/\\"/g, '"')
+          .replace(/\\\\/g, '\\');
+        if (val.length > 0) bullets.push(val);
+      }
     }
   }
 

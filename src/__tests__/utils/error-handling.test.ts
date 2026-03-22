@@ -119,7 +119,7 @@ describe('Tab guard', () => {
 
   it('startTabGuard sets localStorage entry', () => {
     const { cleanup } = startTabGuard();
-    const stored = localStorage.getItem('fuda_plan_active_tab');
+    const stored = localStorage.getItem('parallax_active_tab');
     expect(stored).not.toBeNull();
     const parsed = JSON.parse(stored!);
     expect(parsed).toHaveProperty('tabId');
@@ -136,7 +136,7 @@ describe('Tab guard', () => {
   it('isOtherTabActive returns true when a different tab wrote a recent heartbeat', () => {
     // Simulate another tab's heartbeat
     localStorage.setItem(
-      'fuda_plan_active_tab',
+      'parallax_active_tab',
       JSON.stringify({ tabId: 'other-tab-id', timestamp: Date.now() }),
     );
     // Start our own tab guard (which will overwrite) — but first check
@@ -146,9 +146,9 @@ describe('Tab guard', () => {
 
   it('cleanup removes localStorage entry when owned by same tab', () => {
     const { cleanup } = startTabGuard();
-    expect(localStorage.getItem('fuda_plan_active_tab')).not.toBeNull();
+    expect(localStorage.getItem('parallax_active_tab')).not.toBeNull();
     cleanup();
-    expect(localStorage.getItem('fuda_plan_active_tab')).toBeNull();
+    expect(localStorage.getItem('parallax_active_tab')).toBeNull();
   });
 });
 
