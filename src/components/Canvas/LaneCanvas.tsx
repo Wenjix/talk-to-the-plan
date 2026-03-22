@@ -79,12 +79,12 @@ export function LaneCanvas({ laneId }: LaneCanvasProps) {
 
     const currentViewStates = useViewStore.getState().viewNodes;
     const laneNodes = semanticNodes.filter(n => n.laneId === laneId);
-    const allAtOrigin = laneNodes.length > 1 && laneNodes.every(n => {
+    const needsLayout = laneNodes.length > 1 && laneNodes.every(n => {
       const view = currentViewStates.get(n.id);
-      return view && view.position.x === 0 && view.position.y === 0;
+      return !view || (view.position.x === 0 && view.position.y === 0);
     });
 
-    if (allAtOrigin) {
+    if (needsLayout) {
       const laneEdges = semanticEdges.filter(e =>
         laneNodes.some(n => n.id === e.sourceNodeId)
       );
