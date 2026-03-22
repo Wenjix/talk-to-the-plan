@@ -54,7 +54,7 @@ export function compileContext(
 
   // Tiered budgets after root reserve
   const remainingBudget = Math.max(0, tokenBudget - ROOT_RESERVE - rootTokens)
-  let ancestorBudget = Math.floor(remainingBudget * ANCESTOR_RATIO)
+  const ancestorBudget = Math.floor(remainingBudget * ANCESTOR_RATIO)
   let siblingBudget = Math.floor(remainingBudget * SIBLING_RATIO)
   let cousinBudget = Math.floor(remainingBudget * COUSIN_RATIO)
 

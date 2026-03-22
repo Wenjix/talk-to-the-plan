@@ -66,6 +66,7 @@ function renderCard(data: SemanticNode) {
     height: undefined,
     measured: { width: undefined, height: undefined },
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return render(<ExplorationCard {...(props as any)} />)
 }
 

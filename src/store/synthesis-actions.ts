@@ -1,4 +1,4 @@
-import type { LanePlan, UnifiedPlan, StructuredPlan, EvidenceRef, ConflictResolution } from '../core/types';
+import type { LanePlan, UnifiedPlan, StructuredPlan, ConflictResolution } from '../core/types';
 import type { PairwiseReport, LanePlanSummary } from '../generation/prompts/unified-plan';
 import { buildPairwiseMapPrompt, buildReducePrompt, buildFormatPrompt } from '../generation/prompts/unified-plan';
 import { useSemanticStore } from './semantic-store';
@@ -159,9 +159,7 @@ export async function triggerSynthesis(): Promise<UnifiedPlan> {
   // The format prompt asks for StructuredPlan sections directly, and the
   // unified_plan schema gate validates against StructuredPlanSchema — this is
   // intentional: the LLM returns sections in the StructuredPlan shape.
-  let sections: StructuredPlan;
-  const formatData = formatResult.data as StructuredPlan;
-  sections = formatData;
+  const sections: StructuredPlan = formatResult.data as StructuredPlan;
 
   // 7. Build UnifiedPlan
   const evidence = extractAllEvidence(sections);
@@ -176,6 +174,7 @@ export async function triggerSynthesis(): Promise<UnifiedPlan> {
     conflictsResolved: reduceData.conflictsResolved,
     unresolvedQuestions: reduceData.unresolvedQuestions,
     evidence,
+    revision: 1,
     createdAt: timestamp,
   };
 

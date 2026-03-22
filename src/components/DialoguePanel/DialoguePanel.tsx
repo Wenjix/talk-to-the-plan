@@ -29,7 +29,7 @@ export function DialoguePanel({ nodeId, onClose, onSendMessage, onConclude, isGe
   // Use a safe accessor that filters the dialogueTurns array.
   const dialogueTurns = useSemanticStore(s => {
     // Safely access dialogueTurns (may not exist yet)
-    const turns = (s as Record<string, unknown>).dialogueTurns as DialogueTurn[] | undefined;
+    const turns = (s as unknown as Record<string, unknown>).dialogueTurns as DialogueTurn[] | undefined;
     return (turns ?? []).filter((t: DialogueTurn) => t.nodeId === nodeId);
   });
 

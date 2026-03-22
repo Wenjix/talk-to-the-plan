@@ -199,7 +199,7 @@ describe('SemanticEdgeSchema', () => {
   })
 
   it('rejects edge with missing required fields', () => {
-    const { sourceNodeId, ...incomplete } = validEdge
+    const { sourceNodeId: _sourceNodeId, ...incomplete } = validEdge
     expect(() => SemanticEdgeSchema.parse(incomplete)).toThrow()
   })
 })
@@ -351,7 +351,7 @@ describe('StructuredPlanSchema', () => {
   })
 
   it('rejects plan missing a required section group', () => {
-    const { risks, ...incomplete } = makeStructuredPlan()
+    const { risks: _risks, ...incomplete } = makeStructuredPlan()
     expect(() => StructuredPlanSchema.parse(incomplete)).toThrow()
   })
 })

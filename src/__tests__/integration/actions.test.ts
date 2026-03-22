@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { useSemanticStore } from '../../store/semantic-store';
 import { useSessionStore } from '../../store/session-store';
 import { useJobStore } from '../../store/job-store';
@@ -7,7 +7,6 @@ import type {
   SemanticNode,
   SemanticEdge,
   Promotion,
-  PlanningSession,
 } from '../../core/types';
 
 // ---------------------------------------------------------------------------

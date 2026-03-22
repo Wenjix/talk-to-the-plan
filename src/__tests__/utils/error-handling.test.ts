@@ -9,7 +9,6 @@ import {
   isNearQuota,
   isQuotaExceeded,
   formatBytes,
-  QUOTA_WARNING_THRESHOLD,
 } from '../../persistence/quota';
 import type { QuotaInfo } from '../../persistence/quota';
 

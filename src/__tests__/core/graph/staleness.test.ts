@@ -169,6 +169,7 @@ describe('propagateCrossLayerStaleness', () => {
       conflictsResolved: [],
       unresolvedQuestions: [],
       evidence: [{ nodeId: 'A', laneId, quote: 'q', relevance: 'primary' }],
+      revision: 1,
       createdAt: now,
     }
   }

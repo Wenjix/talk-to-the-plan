@@ -127,7 +127,6 @@ export function TerminalDrawer() {
       termRef.current = null;
       fitAddonRef.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Re-fit when height changes

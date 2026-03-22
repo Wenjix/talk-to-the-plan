@@ -59,6 +59,7 @@ function makeUnifiedPlan(overrides?: Partial<UnifiedPlan>): UnifiedPlan {
       'What budget constraints apply?',
     ],
     evidence: [{ nodeId: 'n1', laneId: 'lane-1', quote: 'Top-level evidence', relevance: 'primary' }],
+    revision: 1,
     createdAt: NOW,
     ...overrides,
   };

@@ -136,6 +136,6 @@ export const concurrencyController = new ConcurrencyController(4);
 
 /** Reset singletons for testing — refills rate limiter tokens to max. */
 export function resetForTesting(): void {
-  (rateLimiter as { tokens: number; lastRefill: number }).tokens = 4;
-  (rateLimiter as { lastRefill: number }).lastRefill = Date.now();
+  (rateLimiter as unknown as { tokens: number; lastRefill: number }).tokens = 4;
+  (rateLimiter as unknown as { lastRefill: number }).lastRefill = Date.now();
 }

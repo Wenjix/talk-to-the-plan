@@ -101,6 +101,7 @@ export function LaneCanvas({ laneId }: LaneCanvasProps) {
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
       onNodeContextMenu={onNodeContextMenu}
+      // @ts-expect-error Edge generic variance between exported and internal ReactFlowInstance types
       onInit={onInit}
       minZoom={0.5}
       defaultEdgeOptions={{ type: 'fudaConnector' }}

@@ -122,6 +122,7 @@ export async function generateDirectPlan(): Promise<UnifiedPlan> {
     conflictsResolved: [],
     unresolvedQuestions: [],
     evidence,
+    revision: 1,
     createdAt: timestamp,
   };
 

@@ -61,7 +61,7 @@ beforeEach(() => {
   (globalThis as unknown as Record<string, unknown>).WebSocket = class extends MockWebSocket {
     constructor() {
       super();
-      lastMockWs = this;
+      lastMockWs = this; // eslint-disable-line @typescript-eslint/no-this-alias
       mockWsInstances.push(this);
     }
   };

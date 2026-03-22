@@ -3,7 +3,6 @@ import { useTerminalStore } from '../../store/terminal-store';
 import { useViewStore } from '../../store/view-store';
 import {
   openTerminal,
-  closeTerminal,
   toggleTerminal,
   endTerminalSession,
   probeVibeToolStatus,

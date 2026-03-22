@@ -37,6 +37,8 @@ export function SynthesisPanel({
 }: SynthesisPanelProps) {
   const [isSynthesizing, setIsSynthesizing] = useState(false);
   const [stageIndex, setStageIndex] = useState(0);
+  const lanes = useSemanticStore(s => s.lanes);
+  const setActiveLane = useSessionStore(s => s.setActiveLane);
 
   const handleSynthesize = useCallback(async () => {
     if (!onSynthesize) return;
@@ -173,8 +175,6 @@ export function SynthesisPanel({
   // Not ready: show disabled progress
   const planCount = lanePlans.length;
   const progressPct = Math.round((planCount / SYNTHESIS_THRESHOLD) * 100);
-  const lanes = useSemanticStore(s => s.lanes);
-  const setActiveLane = useSessionStore(s => s.setActiveLane);
 
   const laneHasPlan = (laneId: string) =>
     lanePlans.some(p => p.laneId === laneId);

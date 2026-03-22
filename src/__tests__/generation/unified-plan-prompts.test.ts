@@ -6,16 +6,14 @@ import {
 } from '../../generation/prompts/unified-plan'
 import type { PairwiseReport, LanePlanSummary } from '../../generation/prompts/unified-plan'
 import type { LanePlan, ConflictResolution } from '../../core/types'
-import { PLANNER_PREAMBLE } from '../../generation/prompts/system-preambles'
+// PLANNER_PREAMBLE imported for potential future use in prompt validation tests
 import { parseAndValidate } from '../../core/validation/schema-gates'
 
 const now = '2026-03-01T00:00:00.000+00:00'
 const sessionId = '00000000-0000-4000-a000-000000000000'
 const laneAId = '00000000-0000-4000-a000-000000000001'
 const laneBId = '00000000-0000-4000-a000-000000000002'
-const laneCId = '00000000-0000-4000-a000-000000000003'
 const nodeId1 = '00000000-0000-4000-a000-000000000010'
-const nodeId2 = '00000000-0000-4000-a000-000000000020'
 
 function makeEvidence(nodeId: string, laneId: string) {
   return { nodeId, laneId, quote: 'sample quote', relevance: 'primary' as const }
@@ -33,8 +31,6 @@ function makeLanePlan(overrides: Partial<LanePlan> & { laneId: string; title: st
   return {
     id: '00000000-0000-4000-a000-000000000090',
     sessionId,
-    laneId: overrides.laneId,
-    title: overrides.title,
     sections: {
       goals: [makeSection('Goal 1', nodeId1, overrides.laneId)],
       assumptions: [makeSection('Assumption 1', nodeId1, overrides.laneId)],
@@ -53,7 +49,6 @@ function makeLanePlan(overrides: Partial<LanePlan> & { laneId: string; title: st
 
 const planA = makeLanePlan({ laneId: laneAId, title: 'Expansive Plan' })
 const planB = makeLanePlan({ laneId: laneBId, title: 'Analytical Plan' })
-const planC = makeLanePlan({ laneId: laneCId, title: 'Pragmatic Plan' })
 
 describe('buildPairwiseMapPrompt', () => {
   it('returns a non-empty string', () => {

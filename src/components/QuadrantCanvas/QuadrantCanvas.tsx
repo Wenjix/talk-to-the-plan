@@ -173,10 +173,10 @@ export function QuadrantCanvas() {
   if (responsiveLayout === 'stacked-2x1') {
     return (
       <div ref={containerRef} className={`${styles.quadrantContainer} ${styles.stacked2x1}`}>
-        <LanePane lane={paneLanes[0]} index={0} onNodeContextMenu={handleNodeContextMenu} />
-        <LanePane lane={paneLanes[1]} index={1} onNodeContextMenu={handleNodeContextMenu} />
-        <LanePane lane={paneLanes[2]} index={2} onNodeContextMenu={handleNodeContextMenu} />
-        <LanePane lane={paneLanes[3]} index={3} onNodeContextMenu={handleNodeContextMenu} />
+        <LanePane lane={paneLanes[0]} index={0} />
+        <LanePane lane={paneLanes[1]} index={1} />
+        <LanePane lane={paneLanes[2]} index={2} />
+        <LanePane lane={paneLanes[3]} index={3} />
         <RadialMenu />
       </div>
     );

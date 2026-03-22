@@ -45,8 +45,6 @@ function pickAnswer(prompt: string): { summary: string; bullets: string[] } {
   return DEMO_ANSWERS.default;
 }
 
-const PATH_TYPES = ['clarify', 'go-deeper', 'challenge', 'apply', 'connect', 'surprise'] as const;
-
 function buildPathQuestions(prompt: string): object {
   const topic = extractTopicHint(prompt);
   return {
@@ -207,7 +205,7 @@ function extractTopicHint(prompt: string): string {
   // Try to pull a topic from common prompt patterns
   const match = prompt.match(/topic[:\s]+"([^"]+)"/i)
     ?? prompt.match(/question[:\s]+"([^"]+)"/i)
-    ?? prompt.match(/about[:\s]+(.{10,60}?)[\.\n"]/i);
+    ?? prompt.match(/about[:\s]+(.{10,60}?)[.\n"]/i);
   return match ? match[1] : 'this topic';
 }
 

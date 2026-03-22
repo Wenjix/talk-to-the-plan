@@ -95,6 +95,7 @@ function makeUnifiedPlan(overrides?: Partial<UnifiedPlan>): UnifiedPlan {
     conflictsResolved: [makeConflict()],
     unresolvedQuestions: ['What is the budget?'],
     evidence: [makeEvidence()],
+    revision: 1,
     createdAt: now,
     ...overrides,
   };
