@@ -11,9 +11,7 @@ export type Theme = z.infer<typeof ThemeSchema>;
 
 export const AppSettingsSchema = z.object({
   mistralApiKey: z.string().default(''),
-  geminiApiKey: z.string().default(''),
   anthropicApiKey: z.string().default(''),
-  openaiApiKey: z.string().default(''),
   eigenApiKey: z.string().default(''),
   bosonApiKey: z.string().default(''),
   challengeDepth: z.enum(['gentle', 'balanced', 'intense']).default('balanced'),
@@ -24,6 +22,18 @@ export const AppSettingsSchema = z.object({
   voiceTtsEnabled: z.boolean().default(true),
   voiceAutoPlayAi: z.boolean().default(true),
   voiceTtsVoiceId: z.string().default(''),
+  personaModelConfig: z.record(
+    z.string(),
+    z.object({
+      providerId: z.enum(['mistral', 'anthropic']),
+      modelId: z.string(),
+    })
+  ).default({
+    expansive: { providerId: 'mistral', modelId: 'mistral-large-2512' },
+    analytical: { providerId: 'mistral', modelId: 'mistral-large-2512' },
+    pragmatic: { providerId: 'anthropic', modelId: 'claude-sonnet-4-6' },
+    socratic: { providerId: 'anthropic', modelId: 'claude-sonnet-4-6' },
+  }),
 });
 
 export type AppSettings = z.infer<typeof AppSettingsSchema>;
@@ -36,6 +46,7 @@ interface SettingsDB extends DBSchema {
 }
 
 const SETTINGS_KEY = 'app-settings';
+const REMOVED_PROVIDER_SETTING_KEYS = ['geminiApiKey', 'openaiApiKey'] as const;
 
 let dbPromise: Promise<IDBPDatabase<SettingsDB>> | null = null;
 
@@ -54,7 +65,11 @@ export async function loadSettings(): Promise<AppSettings> {
   const db = await getSettingsDB();
   const raw = await db.get('settings', SETTINGS_KEY);
   if (!raw) return AppSettingsSchema.parse({});
-  return AppSettingsSchema.parse(raw);
+  const validated = AppSettingsSchema.parse(raw);
+  if (REMOVED_PROVIDER_SETTING_KEYS.some((key) => key in (raw as Record<string, unknown>))) {
+    await db.put('settings', validated, SETTINGS_KEY);
+  }
+  return validated;
 }
 
 export async function saveSettings(settings: AppSettings): Promise<void> {
@@ -72,23 +87,19 @@ export async function updateSettings(partial: Partial<AppSettings>): Promise<App
 
 const ENV_KEY_MAP: Record<ProviderId, string> = {
   mistral: 'VITE_MISTRAL_API_KEY',
-  gemini: 'VITE_GEMINI_API_KEY',
   anthropic: 'VITE_ANTHROPIC_API_KEY',
-  openai: 'VITE_OPENAI_API_KEY',
 };
 
 const SETTINGS_KEY_MAP: Record<ProviderId, keyof AppSettings> = {
   mistral: 'mistralApiKey',
-  gemini: 'geminiApiKey',
   anthropic: 'anthropicApiKey',
-  openai: 'openaiApiKey',
 };
 
 /**
  * Resolve API keys: IndexedDB value if set, else VITE_*_API_KEY env var, else ''.
  */
 export function resolveApiKeys(settings: AppSettings): ApiKeys {
-  const providerIds: ProviderId[] = ['mistral', 'gemini', 'anthropic', 'openai'];
+  const providerIds: ProviderId[] = ['mistral', 'anthropic'];
   const keys = {} as ApiKeys;
   for (const id of providerIds) {
     const settingsValue = settings[SETTINGS_KEY_MAP[id]] as string;
