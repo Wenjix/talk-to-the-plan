@@ -178,6 +178,10 @@ function ExplorationCardInner({ data, id }: NodeProps<ExplorationCardNodeType>) 
         )}
       </div>
 
+      {node.fsmState === 'resolved' && !hasChildren && (
+        <div className={styles.branchHint}>Right-click to branch</div>
+      )}
+
       <Handle type="source" position={Position.Bottom} className={styles.handle} />
     </div>
   );
