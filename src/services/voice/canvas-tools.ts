@@ -89,6 +89,7 @@ export const CANVAS_TOOLS: CanvasTool[] = [
 ];
 
 export function formatToolsForPrompt(): string {
+  const format = 'Respond with exactly ONE tool call in this format:\n<tool_call>{"name": "tool_name", "arguments": {"param": "value"}}</tool_call>\n';
   const toolsXml = CANVAS_TOOLS.map((tool) => JSON.stringify(tool)).join('\n');
-  return `<tools>\n${toolsXml}\n</tools>`;
+  return `${format}\n<tools>\n${toolsXml}\n</tools>`;
 }

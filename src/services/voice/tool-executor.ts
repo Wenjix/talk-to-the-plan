@@ -9,6 +9,22 @@ import type { PromotionReason } from '../../core/types/promotion';
 import type { DialecticMode } from '../../core/types/dialogue';
 import { CANVAS_TOOLS } from './canvas-tools';
 
+const PATH_TYPE_ALIASES: Record<string, string> = {
+  // go-deeper aliases
+  'deeper': 'go-deeper', 'deep': 'go-deeper', 'deepen': 'go-deeper',
+  'go_deeper': 'go-deeper', 'dig-deeper': 'go-deeper',
+  // clarify aliases
+  'clarification': 'clarify', 'explain': 'clarify', 'sharpen': 'clarify',
+  // challenge aliases
+  'push-back': 'challenge', 'push_back': 'challenge', 'question': 'challenge',
+  // apply aliases
+  'practical': 'apply', 'actionable': 'apply', 'implement': 'apply',
+  // connect aliases
+  'link': 'connect', 'relate': 'connect', 'cross-reference': 'connect',
+  // surprise aliases
+  'unexpected': 'surprise', 'creative': 'surprise', 'pivot': 'surprise',
+};
+
 export interface ToolCallResult {
   toolName: string;
   success: boolean;
@@ -21,11 +37,14 @@ interface ParsedToolCall {
 }
 
 function parseToolCall(responseText: string): ParsedToolCall | null {
+  // Try XML-wrapped format first
   const match = responseText.match(/<tool_call>([\s\S]*?)<\/tool_call>/);
-  if (!match) return null;
+  const jsonStr = match
+    ? match[1].trim()
+    : responseText.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
 
   try {
-    const parsed = JSON.parse(match[1].trim());
+    const parsed = JSON.parse(jsonStr);
     if (typeof parsed.name !== 'string') return null;
 
     // Support both OpenAI-style { name, arguments: {...} } and flat-field
@@ -85,7 +104,9 @@ export async function executeToolCall(
 
     switch (name) {
       case 'branch_exploration': {
-        const pathType = PathTypeSchema.parse(args.path_type) as PathType;
+        const rawPathType = String(args.path_type).toLowerCase().trim();
+        const normalizedPathType = PATH_TYPE_ALIASES[rawPathType] ?? rawPathType;
+        const pathType = PathTypeSchema.parse(normalizedPathType) as PathType;
         const question = typeof args.question === 'string' ? args.question : undefined;
         await branchFromNode(nodeId, pathType, question);
         return {
