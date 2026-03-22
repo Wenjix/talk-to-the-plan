@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { SemanticNode, SemanticEdge, Promotion, LanePlan, UnifiedPlan, DialogueTurn, ModelLane } from '../core/types';
+import type { SemanticNode, SemanticEdge, Promotion, LanePlan, UnifiedPlan, DialogueTurn, ModelLane, PersonaId } from '../core/types';
 
 interface SemanticState {
   nodes: SemanticNode[];
@@ -20,6 +20,7 @@ interface SemanticState {
 
   // Lane storage
   setLanes: (lanes: ModelLane[]) => void;
+  updateLanePersona: (laneId: string, personaId: PersonaId) => void;
 
   // Promotion
   addPromotion: (promotion: Promotion) => void;
@@ -63,6 +64,9 @@ export const useSemanticStore = create<SemanticState>()((set, get) => ({
   getNode: (id) => get().nodes.find((n) => n.id === id),
   addEdge: (edge) => set((s) => ({ edges: [...s.edges, edge] })),
   setLanes: (lanes) => set({ lanes }),
+  updateLanePersona: (laneId, personaId) => set((s) => ({
+    lanes: s.lanes.map((l) => (l.id === laneId ? { ...l, personaId } : l)),
+  })),
   addPromotion: (promotion) => set((s) => ({ promotions: [...s.promotions, promotion] })),
   removePromotion: (id) => set((s) => ({ promotions: s.promotions.filter((p) => p.id !== id) })),
   addLanePlan: (plan) => set((s) => ({ lanePlans: [...s.lanePlans, plan] })),
