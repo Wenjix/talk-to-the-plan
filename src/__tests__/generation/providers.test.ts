@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { MockProvider } from '../../generation/providers/mock'
-import { getProvider, getProviderById, getProviderForPersona, getDefaultProvider } from '../../generation/providers'
+import { getProviderById, getProviderForPersona, getDefaultProvider } from '../../generation/providers'
 import type { ApiKeys } from '../../generation/providers/types'
 
 describe('MockProvider', () => {
@@ -43,43 +43,15 @@ describe('MockProvider', () => {
   })
 })
 
-describe('getProvider (deprecated)', () => {
-  it('returns DemoProvider when apiKey is empty', () => {
-    const provider = getProvider('')
-    expect(provider).toBeDefined()
-    expect(provider.generate).toBeDefined()
-    expect(provider.generateStream).toBeDefined()
-  })
-
-  it('returns MistralProvider when apiKey is provided', () => {
-    const provider = getProvider('FakeKeyForTesting12345678901234567')
-    expect(provider).toBeDefined()
-    expect(provider.generate).toBeDefined()
-    expect(provider.generateStream).toBeDefined()
-  })
-})
-
 describe('getProviderById', () => {
   it('returns DemoProvider when apiKey is empty', () => {
-    const provider = getProviderById('gemini', '')
-    expect(provider).toBeDefined()
-    expect(provider.generate).toBeDefined()
-  })
-
-  it('returns GeminiProvider for gemini', () => {
-    const provider = getProviderById('gemini', 'AIzaFakeKey123456789012345678')
+    const provider = getProviderById('mistral', '')
     expect(provider).toBeDefined()
     expect(provider.generate).toBeDefined()
   })
 
   it('returns MistralProvider for mistral', () => {
     const provider = getProviderById('mistral', 'FakeMistralKey12345678901234')
-    expect(provider).toBeDefined()
-    expect(provider.generate).toBeDefined()
-  })
-
-  it('returns OpenAIProvider for openai', () => {
-    const provider = getProviderById('openai', 'sk-FakeOpenAIKey12345678901234')
     expect(provider).toBeDefined()
     expect(provider.generate).toBeDefined()
   })
@@ -100,13 +72,13 @@ describe('getProviderById', () => {
   it('creates different providers for different providerIds', () => {
     const key = 'FakeSharedKey1234567890123456789'
     const provider1 = getProviderById('mistral', key)
-    const provider2 = getProviderById('openai', key)
+    const provider2 = getProviderById('anthropic', key)
     expect(provider1).not.toBe(provider2)
   })
 })
 
 describe('getProviderForPersona', () => {
-  const emptyKeys: ApiKeys = { mistral: '', gemini: '', anthropic: '', openai: '' }
+  const emptyKeys: ApiKeys = { mistral: '', anthropic: '' }
 
   it('returns DemoProvider when all keys are empty', () => {
     const provider = getProviderForPersona('expansive', emptyKeys)
@@ -120,8 +92,8 @@ describe('getProviderForPersona', () => {
     expect(provider).toBeDefined()
   })
 
-  it('maps analytical persona to gemini', () => {
-    const keys: ApiKeys = { ...emptyKeys, gemini: 'AIzaFakeKey123456789012345678' }
+  it('maps analytical persona to mistral', () => {
+    const keys: ApiKeys = { ...emptyKeys, mistral: 'FakeMistralKey12345678901234' }
     const provider = getProviderForPersona('analytical', keys)
     expect(provider).toBeDefined()
   })
@@ -132,23 +104,37 @@ describe('getProviderForPersona', () => {
     expect(provider).toBeDefined()
   })
 
-  it('maps socratic persona to openai', () => {
-    const keys: ApiKeys = { ...emptyKeys, openai: 'sk-FakeOpenAIKey12345678901234' }
+  it('maps socratic persona to anthropic', () => {
+    const keys: ApiKeys = { ...emptyKeys, anthropic: 'sk-ant-FakeKey1234567890123' }
     const provider = getProviderForPersona('socratic', keys)
     expect(provider).toBeDefined()
+  })
+
+  it('uses custom config when provided', () => {
+    const apiKeys: ApiKeys = { mistral: '', anthropic: 'sk-ant-FakeKey1234567890123' };
+    const config = {
+      expansive: { providerId: 'anthropic' as const, modelId: 'claude-sonnet-4-6' },
+      analytical: { providerId: 'mistral' as const, modelId: 'mistral-large-2512' },
+      pragmatic: { providerId: 'anthropic' as const, modelId: 'claude-sonnet-4-6' },
+      socratic: { providerId: 'anthropic' as const, modelId: 'claude-sonnet-4-6' },
+    };
+    // expansive mapped to anthropic with key → should get AnthropicProvider, not DemoProvider
+    const provider = getProviderForPersona('expansive', apiKeys, config);
+    expect(provider).toBeDefined();
+    expect(provider.generate).toBeDefined();
   })
 })
 
 describe('getDefaultProvider', () => {
   it('returns mistral provider', () => {
-    const keys: ApiKeys = { mistral: 'FakeMistralKey12345678901234', gemini: '', anthropic: '', openai: '' }
+    const keys: ApiKeys = { mistral: 'FakeMistralKey12345678901234', anthropic: '' }
     const provider = getDefaultProvider(keys)
     expect(provider).toBeDefined()
     expect(provider.generate).toBeDefined()
   })
 
   it('returns DemoProvider when mistral key is empty', () => {
-    const keys: ApiKeys = { mistral: '', gemini: 'AIzaFake123456789012345678901', anthropic: '', openai: '' }
+    const keys: ApiKeys = { mistral: '', anthropic: 'sk-ant-FakeKey1234567890123' }
     const provider = getDefaultProvider(keys)
     expect(provider).toBeDefined()
   })

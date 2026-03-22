@@ -8,9 +8,9 @@ vi.mock('../../persistence/settings-store', async () => {
   const ThemeSchema = z.enum(['light', 'dark']).default('light');
   const AppSettingsSchema = z.object({
     mistralApiKey: z.string().default(''),
-    geminiApiKey: z.string().default(''),
     anthropicApiKey: z.string().default(''),
-    openaiApiKey: z.string().default(''),
+    eigenApiKey: z.string().default(''),
+    bosonApiKey: z.string().default(''),
     challengeDepth: z.enum(['gentle', 'balanced', 'intense']).default('balanced'),
     autoSaveEnabled: z.boolean().default(true),
     animationsEnabled: z.boolean().default(true),
@@ -19,12 +19,21 @@ vi.mock('../../persistence/settings-store', async () => {
     voiceTtsEnabled: z.boolean().default(true),
     voiceAutoPlayAi: z.boolean().default(true),
     voiceTtsVoiceId: z.string().default(''),
+    personaModelConfig: z.record(
+      z.string(),
+      z.object({ providerId: z.enum(['mistral', 'anthropic']), modelId: z.string() })
+    ).default({
+      expansive: { providerId: 'mistral', modelId: 'mistral-large-2512' },
+      analytical: { providerId: 'mistral', modelId: 'mistral-large-2512' },
+      pragmatic: { providerId: 'anthropic', modelId: 'claude-sonnet-4-6' },
+      socratic: { providerId: 'anthropic', modelId: 'claude-sonnet-4-6' },
+    }),
   });
   const defaults = {
     mistralApiKey: '',
-    geminiApiKey: '',
     anthropicApiKey: '',
-    openaiApiKey: '',
+    eigenApiKey: '',
+    bosonApiKey: '',
     challengeDepth: 'balanced' as const,
     autoSaveEnabled: true,
     animationsEnabled: true,
@@ -33,6 +42,12 @@ vi.mock('../../persistence/settings-store', async () => {
     voiceTtsEnabled: true,
     voiceAutoPlayAi: true,
     voiceTtsVoiceId: '',
+    personaModelConfig: {
+      expansive: { providerId: 'mistral', modelId: 'mistral-large-2512' },
+      analytical: { providerId: 'mistral', modelId: 'mistral-large-2512' },
+      pragmatic: { providerId: 'anthropic', modelId: 'claude-sonnet-4-6' },
+      socratic: { providerId: 'anthropic', modelId: 'claude-sonnet-4-6' },
+    },
   };
   return {
     ThemeSchema,
@@ -40,7 +55,7 @@ vi.mock('../../persistence/settings-store', async () => {
     loadSettings: vi.fn().mockResolvedValue({ ...defaults }),
     saveSettings: vi.fn().mockResolvedValue(undefined),
     updateSettings: vi.fn().mockResolvedValue({ ...defaults }),
-    resolveApiKeys: vi.fn().mockReturnValue({ mistral: '', gemini: '', anthropic: '', openai: '' }),
+    resolveApiKeys: vi.fn().mockReturnValue({ mistral: '', anthropic: '' }),
     hasEnvFallback: vi.fn().mockReturnValue(false),
   };
 });
@@ -67,7 +82,7 @@ describe('Settings component', () => {
 
   // --- Tab rendering ---
 
-  it('renders with three tabs (General, API, Display)', async () => {
+  it('renders with four tabs (General, API, Display, Personas)', async () => {
     renderSettings();
 
     await waitFor(() => {
@@ -75,6 +90,7 @@ describe('Settings component', () => {
     });
     expect(screen.getByRole('tab', { name: 'API' })).toBeDefined();
     expect(screen.getByRole('tab', { name: 'Display' })).toBeDefined();
+    expect(screen.getByRole('tab', { name: 'Personas' })).toBeDefined();
   });
 
   it('renders as an accessible dialog', async () => {
@@ -140,7 +156,7 @@ describe('Settings component', () => {
 
   // --- API tab ---
 
-  it('API tab shows key input field', async () => {
+  it('API tab shows only supported LLM input fields', async () => {
     renderSettings();
 
     await waitFor(() => {
@@ -150,8 +166,11 @@ describe('Settings component', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'API' }));
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Gemini API key')).toBeDefined();
+      expect(screen.getByLabelText('Mistral API key')).toBeDefined();
     });
+    expect(screen.getByLabelText('Anthropic API key')).toBeDefined();
+    expect(screen.queryByLabelText('Gemini API key')).toBeNull();
+    expect(screen.queryByLabelText('OpenAI API key')).toBeNull();
   });
 
   it('API key input masks the value by default', async () => {
@@ -162,7 +181,7 @@ describe('Settings component', () => {
     });
 
     await waitFor(() => {
-      const input = screen.getByLabelText('Gemini API key');
+      const input = screen.getByLabelText('Mistral API key');
       expect(input.getAttribute('type')).toBe('password');
     });
   });
@@ -175,14 +194,13 @@ describe('Settings component', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Gemini API key')).toBeDefined();
+      expect(screen.getByLabelText('Mistral API key')).toBeDefined();
     });
 
     const toggleBtns = screen.getAllByLabelText('Show API key');
-    // Click the Gemini show button (second in list: Mistral, Gemini, Anthropic, OpenAI)
-    fireEvent.click(toggleBtns[1]);
+    fireEvent.click(toggleBtns[0]);
 
-    const input = screen.getByLabelText('Gemini API key');
+    const input = screen.getByLabelText('Mistral API key');
     expect(input.getAttribute('type')).toBe('text');
 
     const hideBtns = screen.getAllByLabelText('Hide API key');
@@ -199,7 +217,7 @@ describe('Settings component', () => {
     });
 
     await waitFor(() => {
-      const status = screen.getByTestId('gemini-key-status');
+      const status = screen.getByTestId('mistral-key-status');
       expect(status.textContent).toBe('Not set');
     });
   });
@@ -212,14 +230,14 @@ describe('Settings component', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Gemini API key')).toBeDefined();
+      expect(screen.getByLabelText('Mistral API key')).toBeDefined();
     });
 
-    const input = screen.getByLabelText('Gemini API key');
-    fireEvent.change(input, { target: { value: 'AIzaSyDfakekey12345678901' } });
+    const input = screen.getByLabelText('Mistral API key');
+    fireEvent.change(input, { target: { value: 'FakeMistralKey12345678901234' } });
 
     await waitFor(() => {
-      const status = screen.getByTestId('gemini-key-status');
+      const status = screen.getByTestId('mistral-key-status');
       expect(status.textContent).toBe('Valid format');
     });
   });
@@ -232,14 +250,14 @@ describe('Settings component', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Gemini API key')).toBeDefined();
+      expect(screen.getByLabelText('Mistral API key')).toBeDefined();
     });
 
-    const input = screen.getByLabelText('Gemini API key');
+    const input = screen.getByLabelText('Mistral API key');
     fireEvent.change(input, { target: { value: 'short-key' } });
 
     await waitFor(() => {
-      const status = screen.getByTestId('gemini-key-status');
+      const status = screen.getByTestId('mistral-key-status');
       expect(status.textContent).toBe('Invalid format');
     });
   });
