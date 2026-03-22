@@ -1,0 +1,250 @@
+.panel {
+  background: var(--plan-bg);
+  border-left: 1px solid var(--plan-border);
+  padding: 16px;
+  height: 100%;
+  overflow-y: auto;
+  color: var(--text-primary);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--plan-border);
+}
+
+.tabLabel {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.emptyHeading {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+}
+
+.emptyHint {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin: 0 0 20px 0;
+  line-height: 1.5;
+}
+
+.emptyText {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin: 0 0 8px 0;
+}
+
+.promotionCount {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0 0 16px 0;
+}
+
+.generateBtn {
+  padding: 10px 24px;
+  border-radius: 8px;
+  border: 1px solid var(--plan-accent);
+  background: var(--plan-accent);
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.15s;
+}
+
+.generateBtn:hover:not(:disabled) {
+  background: var(--btn-accent-bg-hover);
+  border-color: var(--accent-hover);
+}
+
+.generateBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.planList {
+  margin-top: 20px;
+  padding-top: 12px;
+  border-top: 1px solid var(--plan-border);
+}
+
+.planListTitle {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0 0 8px 0;
+}
+
+.planListItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 6px;
+  margin-bottom: 4px;
+  font-size: 0.8rem;
+  color: var(--card-bullet-text);
+}
+
+.planListItem.active {
+  background: var(--btn-secondary-bg);
+  color: var(--text-primary);
+}
+
+.planListName {
+  flex: 1;
+}
+
+.planListConfidence {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.directPlan {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 20px 8px;
+  text-align: center;
+}
+
+.directPlanText {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0 0 12px 0;
+}
+
+.directPlanBtn {
+  padding: 10px 28px;
+  border-radius: 8px;
+  border: none;
+  background: var(--plan-accent);
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.15s;
+}
+
+.directPlanBtn:hover {
+  opacity: 0.85;
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--plan-border);
+  border-top-color: var(--plan-accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 8px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.divider {
+  height: 1px;
+  background: var(--plan-border);
+  margin: 16px 0;
+}
+
+/* Fullscreen overlay */
+.fullscreenOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.fullscreenPanel {
+  background: var(--plan-bg);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 900px;
+  height: 100%;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  padding: 32px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+  color: var(--text-primary);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.fullscreenHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--plan-border);
+}
+
+.fullscreenTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.fullscreenActions {
+  display: flex;
+  gap: 8px;
+}
+
+.expandBtn {
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--plan-border);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.75rem;
+  transition: all 0.15s;
+}
+
+.expandBtn:hover {
+  background: var(--btn-secondary-bg);
+  color: var(--text-primary);
+}
+
+.closeBtn {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--plan-border);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.15s;
+}
+
+.closeBtn:hover {
+  background: var(--btn-secondary-bg);
+  color: var(--text-primary);
+}

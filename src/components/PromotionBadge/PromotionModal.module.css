@@ -1,0 +1,104 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border-hover);
+  border-radius: 12px;
+  padding: 24px;
+  min-width: 340px;
+  max-width: 420px;
+  color: var(--card-text);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.title {
+  margin: 0 0 16px;
+  font-size: 1.1rem;
+  color: var(--promotion-color);
+}
+
+.reasons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.reason {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  color: var(--card-bullet-text);
+}
+
+.reason input[type="radio"] {
+  accent-color: var(--promotion-color);
+}
+
+.reason span {
+  line-height: 1.4;
+}
+
+.note {
+  width: 100%;
+  background: var(--input-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  padding: 8px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  resize: vertical;
+  margin-bottom: 16px;
+  box-sizing: border-box;
+}
+
+.note::placeholder {
+  color: var(--text-muted);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.cancelBtn {
+  padding: 6px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--btn-secondary-border);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.cancelBtn:hover {
+  background: var(--btn-secondary-bg);
+  color: var(--text-primary);
+}
+
+.confirmBtn {
+  padding: 6px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--promotion-color);
+  background: var(--promotion-color);
+  color: var(--card-bg);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.confirmBtn:hover {
+  opacity: 0.9;
+}

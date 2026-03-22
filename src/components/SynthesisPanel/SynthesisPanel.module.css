@@ -1,0 +1,230 @@
+.panel {
+  padding: 16px 0;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+/* Disabled state */
+.disabled {
+  text-align: center;
+  padding: 24px 16px;
+  color: var(--text-muted);
+}
+
+.disabledText {
+  font-size: 0.85rem;
+  margin: 0 0 12px 0;
+}
+
+.progressBar {
+  width: 100%;
+  height: 6px;
+  background: var(--synthesis-spinner-bg);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--synthesis-accent);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.progressLabel {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* Lane status chips */
+.laneChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+  justify-content: center;
+}
+
+.laneChip {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 12px;
+  border: 1.5px solid;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.laneChip:hover:not(.laneChipDone) {
+  opacity: 0.8;
+}
+
+.laneChipDone {
+  cursor: default;
+}
+
+/* Ready state */
+.readySection {
+  text-align: center;
+  padding: 20px 16px;
+}
+
+.planSummary {
+  font-size: 0.8rem;
+  color: var(--card-bullet-text);
+  margin: 0 0 16px 0;
+}
+
+.synthesizeBtn {
+  padding: 10px 24px;
+  border-radius: 8px;
+  border: 1px solid var(--synthesis-accent);
+  background: var(--plan-generate-bg);
+  color: var(--synthesis-accent-text);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.15s;
+}
+
+.synthesizeBtn:hover:not(:disabled) {
+  background: var(--btn-accent-bg-hover);
+  border-color: var(--accent-hover);
+}
+
+.synthesizeBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Loading state */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 16px;
+}
+
+.spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--synthesis-spinner-bg);
+  border-top-color: var(--synthesis-spinner-accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.stageText {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* Unified plan display */
+.section {
+  margin-bottom: 16px;
+}
+
+.sectionTitle {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--plan-section-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0 0 8px 0;
+}
+
+.item {
+  margin-bottom: 12px;
+  padding-left: 12px;
+  border-left: 2px solid var(--plan-item-border);
+}
+
+.heading {
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin: 0 0 4px 0;
+  color: var(--text-primary);
+}
+
+.content {
+  font-size: 0.8rem;
+  line-height: 1.5;
+  padding-left: 16px;
+  color: var(--card-bullet-text);
+  margin: 0 0 6px 0;
+}
+
+.content li {
+  margin-bottom: 3px;
+}
+
+/* Conflicts */
+.conflictsSection {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--plan-border);
+}
+
+.conflictItem {
+  margin-bottom: 12px;
+  padding: 10px;
+  background: var(--plan-conflict-bg);
+  border: 1px solid var(--plan-border);
+  border-radius: 8px;
+}
+
+.conflictDesc {
+  font-size: 0.82rem;
+  color: var(--text-primary);
+  margin: 0 0 6px 0;
+}
+
+.conflictResolution {
+  font-size: 0.78rem;
+  color: var(--synthesis-conflict-resolution);
+  margin: 0 0 4px 0;
+}
+
+.conflictTradeoff {
+  font-size: 0.75rem;
+  color: var(--synthesis-conflict-tradeoff);
+  margin: 0;
+}
+
+/* Unresolved questions */
+.unresolvedSection {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--plan-border);
+}
+
+.unresolvedList {
+  list-style: disc;
+  padding-left: 20px;
+  margin: 0;
+}
+
+.unresolvedItem {
+  font-size: 0.8rem;
+  color: var(--synthesis-unresolved);
+  margin-bottom: 4px;
+}

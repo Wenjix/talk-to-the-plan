@@ -1,0 +1,153 @@
+/* QuadrantCanvas — 2x2 grid with draggable splitters */
+
+.quadrantContainer {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background: var(--quadrant-pane-bg);
+  overflow: hidden;
+}
+
+.focusedPane {
+  width: 100%;
+  height: 100%;
+  grid-column: 1 / -1;
+  grid-row: 1 / -1;
+}
+
+/* --- Splitters --- */
+
+.splitter {
+  background: var(--quadrant-splitter-bg);
+  z-index: 10;
+  transition: background 0.15s;
+}
+
+.splitter:hover {
+  background: var(--quadrant-splitter-hover);
+}
+
+.splitterVertical {
+  cursor: col-resize;
+}
+
+.splitterHorizontal {
+  cursor: row-resize;
+}
+
+.splitterIntersection {
+  background: var(--quadrant-splitter-bg);
+  z-index: 10;
+  cursor: move;
+}
+
+/* --- LanePane --- */
+
+.pane {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--quadrant-pane-border);
+  background: var(--quadrant-pane-bg);
+}
+
+.paneFocused {
+  outline: var(--quadrant-focus-ring-width) solid var(--quadrant-focus-ring);
+  outline-offset: -2px;
+}
+
+.paneHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: var(--lane-header-height);
+  padding: 0 10px;
+  background: var(--lane-header-bg);
+  color: var(--lane-header-text);
+  flex-shrink: 0;
+  border-top: 3px solid transparent; /* colored via inline style */
+  font-size: 0.8rem;
+  user-select: none;
+}
+
+.laneDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.laneLabel {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.laneStats {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.paneActions {
+  display: flex;
+  gap: 4px;
+  margin-left: 4px;
+  flex-shrink: 0;
+}
+
+.paneBtn {
+  background: none;
+  border: 1px solid var(--quadrant-pane-border);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 0.7rem;
+  cursor: pointer;
+  color: var(--text-muted);
+  line-height: 1;
+  transition: background 0.15s, color 0.15s;
+}
+
+.paneBtn:hover {
+  background: var(--btn-secondary-bg);
+  color: var(--text-primary);
+}
+
+.paneBtnActive {
+  color: var(--accent-color);
+  border-color: var(--accent-color);
+}
+
+.paneCanvas {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  position: relative;
+}
+
+/* --- Responsive layouts --- */
+
+/* Stacked 2x1: two lanes per row */
+.stacked2x1 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 2px;
+}
+
+/* Vertical stack: single column, scrollable */
+.verticalStack {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.verticalStack .pane {
+  min-height: 300px;
+  flex-shrink: 0;
+}

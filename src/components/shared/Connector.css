@@ -1,0 +1,9 @@
+.fuda-connector {
+  stroke: var(--connector-stroke);
+  stroke-width: 2;
+  transition: stroke 0.2s;
+}
+
+.fuda-connector:hover {
+  stroke: var(--connector-stroke-hover);
+}

@@ -1,0 +1,183 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay-bg, rgba(0, 0, 0, 0.4));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.panel {
+  background: var(--bg-primary, #ffffff);
+  border: 1px solid var(--border-color, #e0e0e0);
+  border-radius: 12px;
+  width: 480px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color, #e0e0e0);
+}
+
+.title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary, #1a1a1a);
+  margin: 0;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: var(--text-secondary, #666666);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.closeButton:hover {
+  background: var(--bg-secondary, #f5f5f5);
+}
+
+.tabBar {
+  display: flex;
+  border-bottom: 1px solid var(--border-color, #e0e0e0);
+  padding: 0 20px;
+  gap: 4px;
+}
+
+.tab {
+  padding: 10px 16px;
+  border: none;
+  background: none;
+  color: var(--text-secondary, #666666);
+  font-size: 0.85rem;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.tab:hover {
+  color: var(--text-primary, #1a1a1a);
+}
+
+.tabActive {
+  color: var(--accent-color, #6366f1);
+  border-bottom-color: var(--accent-color, #6366f1);
+  font-weight: 600;
+}
+
+.tabContent {
+  padding: 20px;
+}
+
+.fieldset {
+  border: none;
+  padding: 0;
+  margin: 0 0 20px;
+}
+
+.legend {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary, #1a1a1a);
+  margin-bottom: 10px;
+  display: block;
+}
+
+.radioGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.radioLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--text-primary, #1a1a1a);
+  cursor: pointer;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--text-primary, #1a1a1a);
+  cursor: pointer;
+}
+
+.inputGroup {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.textInput {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--input-border, #d1d5db);
+  background: var(--input-bg, #ffffff);
+  color: var(--text-primary, #1a1a1a);
+  font-size: 0.85rem;
+}
+
+.toggleButton {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--input-border, #d1d5db);
+  background: var(--bg-secondary, #f5f5f5);
+  color: var(--text-secondary, #666666);
+  cursor: pointer;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.testButton {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  background: var(--button-bg, #6366f1);
+  color: var(--button-text, #ffffff);
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.testButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.statusIndicator {
+  font-size: 0.8rem;
+  padding: 4px 0;
+}
+
+.statusNotSet {
+  color: var(--text-muted, #999999);
+}
+
+.statusValid {
+  color: var(--success-color, #22c55e);
+}
+
+.statusInvalid {
+  color: var(--error-color, #ef4444);
+}
+
+.placeholder {
+  font-size: 0.85rem;
+  color: var(--text-muted, #999999);
+  font-style: italic;
+}

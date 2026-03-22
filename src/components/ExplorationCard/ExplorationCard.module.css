@@ -1,0 +1,186 @@
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 16px;
+  min-width: 280px;
+  max-width: 360px;
+  color: var(--card-text);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.card:hover {
+  border-color: var(--card-border-hover);
+}
+
+.promoted {
+  border-left: 3px solid var(--promotion-color);
+  background: color-mix(in srgb, var(--promotion-color) 5%, var(--card-bg));
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.pathType {
+  font-size: 0.7rem;
+  color: var(--card-text-muted);
+  text-transform: uppercase;
+}
+
+.promotionTag {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--promotion-color) 15%, transparent);
+  color: var(--promotion-color);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.question {
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.4;
+  margin-bottom: 12px;
+}
+
+.answer {
+  margin-bottom: 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--card-border);
+}
+
+.summary {
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.bullets {
+  font-size: 0.8rem;
+  line-height: 1.5;
+  padding-left: 16px;
+  color: var(--card-bullet-text);
+}
+
+.bullets li {
+  margin-bottom: 4px;
+}
+
+.actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.answerBtn, .retryBtn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--btn-secondary-border);
+  background: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.answerBtn:hover { background: var(--btn-accent-bg-hover); }
+.retryBtn { border-color: var(--btn-danger-border); color: var(--btn-danger-text); }
+.retryBtn:hover { background: var(--btn-danger-bg-hover); }
+
+.branchActions {
+  display: flex;
+  gap: 4px;
+}
+
+.branchActions button {
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--btn-secondary-border);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.75rem;
+}
+
+.branchActions button:hover {
+  background: var(--btn-secondary-bg);
+  color: var(--text-primary);
+}
+
+.vibeBtn {
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--btn-accent-border);
+  background: transparent;
+  color: var(--btn-accent-text);
+  cursor: pointer;
+  font-size: 0.75rem;
+  transition: all 0.15s;
+}
+
+.vibeBtn:hover {
+  background: var(--btn-accent-bg-hover);
+  border-color: var(--accent-hover);
+}
+
+.collapseBtn {
+  margin-left: auto;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--btn-secondary-border);
+  background: var(--btn-secondary-bg);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.collapseBtn:hover {
+  background: var(--btn-accent-bg-hover);
+  color: var(--text-primary);
+}
+
+.handle {
+  width: 8px;
+  height: 8px;
+  background: var(--handle-color);
+}
+
+/* Compact variant for small quadrant panes (<480px) */
+:global(.pane-compact) .card {
+  min-width: 220px;
+  max-width: 260px;
+  padding: 10px;
+}
+
+:global(.pane-compact) .question {
+  font-size: 0.82rem;
+  margin-bottom: 8px;
+}
+
+:global(.pane-compact) .summary {
+  font-size: 0.75rem;
+  margin-bottom: 4px;
+}
+
+:global(.pane-compact) .bullets {
+  font-size: 0.72rem;
+  padding-left: 12px;
+}
+
+:global(.pane-compact) .answerBtn,
+:global(.pane-compact) .retryBtn {
+  padding: 4px 10px;
+  font-size: 0.72rem;
+}
+
+:global(.pane-compact) .vibeBtn {
+  padding: 3px 8px;
+  font-size: 0.68rem;
+}

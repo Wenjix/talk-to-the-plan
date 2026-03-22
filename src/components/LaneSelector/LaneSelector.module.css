@@ -1,0 +1,41 @@
+.selector {
+  display: flex;
+  gap: 2px;
+  padding: 4px 16px;
+  background: var(--lane-selector-bg);
+  border-bottom: 1px solid var(--lane-selector-border);
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--lane-tab-text);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.tab:hover {
+  color: var(--lane-tab-active-text);
+}
+
+.active {
+  color: var(--lane-tab-active-text);
+  border-bottom-color: var(--lane-color);
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.label {
+  text-transform: capitalize;
+}

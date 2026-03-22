@@ -1,0 +1,215 @@
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  padding: 0 16px;
+  background: var(--toolbar-bg);
+  border-bottom: 1px solid var(--toolbar-border);
+  flex-shrink: 0;
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand {
+  background: none;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--toolbar-brand);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.05em;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.brand:hover {
+  background: var(--toolbar-brand-hover-bg);
+  color: var(--accent-hover);
+}
+
+.topic {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--status-bg);
+  color: var(--status-text);
+  text-transform: uppercase;
+  font-weight: 600;
+  transition: background 0.3s, color 0.3s;
+  cursor: default;
+}
+
+.statusExploring {
+  background: #1e3a5f;
+  color: #7fb3e0;
+}
+
+.statusLanePlanning {
+  background: #4a3500;
+  color: #f5c542;
+}
+
+.statusSynthesisReady {
+  background: #1a4731;
+  color: #6ee7a0;
+  animation: statusPulse 2s ease-in-out infinite;
+}
+
+.statusSynthesized {
+  background: #3b1f5e;
+  color: #c084fc;
+}
+
+@keyframes statusPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.center {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.mode {
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: var(--bg-secondary);
+}
+
+.layoutToggle {
+  display: flex;
+  border: 1px solid var(--toolbar-border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.layoutBtn {
+  background: none;
+  border: none;
+  padding: 4px 14px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.layoutBtn:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.layoutBtnActive {
+  background: var(--accent-color);
+  color: var(--button-text);
+}
+
+.layoutBtnActive:hover {
+  background: var(--accent-hover);
+  color: var(--button-text);
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nodeCount {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.settingsButton {
+  background: none;
+  border: 1px solid var(--toolbar-border);
+  border-radius: 6px;
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.settingsButton:hover {
+  color: var(--text-primary);
+  border-color: var(--card-border-hover);
+}
+
+.terminalToggle {
+  background: none;
+  border: 1px solid var(--toolbar-border);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 12px;
+  line-height: 1;
+  font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.terminalToggle:hover {
+  color: var(--text-primary);
+  border-color: var(--card-border-hover);
+}
+
+.terminalToggleActive {
+  color: var(--accent-color);
+  border-color: var(--accent-color);
+  background: var(--btn-accent-bg-hover);
+}
+
+.planToggle {
+  background: none;
+  border: 1px solid var(--toolbar-border);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 12px;
+  line-height: 1;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.planToggle:hover {
+  color: var(--text-primary);
+  border-color: var(--card-border-hover);
+}
+
+.planToggleActive {
+  color: var(--accent-color);
+  border-color: var(--accent-color);
+  background: var(--btn-accent-bg-hover);
+}
+
+.planTogglePulse {
+  animation: planPulse 2s ease-in-out infinite;
+  border-color: #6ee7a0;
+  color: #6ee7a0;
+}
+
+@keyframes planPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(110, 231, 160, 0.4); }
+  50% { box-shadow: 0 0 0 4px rgba(110, 231, 160, 0); }
+}

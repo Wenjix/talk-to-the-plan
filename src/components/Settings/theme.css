@@ -1,0 +1,394 @@
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f5f5f5;
+  --bg-tertiary: #eaeaea;
+  --text-primary: #1a1a1a;
+  --text-secondary: #666666;
+  --text-muted: #767676;
+  --border-color: #e0e0e0;
+  --accent-color: #6366f1;
+  --accent-hover: #4f46e5;
+  --success-color: #22c55e;
+  --error-color: #ef4444;
+  --warning-color: #f59e0b;
+  --overlay-bg: rgba(0, 0, 0, 0.4);
+  --input-bg: #ffffff;
+  --input-border: #d1d5db;
+  --button-bg: #6366f1;
+  --button-text: #ffffff;
+
+  /* Canvas */
+  --canvas-bg: #f8f9fa;
+  --canvas-dot: #d0d0d0;
+
+  /* Cards */
+  --card-bg: #ffffff;
+  --card-border: #e0e0e0;
+  --card-border-hover: #b0b0c0;
+  --card-text: #1a1a1a;
+  --card-text-muted: #666666;
+  --card-bullet-text: #444444;
+
+  /* Buttons */
+  --btn-secondary-bg: #f0f0f5;
+  --btn-secondary-border: #d0d0d8;
+  --btn-secondary-text: #333333;
+  --btn-danger-border: #ef4444;
+  --btn-danger-text: #ef4444;
+  --btn-danger-bg-hover: #fef2f2;
+  --btn-accent-border: #6366f1;
+  --btn-accent-text: #6366f1;
+  --btn-accent-bg-hover: #eef2ff;
+
+  /* Connectors */
+  --connector-stroke: #b0b0c0;
+  --connector-stroke-hover: #8888aa;
+  --handle-color: #b0b0c0;
+
+  /* Toolbar */
+  --toolbar-bg: #ffffff;
+  --toolbar-border: #e0e0e0;
+  --toolbar-brand: #6366f1;
+  --toolbar-brand-hover-bg: #f0f0f5;
+
+  /* Status */
+  --status-bg: #e8f5e9;
+  --status-text: #2e7d32;
+  --status-idle-bg: #eaeaef;
+  --status-idle-text: #666677;
+  --status-generating-bg: #e3f2fd;
+  --status-generating-text: #1976d2;
+  --status-resolved-bg: #e8f5e9;
+  --status-resolved-text: #2e7d32;
+  --status-failed-bg: #fef2f2;
+  --status-failed-text: #d32f2f;
+  --status-stale-bg: #fff8e1;
+  --status-stale-text: #f57f17;
+
+  /* Session list */
+  --session-card-bg: #ffffff;
+  --session-card-border: #e0e0e0;
+  --session-card-border-hover: #b0b0c0;
+  --session-meta-text: #888899;
+  --progress-bg: #eaeaea;
+  --progress-fill: #6366f1;
+
+  /* Dialogue */
+  --dialogue-bg: #ffffff;
+  --dialogue-border: #e0e0e0;
+  --dialogue-input-bg: #f8f9fa;
+  --dialogue-user-bg: #eef2ff;
+  --dialogue-user-text: #333366;
+  --dialogue-ai-bg: #f0faf0;
+  --dialogue-ai-text: #336633;
+  --dialogue-suggestion-border: #c0d8d0;
+  --dialogue-suggestion-text: #4d7a6a;
+  --dialogue-conclude-border: #d0c080;
+  --dialogue-conclude-text: #806020;
+
+  /* Plan panel */
+  --plan-bg: #f8f9fa;
+  --plan-border: #e0e0e0;
+  --plan-accent: #6366f1;
+  --plan-accent-text: #6366f1;
+  --plan-generate-bg: #eef2ff;
+  --plan-section-accent: #6366f1;
+  --plan-item-border: #d0d0d8;
+  --plan-conflict-bg: #ffffff;
+
+  /* Synthesis */
+  --synthesis-accent: #6366f1;
+  --synthesis-accent-text: #6366f1;
+  --synthesis-spinner-bg: #eaeaea;
+  --synthesis-spinner-accent: #6366f1;
+  --synthesis-conflict-resolution: #2e7d32;
+  --synthesis-conflict-tradeoff: #c07020;
+  --synthesis-unresolved: #d32f2f;
+
+  /* Compass */
+  --compass-center-bg: #eaeaea;
+  --compass-center-border: #b0b0c0;
+  --compass-center-text: #888899;
+  --compass-direction-bg: #ffffff;
+  --compass-direction-border: #d0d0d8;
+  --compass-direction-text: #1a1a1a;
+  --compass-direction-question: #888899;
+
+  /* Evidence trail */
+  --evidence-item-border: #d0d0d8;
+  --evidence-item-text: #555555;
+  --evidence-item-hover-bg: #eef2ff;
+  --evidence-item-primary-text: #4a3a6a;
+  --evidence-item-primary-border: #b0a0d0;
+  --evidence-badge-primary-bg: #eef2ff;
+  --evidence-badge-primary-text: #6366f1;
+  --evidence-badge-supporting-bg: #e3f2fd;
+  --evidence-badge-supporting-text: #5a7a98;
+  --evidence-separator: #b0b0c0;
+
+  /* Promotion */
+  --promotion-color: #d4a017;
+  --promotion-inactive: #999999;
+
+  /* Stale badge */
+  --stale-bg: #fff8e1;
+  --stale-border: #f0d860;
+  --stale-text: #c09020;
+  --stale-btn-bg: #fff0c0;
+  --stale-btn-border: #f0d860;
+  --stale-btn-hover-bg: #ffe880;
+
+  /* Lane selector */
+  --lane-selector-bg: #f0f0f5;
+  --lane-selector-border: #e0e0e0;
+  --lane-tab-text: #888899;
+  --lane-tab-active-text: #1a1a1a;
+
+  /* Cursor */
+  --cursor-color: #6366f1;
+
+  /* Session status colors */
+  --status-exploring-bg: #e3f2fd;
+  --status-exploring-text: #1976d2;
+  --status-lane-planning-bg: #fff8e1;
+  --status-lane-planning-text: #f57f17;
+  --status-synthesis-ready-bg: #e8f5e9;
+  --status-synthesis-ready-text: #2e7d32;
+  --status-synthesized-bg: #f3e8ff;
+  --status-synthesized-text: #7c3aed;
+
+  /* Confirm actions */
+  --confirm-yes-bg: #fef2f2;
+  --confirm-yes-border: #ef4444;
+  --confirm-yes-text: #ef4444;
+  --confirm-yes-hover-bg: #fee2e2;
+  --confirm-no-border: #d0d0d8;
+  --confirm-no-text: #888899;
+  --confirm-no-hover-bg: #f0f0f5;
+
+  /* Quadrant layout */
+  --quadrant-splitter-bg: #d0d0d8;
+  --quadrant-splitter-hover: var(--accent-color);
+  --quadrant-splitter-width: 4px;
+  --quadrant-pane-border: var(--border-color);
+  --quadrant-pane-bg: var(--canvas-bg);
+
+  /* Lane header bar */
+  --lane-header-height: 36px;
+  --lane-header-bg: var(--bg-secondary);
+  --lane-header-text: var(--text-primary);
+
+  /* Focus ring */
+  --quadrant-focus-ring: var(--accent-color);
+  --quadrant-focus-ring-width: 2px;
+
+  /* Lane colors */
+  --lane-expansive: #7B4FBF;
+  --lane-analytical: #4A90D9;
+  --lane-pragmatic: #3DAA6D;
+  --lane-socratic: #D94F4F;
+
+  /* Terminal (dark bg in both themes — standard practice) */
+  --terminal-bg: #1e1e2e;
+  --terminal-header-bg: #181825;
+  --terminal-border: #2a2a3a;
+  --terminal-text: #cdd6f4;
+  --terminal-cursor: #f5e0dc;
+  --terminal-selection-bg: rgba(99, 102, 241, 0.3);
+}
+
+[data-theme="dark"] {
+  --bg-primary: #1a1a2e;
+  --bg-secondary: #16213e;
+  --bg-tertiary: #0f3460;
+  --text-primary: #e0e0e0;
+  --text-secondary: #a0a0a0;
+  --text-muted: #8a8aaa;
+  --border-color: #2a2a4a;
+  --accent-color: #818cf8;
+  --accent-hover: #6366f1;
+  --success-color: #34d399;
+  --error-color: #f87171;
+  --warning-color: #fbbf24;
+  --overlay-bg: rgba(0, 0, 0, 0.6);
+  --input-bg: #12122a;
+  --input-border: #3a3a5a;
+  --button-bg: #818cf8;
+  --button-text: #ffffff;
+
+  /* Canvas */
+  --canvas-bg: #0a0a0f;
+  --canvas-dot: #1a1a2e;
+
+  /* Cards */
+  --card-bg: #1a1a2e;
+  --card-border: #2a2a4a;
+  --card-border-hover: #4a4a7a;
+  --card-text: #e0e0e0;
+  --card-text-muted: #7b7b9a;
+  --card-bullet-text: #b0b0c0;
+
+  /* Buttons */
+  --btn-secondary-bg: #2a2a4a;
+  --btn-secondary-border: #4a4a7a;
+  --btn-secondary-text: #e0e0e0;
+  --btn-danger-border: #d94f4f;
+  --btn-danger-text: #d94f4f;
+  --btn-danger-bg-hover: #3a1a1a;
+  --btn-accent-border: #7b4fbf;
+  --btn-accent-text: #c0a0ff;
+  --btn-accent-bg-hover: #1a1a3a;
+
+  /* Connectors */
+  --connector-stroke: #4a4a5a;
+  --connector-stroke-hover: #7b7b9a;
+  --handle-color: #4a4a7a;
+
+  /* Toolbar */
+  --toolbar-bg: #12121a;
+  --toolbar-border: #2a2a3a;
+  --toolbar-brand: #7b4fbf;
+  --toolbar-brand-hover-bg: #1a1a2e;
+
+  /* Status */
+  --status-bg: #1a3a2a;
+  --status-text: #3daa6d;
+  --status-idle-bg: #2a2a3a;
+  --status-idle-text: #8888aa;
+  --status-generating-bg: #1a2a3a;
+  --status-generating-text: #4a90d9;
+  --status-resolved-bg: #1a3a2a;
+  --status-resolved-text: #3daa6d;
+  --status-failed-bg: #3a1a1a;
+  --status-failed-text: #d94f4f;
+  --status-stale-bg: #3a3a1a;
+  --status-stale-text: #d9a84f;
+
+  /* Session list */
+  --session-card-bg: #12121a;
+  --session-card-border: #2a2a3a;
+  --session-card-border-hover: #4a4a6a;
+  --session-meta-text: #6a6a8a;
+  --progress-bg: #1a1a2e;
+  --progress-fill: #7b4fbf;
+
+  /* Dialogue */
+  --dialogue-bg: #12121a;
+  --dialogue-border: #2a2a3a;
+  --dialogue-input-bg: #0a0a14;
+  --dialogue-user-bg: #2a2a5a;
+  --dialogue-user-text: #d0d0e0;
+  --dialogue-ai-bg: #1a2a2a;
+  --dialogue-ai-text: #d0e0d0;
+  --dialogue-suggestion-border: #3a4a4a;
+  --dialogue-suggestion-text: #80b0a0;
+  --dialogue-conclude-border: #4a4a3a;
+  --dialogue-conclude-text: #b0a060;
+
+  /* Plan panel */
+  --plan-bg: #12122a;
+  --plan-border: #2a2a4a;
+  --plan-accent: #7b4fbf;
+  --plan-accent-text: #c0a0ff;
+  --plan-generate-bg: #2a1a4a;
+  --plan-section-accent: #c0a0ff;
+  --plan-item-border: #3a3a5a;
+  --plan-conflict-bg: #1a1a2e;
+
+  /* Synthesis */
+  --synthesis-accent: #7b4fbf;
+  --synthesis-accent-text: #c0a0ff;
+  --synthesis-spinner-bg: #2a2a4a;
+  --synthesis-spinner-accent: #c0a0ff;
+  --synthesis-conflict-resolution: #a0d0a0;
+  --synthesis-conflict-tradeoff: #d0a080;
+  --synthesis-unresolved: #d0a0a0;
+
+  /* Compass */
+  --compass-center-bg: #2a2a4a;
+  --compass-center-border: #4a4a7a;
+  --compass-center-text: #8888aa;
+  --compass-direction-bg: #1a1a2e;
+  --compass-direction-border: #3a3a5a;
+  --compass-direction-text: #e0e0e0;
+  --compass-direction-question: #8888aa;
+
+  /* Evidence trail */
+  --evidence-item-border: #3a3a5a;
+  --evidence-item-text: #b0b0c0;
+  --evidence-item-hover-bg: #2a2a4a;
+  --evidence-item-primary-text: #d0c0e8;
+  --evidence-item-primary-border: #4a3a6a;
+  --evidence-badge-primary-bg: #2a1a4a;
+  --evidence-badge-primary-text: #c0a0ff;
+  --evidence-badge-supporting-bg: #1a2a3a;
+  --evidence-badge-supporting-text: #7b9ab8;
+  --evidence-separator: #4a4a6a;
+
+  /* Promotion */
+  --promotion-color: #d4a017;
+  --promotion-inactive: #5a5a7a;
+
+  /* Stale badge */
+  --stale-bg: #3a3010;
+  --stale-border: #6a5a20;
+  --stale-text: #e0c040;
+  --stale-btn-bg: #4a4010;
+  --stale-btn-border: #6a5a20;
+  --stale-btn-hover-bg: #5a5020;
+
+  /* Lane selector */
+  --lane-selector-bg: #0a0a14;
+  --lane-selector-border: #2a2a3a;
+  --lane-tab-text: #8888aa;
+  --lane-tab-active-text: #e0e0e0;
+
+  /* Cursor */
+  --cursor-color: #7b4fbf;
+
+  /* Session status colors */
+  --status-exploring-bg: #1a2a3a;
+  --status-exploring-text: #4a90d9;
+  --status-lane-planning-bg: #2a2a1a;
+  --status-lane-planning-text: #d9a84f;
+  --status-synthesis-ready-bg: #1a3a2a;
+  --status-synthesis-ready-text: #3daa6d;
+  --status-synthesized-bg: #2a1a3a;
+  --status-synthesized-text: #9b6fd0;
+
+  /* Confirm actions */
+  --confirm-yes-bg: #3a1010;
+  --confirm-yes-border: #d94f4f;
+  --confirm-yes-text: #d94f4f;
+  --confirm-yes-hover-bg: #5a1010;
+  --confirm-no-border: #3a3a5a;
+  --confirm-no-text: #8888aa;
+  --confirm-no-hover-bg: #1a1a2e;
+
+  /* Quadrant layout */
+  --quadrant-splitter-bg: #2a2a4a;
+  --quadrant-splitter-hover: var(--accent-color);
+  --quadrant-pane-border: var(--border-color);
+  --quadrant-pane-bg: var(--canvas-bg);
+
+  /* Lane header bar */
+  --lane-header-bg: var(--bg-secondary);
+  --lane-header-text: var(--text-primary);
+
+  /* Focus ring */
+  --quadrant-focus-ring: var(--accent-color);
+
+  /* Lane colors (brighter for dark mode) */
+  --lane-expansive: #9B7FDF;
+  --lane-analytical: #6AB0F9;
+  --lane-pragmatic: #5DCA8D;
+  --lane-socratic: #F96F6F;
+
+  /* Terminal */
+  --terminal-bg: #11111b;
+  --terminal-header-bg: #0d0d14;
+  --terminal-border: #1e1e30;
+  --terminal-text: #cdd6f4;
+  --terminal-cursor: #f5e0dc;
+  --terminal-selection-bg: rgba(129, 140, 248, 0.3);
+}

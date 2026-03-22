@@ -1,0 +1,38 @@
+.streaming-text {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.streaming-cursor {
+  animation: blink 0.8s step-end infinite;
+  color: var(--cursor-color);
+  font-weight: bold;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-badge--idle { background: var(--status-idle-bg); color: var(--status-idle-text); }
+.status-badge--generating { background: var(--status-generating-bg); color: var(--status-generating-text); animation: pulse 1.5s ease-in-out infinite; }
+.status-badge--resolved { background: var(--status-resolved-bg); color: var(--status-resolved-text); }
+.status-badge--failed { background: var(--status-failed-bg); color: var(--status-failed-text); }
+.status-badge--stale { background: var(--status-stale-bg); color: var(--status-stale-text); }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
