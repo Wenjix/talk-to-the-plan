@@ -13,13 +13,13 @@ This document compiles the essential endpoints, parameters, and patterns require
 
 ---
 
-## 2. Text-to-Speech (TTS) - HTTP Polling
+## 2. Text-to-Speech (TTS) - Higgs Audio V2.5
 
 **Endpoint:** `POST /api/v1/generate`
 **Content-Type:** `multipart/form-data`
-**Output:** Raw `.wav` audio file (when `stream=false`)
+**Output:** Raw `.wav` audio file (when `stream=false`), SSE stream (when `stream=true`)
 
-**Recommended Model:** `higgs2p5` (Higgs Audio V2.5 - 24kHz audio)
+**Model:** `higgs2p5`
 
 ### Required Parameters (FormData)
 | Parameter | Type | Value |
@@ -31,64 +31,103 @@ This document compiles the essential endpoints, parameters, and patterns require
 | Parameter | Type | Description |
 | :--- | :--- | :--- |
 | `voice` | string | Preset voice name (e.g., `"Linda"`, `"Jack"`). |
-| `voice_id` | string | ID of a custom cloned voice (retrieved via `/upload` endpoint). |
-| `voice_reference_file` | file | Raw audio file for one-off voice cloning (WAV, MP3). |
-| `stream` | boolean | `"false"` (returns WAV file) or `"true"` (HTTP SSE streaming). |
-| `voice_settings` | string | JSON string: `{"speed": 1.0}` |
-| `sampling` | string | JSON string: `{"temperature": 1.0, "top_p": 0.95, "top_k": 50}` |
+| `voice_id` | string | ID of a custom cloned voice (retrieved via `/upload` endpoint). Use instead of `voice`. |
+| `stream` | string | `"false"` (returns WAV file) or `"true"` (HTTP SSE streaming). |
+| `sampling` | string | JSON string: `{"temperature": 0.85, "top_p": 0.95, "top_k": 50}` |
 
-### Javascript Fetch Example
+### Response Headers
+| Header | Description |
+| :--- | :--- |
+| `x-credits-remaining` | Remaining API credits after the request. |
+
+### Javascript Example
 ```javascript
 const form = new FormData();
 form.append('model', 'higgs2p5');
-form.append('text', 'Hello world');
-form.append('voice', 'Linda');
+form.append('text', 'Hello, this is a test of the text-to-speech system.');
+form.append('voice', 'Linda'); // Or use voice_id for cloned voice
 form.append('stream', 'false');
+form.append('sampling', JSON.stringify({ temperature: 0.85, top_p: 0.95, top_k: 50 }));
 
 const response = await fetch('https://api-web.eigenai.com/api/v1/generate', {
   method: 'POST',
   headers: { 'Authorization': `Bearer ${apiKey}` },
   body: form
 });
-const audioBlob = await response.blob();
+const audioBlob = await response.blob(); // .wav file
+```
+
+### curl Examples
+```bash
+# Non-streaming (returns .wav file)
+curl -X POST https://api-web.eigenai.com/api/v1/generate \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -F "model=higgs2p5" \
+  -F "text=Hello, this is a test of the text-to-speech system." \
+  -F "voice=Linda" \
+  -F "stream=false" \
+  -F 'sampling={"temperature":0.85,"top_p":0.95,"top_k":50}' \
+  --output speech.wav
+
+# Streaming
+curl -X POST https://api-web.eigenai.com/api/v1/generate \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -F "model=higgs2p5" \
+  -F "text=Hello, this is streaming audio generation." \
+  -F "voice=Linda" \
+  -F "stream=true" \
+  -F 'sampling={"temperature":0.85,"top_p":0.95,"top_k":50}' \
+  --no-buffer
 ```
 
 ---
 
 ## 3. Automatic Speech Recognition (ASR)
 
-*Note: The documentation specifies `whisper_v3_turbo` for the `/api/v1/generate` endpoint, but previous docs mentioned `higgs_asr_3`. If `higgs_asr_3` fails, fall back to `whisper_v3_turbo`.*
-
 **Endpoint:** `POST /api/v1/generate`
 **Content-Type:** `multipart/form-data`
-**Output:** JSON or plain text transcript.
+**Output:** JSON with transcription.
+
+**Model:** `higgs_asr_3`
 
 ### Required Parameters (FormData)
 | Parameter | Type | Value |
 | :--- | :--- | :--- |
-| `model` | string | `"higgs_asr_3"` or `"whisper_v3_turbo"` |
+| `model` | string | `"higgs_asr_3"` |
 | `file` | file | Audio file (MP3, WAV, M4A, OGG, WebM). |
 
 ### Optional Parameters (FormData)
 | Parameter | Type | Description |
 | :--- | :--- | :--- |
-| `language` | string | Spoken language code (default `"en"`). |
-| `response_format` | string | `"json"` or `"text"`. |
+| `language` | string | Full language name, e.g. `"English"` (not a language code). |
+
+### Response Schema
+```json
+{ "transcription": "the transcribed text..." }
+```
 
 ### Javascript Fetch Example
 ```javascript
 const form = new FormData();
-form.append('model', 'higgs_asr_3'); // or 'whisper_v3_turbo'
+form.append('model', 'higgs_asr_3');
 form.append('file', audioBlob, 'recording.webm');
-form.append('language', 'en');
-form.append('response_format', 'json');
+form.append('language', 'English');
 
 const response = await fetch('https://api-web.eigenai.com/api/v1/generate', {
   method: 'POST',
   headers: { 'Authorization': `Bearer ${apiKey}` },
   body: form
 });
-const data = await response.json(); // { text: "..." }
+const data = await response.json(); // { transcription: "..." }
+```
+
+### curl Example
+```bash
+curl -X POST https://api-web.eigenai.com/api/v1/generate \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -F "model=higgs_asr_3" \
+  -F "file=@/path/to/audio.mp3" \
+  -F "language=English"
 ```
 
 ---
