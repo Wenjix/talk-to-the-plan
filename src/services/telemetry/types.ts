@@ -12,7 +12,9 @@ export type TelemetryEventName =
   | 'edits_applied'
   | 'modal_opened'
   | 'modal_closed'
-  | 'session_turn_count';
+  | 'session_turn_count'
+  | 'voice_recording_started'
+  | 'voice_recording_stopped';
 
 export interface TelemetryEvent {
   name: TelemetryEventName;

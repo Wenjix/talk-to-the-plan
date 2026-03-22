@@ -14,6 +14,8 @@ export const AppSettingsSchema = z.object({
   geminiApiKey: z.string().default(''),
   anthropicApiKey: z.string().default(''),
   openaiApiKey: z.string().default(''),
+  eigenApiKey: z.string().default(''),
+  bosonApiKey: z.string().default(''),
   challengeDepth: z.enum(['gentle', 'balanced', 'intense']).default('balanced'),
   autoSaveEnabled: z.boolean().default(true),
   animationsEnabled: z.boolean().default(true),
@@ -94,6 +96,14 @@ export function resolveApiKeys(settings: AppSettings): ApiKeys {
     keys[id] = settingsValue || envValue;
   }
   return keys;
+}
+
+export function resolveEigenApiKey(settings: AppSettings): string {
+  return settings.eigenApiKey || ((import.meta.env?.VITE_EIGEN_API_KEY as string) ?? '');
+}
+
+export function resolveBosonApiKey(settings: AppSettings): string {
+  return settings.bosonApiKey || ((import.meta.env?.VITE_BOSON_API_KEY as string) ?? '');
 }
 
 /**

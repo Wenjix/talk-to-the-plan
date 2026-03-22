@@ -33,7 +33,6 @@ export class AudioPlayback {
   stop(): void {
     if (this.audio) {
       this.audio.pause();
-      this.audio.src = '';
     }
     this.cleanup();
   }
@@ -51,11 +50,7 @@ export class AudioPlayback {
       URL.revokeObjectURL(this.objectUrl);
       this.objectUrl = null;
     }
-    if (this.audio) {
-      this.audio.removeAttribute('src');
-      this.audio.load();
-      this.audio = null;
-    }
+    this.audio = null;
   }
 }
 

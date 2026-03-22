@@ -153,3 +153,81 @@ export class VoiceRecorder {
     this.startedAt = 0;
   }
 }
+
+/**
+ * Accumulates PCM audio into a single Float32Array buffer.
+ * Uses the same 16kHz AudioWorklet as PCMRecorder but collects
+ * all chunks for batch processing (e.g. chunkPcmBuffer).
+ */
+export class BufferedPCMRecorder {
+  private context: AudioContext | null = null;
+  private source: MediaStreamAudioSourceNode | null = null;
+  private workletNode: AudioWorkletNode | null = null;
+  private stream: MediaStream | null = null;
+  private chunks: Int16Array[] = [];
+  private startedAt = 0;
+
+  async start(): Promise<void> {
+    try {
+      this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch {
+      throw new MicPermissionError();
+    }
+
+    this.chunks = [];
+    this.context = new AudioContext({ sampleRate: 16000 });
+    await this.context.audioWorklet.addModule('/pcm-processor.js');
+
+    this.source = this.context.createMediaStreamSource(this.stream);
+    this.workletNode = new AudioWorkletNode(this.context, 'pcm-processor');
+
+    this.workletNode.port.onmessage = (e: MessageEvent<ArrayBuffer>) => {
+      this.chunks.push(new Int16Array(e.data));
+    };
+
+    this.source.connect(this.workletNode);
+    this.workletNode.connect(this.context.destination);
+    this.startedAt = Date.now();
+  }
+
+  stop(): Float32Array {
+    this.workletNode?.disconnect();
+    this.source?.disconnect();
+
+    let totalSamples = 0;
+    for (const chunk of this.chunks) {
+      totalSamples += chunk.length;
+    }
+
+    const buffer = new Float32Array(totalSamples);
+    let offset = 0;
+    for (const chunk of this.chunks) {
+      for (let i = 0; i < chunk.length; i++) {
+        buffer[offset++] = chunk[i] / 0x7fff;
+      }
+    }
+
+    this.chunks = [];
+    return buffer;
+  }
+
+  getElapsedMs(): number {
+    if (!this.startedAt) return 0;
+    return Date.now() - this.startedAt;
+  }
+
+  destroy(): void {
+    this.workletNode?.disconnect();
+    this.source?.disconnect();
+    this.stream?.getTracks().forEach((t) => t.stop());
+    if (this.context?.state !== 'closed') {
+      this.context?.close().catch(() => {});
+    }
+    this.context = null;
+    this.source = null;
+    this.workletNode = null;
+    this.stream = null;
+    this.chunks = [];
+    this.startedAt = 0;
+  }
+}
