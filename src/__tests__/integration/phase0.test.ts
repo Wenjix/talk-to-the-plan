@@ -302,7 +302,6 @@ describe('Phase 0 Integration', () => {
     expect(semanticState.nodes).toEqual([]);
     expect(semanticState.edges).toEqual([]);
     expect(semanticState.promotions).toEqual([]);
-    expect(semanticState.lanePlans).toEqual([]);
     expect(semanticState.unifiedPlan).toBeNull();
 
     // Verify job store is empty
@@ -349,7 +348,6 @@ describe('Phase 0 Integration', () => {
       edges,
       promotions,
       lanes: [],
-      lanePlans: [],
       unifiedPlan: null,
       dialogueTurns: [],
     });
@@ -360,7 +358,6 @@ describe('Phase 0 Integration', () => {
     expect(state.nodes).toHaveLength(4);
     expect(state.edges).toHaveLength(3);
     expect(state.promotions).toHaveLength(2);
-    expect(state.lanePlans).toEqual([]);
     expect(state.unifiedPlan).toBeNull();
 
     // Verify individual nodes are correct

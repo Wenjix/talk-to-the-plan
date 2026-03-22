@@ -51,12 +51,6 @@
   margin: 0 0 8px 0;
 }
 
-.promotionCount {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  margin: 0 0 16px 0;
-}
-
 .generateBtn {
   padding: 10px 24px;
   border-radius: 8px;
@@ -65,7 +59,7 @@
   color: #fff;
   cursor: pointer;
   font-size: 0.85rem;
-  font-weight: 500;
+  font-weight: 600;
   transition: all 0.15s;
 }
 
@@ -77,76 +71,6 @@
 .generateBtn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
-}
-
-.planList {
-  margin-top: 20px;
-  padding-top: 12px;
-  border-top: 1px solid var(--plan-border);
-}
-
-.planListTitle {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  margin: 0 0 8px 0;
-}
-
-.planListItem {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 6px 10px;
-  border-radius: 6px;
-  margin-bottom: 4px;
-  font-size: 0.8rem;
-  color: var(--card-bullet-text);
-}
-
-.planListItem.active {
-  background: var(--btn-secondary-bg);
-  color: var(--text-primary);
-}
-
-.planListName {
-  flex: 1;
-}
-
-.planListConfidence {
-  font-size: 0.7rem;
-  color: var(--text-muted);
-}
-
-.directPlan {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 0 20px 8px;
-  text-align: center;
-}
-
-.directPlanText {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  margin: 0 0 12px 0;
-}
-
-.directPlanBtn {
-  padding: 10px 28px;
-  border-radius: 8px;
-  border: none;
-  background: var(--plan-accent);
-  color: #fff;
-  cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 600;
-  transition: all 0.15s;
-}
-
-.directPlanBtn:hover {
-  opacity: 0.85;
 }
 
 .spinner {
@@ -161,12 +85,6 @@
 
 @keyframes spin {
   to { transform: rotate(360deg); }
-}
-
-.divider {
-  height: 1px;
-  background: var(--plan-border);
-  margin: 16px 0;
 }
 
 /* Fullscreen overlay */

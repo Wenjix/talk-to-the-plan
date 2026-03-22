@@ -27,7 +27,6 @@ export interface SessionSummary {
   status: SessionStatus;
   createdAt: string;
   nodeCount: number;
-  lanePlanCount: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -89,7 +88,6 @@ export async function deleteSession(sessionId: string): Promise<void> {
       'nodes',
       'edges',
       'promotions',
-      'lanePlans',
       'unifiedPlans',
       'dialogueTurns',
       'jobs',
@@ -119,10 +117,7 @@ export async function listSessions(): Promise<SessionSummary[]> {
 
   const summaries = await Promise.all(
     savedSessions.map(async (s) => {
-      const [nodes, lanePlans] = await Promise.all([
-        getAllByIndex('nodes', 'by-session', s.id),
-        getAllByIndex('lanePlans', 'by-session', s.id),
-      ]);
+      const nodes = await getAllByIndex('nodes', 'by-session', s.id);
 
       // We need to get the full session to read status; listSavedSessions
       // only returns { id, topic, updatedAt }. We fetch the session entity.
@@ -135,7 +130,6 @@ export async function listSessions(): Promise<SessionSummary[]> {
         status: (fullSession?.status ?? 'exploring') as SessionStatus,
         createdAt: fullSession?.createdAt ?? s.updatedAt,
         nodeCount: nodes.length,
-        lanePlanCount: lanePlans.length,
       };
     }),
   );

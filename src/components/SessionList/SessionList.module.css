@@ -96,16 +96,6 @@
   color: var(--status-exploring-text);
 }
 
-.statusLanePlanning {
-  background: var(--status-lane-planning-bg);
-  color: var(--status-lane-planning-text);
-}
-
-.statusSynthesisReady {
-  background: var(--status-synthesis-ready-bg);
-  color: var(--status-synthesis-ready-text);
-}
-
 .statusSynthesized {
   background: var(--status-synthesized-bg);
   color: var(--status-synthesized-text);
@@ -123,22 +113,6 @@
   display: flex;
   align-items: center;
   gap: 4px;
-}
-
-/* Progress bar */
-
-.progressBar {
-  height: 4px;
-  border-radius: 2px;
-  background: var(--progress-bg);
-  overflow: hidden;
-}
-
-.progressFill {
-  height: 100%;
-  border-radius: 2px;
-  background: var(--progress-fill);
-  transition: width 0.3s ease;
 }
 
 /* Actions */

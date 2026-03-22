@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { UUIDSchema, ISODateTimeSchema } from './primitives';
+import { UUIDSchema } from './primitives';
 
 export const EvidenceRefSchema = z.object({
   nodeId: UUIDSchema,
@@ -26,15 +26,3 @@ export const StructuredPlanSchema = z.object({
 });
 export type StructuredPlan = z.infer<typeof StructuredPlanSchema>;
 
-export const LanePlanSchema = z.object({
-  id: UUIDSchema,
-  sessionId: UUIDSchema,
-  laneId: UUIDSchema,
-  title: z.string().min(1),
-  sections: StructuredPlanSchema,
-  sourcePromotionIds: z.array(UUIDSchema).min(1),
-  confidence: z.number().min(0).max(1),
-  createdAt: ISODateTimeSchema,
-  updatedAt: ISODateTimeSchema,
-});
-export type LanePlan = z.infer<typeof LanePlanSchema>;

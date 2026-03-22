@@ -214,7 +214,6 @@ describe('workspace-actions', () => {
 
       mockGetAllByIndex.mockImplementation(async (store: string) => {
         if (store === 'nodes') return [{ id: 'n1' }, { id: 'n2' }];
-        if (store === 'lanePlans') return [{ id: 'lp1' }];
         return [];
       });
 
@@ -222,7 +221,7 @@ describe('workspace-actions', () => {
         makeSession({
           id: sessionId,
           topic: 'My planning topic for team alignment',
-          status: 'lane_planning',
+          status: 'exploring',
           createdAt,
         }),
       );
@@ -232,9 +231,8 @@ describe('workspace-actions', () => {
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe(sessionId);
       expect(result[0].topic).toBe('My planning topic for team alignment');
-      expect(result[0].status).toBe('lane_planning');
+      expect(result[0].status).toBe('exploring');
       expect(result[0].nodeCount).toBe(2);
-      expect(result[0].lanePlanCount).toBe(1);
     });
 
     it('returns empty array when no sessions exist', async () => {

@@ -23,7 +23,6 @@ function makeSummary(overrides?: Partial<SessionSummary>): SessionSummary {
     status: 'exploring',
     createdAt: new Date().toISOString(),
     nodeCount: 5,
-    lanePlanCount: 1,
     ...overrides,
   };
 }
@@ -79,9 +78,8 @@ describe('SessionList', () => {
   it('shows topic, status, and node count on cards', async () => {
     const session = makeSummary({
       topic: 'Migrating from monolith to microservices strategy',
-      status: 'lane_planning',
+      status: 'exploring',
       nodeCount: 12,
-      lanePlanCount: 2,
     });
     mockListSessions.mockResolvedValue([session]);
     render(<SessionList {...defaultProps} />);
@@ -89,9 +87,8 @@ describe('SessionList', () => {
     await waitFor(() => {
       expect(screen.getByText('Migrating from monolith to microservices strategy')).toBeDefined();
     });
-    expect(screen.getByText('Lane Planning')).toBeDefined();
+    expect(screen.getByText('Exploring')).toBeDefined();
     expect(screen.getByText('12 nodes')).toBeDefined();
-    expect(screen.getByText('2/4 lanes planned')).toBeDefined();
   });
 
   it('shows singular "node" for 1 node', async () => {
@@ -107,8 +104,6 @@ describe('SessionList', () => {
   it('shows correct status badges for all statuses', async () => {
     const sessions = [
       makeSummary({ topic: 'Topic A is about something exploratory', status: 'exploring' }),
-      makeSummary({ topic: 'Topic B is about lane planning details', status: 'lane_planning' }),
-      makeSummary({ topic: 'Topic C is about synthesis readiness', status: 'synthesis_ready' }),
       makeSummary({ topic: 'Topic D is about synthesized outcomes', status: 'synthesized' }),
     ];
     mockListSessions.mockResolvedValue(sessions);
@@ -117,8 +112,6 @@ describe('SessionList', () => {
     await waitFor(() => {
       expect(screen.getByText('Exploring')).toBeDefined();
     });
-    expect(screen.getByText('Lane Planning')).toBeDefined();
-    expect(screen.getByText('Synthesis Ready')).toBeDefined();
     expect(screen.getByText('Synthesized')).toBeDefined();
   });
 

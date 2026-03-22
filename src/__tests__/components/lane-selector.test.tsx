@@ -144,7 +144,6 @@ describe('semantic-store lanes', () => {
       edges: [],
       promotions: [],
       lanes,
-      lanePlans: [],
       unifiedPlan: null,
       dialogueTurns: [],
     });

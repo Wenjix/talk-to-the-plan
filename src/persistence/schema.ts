@@ -5,7 +5,6 @@ import type {
   SemanticNode,
   SemanticEdge,
   Promotion,
-  LanePlan,
   UnifiedPlan,
   DialogueTurn,
   GenerationJob,
@@ -37,11 +36,6 @@ export interface FudaDB extends DBSchema {
     value: Promotion;
     indexes: { 'by-session': string; 'by-lane': string };
   };
-  lanePlans: {
-    key: string;
-    value: LanePlan;
-    indexes: { 'by-session': string; 'by-lane': string };
-  };
   unifiedPlans: {
     key: string;
     value: UnifiedPlan;
@@ -65,4 +59,4 @@ export interface FudaDB extends DBSchema {
 }
 
 export const DB_NAME = 'fuda-plan';
-export const DB_VERSION = 2;
+export const DB_VERSION = 3;

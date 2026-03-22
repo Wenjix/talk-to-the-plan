@@ -1,12 +1,11 @@
 import { create } from 'zustand';
-import type { SemanticNode, SemanticEdge, Promotion, LanePlan, UnifiedPlan, DialogueTurn, ModelLane, PersonaId } from '../core/types';
+import type { SemanticNode, SemanticEdge, Promotion, UnifiedPlan, DialogueTurn, ModelLane, PersonaId } from '../core/types';
 
 interface SemanticState {
   nodes: SemanticNode[];
   edges: SemanticEdge[];
   promotions: Promotion[];
   lanes: ModelLane[];
-  lanePlans: LanePlan[];
   unifiedPlan: UnifiedPlan | null;
   dialogueTurns: DialogueTurn[];
 
@@ -27,7 +26,6 @@ interface SemanticState {
   removePromotion: (id: string) => void;
 
   // Plans
-  addLanePlan: (plan: LanePlan) => void;
   setUnifiedPlan: (plan: UnifiedPlan | null) => void;
 
   // Dialogue turns
@@ -41,7 +39,6 @@ interface SemanticState {
     edges: SemanticEdge[];
     promotions: Promotion[];
     lanes: ModelLane[];
-    lanePlans: LanePlan[];
     unifiedPlan: UnifiedPlan | null;
     dialogueTurns: DialogueTurn[];
   }) => void;
@@ -53,7 +50,6 @@ export const useSemanticStore = create<SemanticState>()((set, get) => ({
   edges: [],
   promotions: [],
   lanes: [],
-  lanePlans: [],
   unifiedPlan: null,
   dialogueTurns: [],
 
@@ -69,7 +65,6 @@ export const useSemanticStore = create<SemanticState>()((set, get) => ({
   })),
   addPromotion: (promotion) => set((s) => ({ promotions: [...s.promotions, promotion] })),
   removePromotion: (id) => set((s) => ({ promotions: s.promotions.filter((p) => p.id !== id) })),
-  addLanePlan: (plan) => set((s) => ({ lanePlans: [...s.lanePlans, plan] })),
   setUnifiedPlan: (plan) => set({ unifiedPlan: plan }),
   addDialogueTurn: (turn) => set((s) => ({ dialogueTurns: [...s.dialogueTurns, turn] })),
   getDialogueTurnsByNode: (nodeId) => get().dialogueTurns.filter((t) => t.nodeId === nodeId),
@@ -77,5 +72,5 @@ export const useSemanticStore = create<SemanticState>()((set, get) => ({
     dialogueTurns: s.dialogueTurns.filter((t) => t.nodeId !== nodeId),
   })),
   loadSession: (data) => set(data),
-  clear: () => set({ nodes: [], edges: [], promotions: [], lanes: [], lanePlans: [], unifiedPlan: null, dialogueTurns: [] }),
+  clear: () => set({ nodes: [], edges: [], promotions: [], lanes: [], unifiedPlan: null, dialogueTurns: [] }),
 }));

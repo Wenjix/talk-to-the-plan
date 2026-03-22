@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type {
   UnifiedPlan,
   ModelLane,
-  LanePlan,
   PlanningSession,
   SemanticNode,
   SemanticEdge,
@@ -14,7 +13,6 @@ import type {
 } from '../../core/types';
 import {
   exportUnifiedPlanMarkdown,
-  exportLanePlanMarkdown,
   exportSessionJSON,
   importSessionJSON,
   downloadFile,
@@ -101,21 +99,6 @@ function makeUnifiedPlan(overrides?: Partial<UnifiedPlan>): UnifiedPlan {
   };
 }
 
-function makeLanePlan(overrides?: Partial<LanePlan>): LanePlan {
-  return {
-    id: crypto.randomUUID(),
-    sessionId,
-    laneId: laneAId,
-    title: 'Lane Plan A',
-    sections: makeSections(),
-    sourcePromotionIds: [crypto.randomUUID()],
-    confidence: 0.85,
-    createdAt: now,
-    updatedAt: now,
-    ...overrides,
-  };
-}
-
 function makeSession(overrides?: Partial<PlanningSession>): PlanningSession {
   return {
     id: sessionId,
@@ -192,8 +175,8 @@ describe('exportUnifiedPlanMarkdown', () => {
   const plan = makeUnifiedPlan();
   const md = exportUnifiedPlanMarkdown(plan, lanes);
 
-  it('contains the heading "Unified Plan"', () => {
-    expect(md).toContain('# Unified Plan');
+  it('contains the heading "Plan"', () => {
+    expect(md).toContain('# Plan');
   });
 
   it('contains all section headings', () => {
@@ -230,35 +213,6 @@ describe('exportUnifiedPlanMarkdown', () => {
 });
 
 // ---------------------------------------------------------------------------
-// exportLanePlanMarkdown
-// ---------------------------------------------------------------------------
-
-describe('exportLanePlanMarkdown', () => {
-  const lane = makeLane();
-  const plan = makeLanePlan();
-  const md = exportLanePlanMarkdown(plan, lane);
-
-  it('contains the lane label in the title', () => {
-    expect(md).toContain('# Expansive Lane Plan');
-  });
-
-  it('contains all section headings', () => {
-    for (const heading of ['Goals', 'Assumptions', 'Strategy', 'Milestones', 'Risks', 'Next Actions']) {
-      expect(md).toContain(`## ${heading}`);
-    }
-  });
-
-  it('contains evidence quotes with lane labels', () => {
-    expect(md).toContain('"This is key evidence"');
-    expect(md).toContain('(from Expansive)');
-  });
-
-  it('does not contain conflicts section', () => {
-    expect(md).not.toContain('## Conflicts Resolved');
-  });
-});
-
-// ---------------------------------------------------------------------------
 // exportSessionJSON
 // ---------------------------------------------------------------------------
 
@@ -268,7 +222,6 @@ describe('exportSessionJSON', () => {
   const edges = [makeEdge()];
   const promotions = [makePromotion()];
   const lanes = [makeLane()];
-  const lanePlans = [makeLanePlan()];
   const dialogueTurns = [makeDialogueTurn()];
 
   const json = exportSessionJSON(session, {
@@ -276,7 +229,6 @@ describe('exportSessionJSON', () => {
     edges,
     promotions,
     lanes,
-    lanePlans,
     unifiedPlan: null,
     dialogueTurns,
   });
@@ -289,7 +241,7 @@ describe('exportSessionJSON', () => {
     const parsed = JSON.parse(json) as Record<string, unknown>;
     for (const key of [
       'version', 'exportedAt', 'session', 'nodes', 'edges',
-      'promotions', 'lanes', 'lanePlans', 'unifiedPlan', 'dialogueTurns',
+      'promotions', 'lanes', 'unifiedPlan', 'dialogueTurns',
     ]) {
       expect(parsed).toHaveProperty(key);
     }
@@ -325,7 +277,6 @@ describe('importSessionJSON', () => {
   const edges = [makeEdge()];
   const promotions = [makePromotion()];
   const lanes = [makeLane()];
-  const lanePlans = [makeLanePlan()];
   const dialogueTurns = [makeDialogueTurn()];
 
   const json = exportSessionJSON(session, {
@@ -333,7 +284,6 @@ describe('importSessionJSON', () => {
     edges,
     promotions,
     lanes,
-    lanePlans,
     unifiedPlan: null,
     dialogueTurns,
   });
@@ -345,7 +295,6 @@ describe('importSessionJSON', () => {
     expect(result.edges).toHaveLength(1);
     expect(result.promotions).toHaveLength(1);
     expect(result.lanes).toHaveLength(1);
-    expect(result.lanePlans).toHaveLength(1);
     expect(result.dialogueTurns).toHaveLength(1);
     expect(result.unifiedPlan).toBeNull();
   });

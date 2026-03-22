@@ -44,34 +44,6 @@ const PathQuestionsResponseSchema = z.object({
   }),
 })
 
-const PairwiseMapResponseSchema = z.object({
-  contradictions: z.array(z.object({
-    description: z.string().min(1),
-    planAPosition: z.string().min(1),
-    planBPosition: z.string().min(1),
-  })),
-  synergies: z.array(z.object({
-    description: z.string().min(1),
-    sharedInsight: z.string().min(1),
-  })),
-  gaps: z.array(z.object({
-    description: z.string().min(1),
-    coveredBy: z.enum(['planA', 'planB']),
-    missingFrom: z.enum(['planA', 'planB']),
-  })),
-})
-
-const ReduceResponseSchema = z.object({
-  conflictsResolved: z.array(z.object({
-    description: z.string().min(1),
-    laneAId: z.string().min(1),
-    laneBId: z.string().min(1),
-    resolution: z.string().min(1),
-    tradeoff: z.string().min(1),
-  })),
-  unresolvedQuestions: z.array(z.string().min(1)),
-})
-
 const jobTypeSchemas: Record<JobType, z.ZodTypeAny> = {
   answer: AnswerSchema,
   branch: BranchResponseSchema,
@@ -79,8 +51,6 @@ const jobTypeSchemas: Record<JobType, z.ZodTypeAny> = {
   lane_plan: StructuredPlanSchema,
   unified_plan: StructuredPlanSchema,
   path_questions: PathQuestionsResponseSchema,
-  pairwise_map: PairwiseMapResponseSchema,
-  reduce: ReduceResponseSchema,
 }
 
 export interface SchemaGateResult {

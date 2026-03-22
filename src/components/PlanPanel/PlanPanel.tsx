@@ -1,156 +1,88 @@
 import { useState, useCallback } from 'react';
-import type { SessionStatus } from '../../core/types';
 import { useSemanticStore } from '../../store/semantic-store';
 import { useSessionStore } from '../../store/session-store';
-import { PlanCard } from '../PlanCard/PlanCard';
 import { SynthesisPanel } from '../SynthesisPanel/SynthesisPanel';
 import styles from './PlanPanel.module.css';
 
-const SYNTHESIS_STATUSES: ReadonlySet<SessionStatus> = new Set([
-  'lane_planning',
-  'synthesis_ready',
-  'synthesized',
-]);
+const MIN_PROMOTIONS = 3;
 
 interface PlanPanelProps {
-  onGeneratePlan: (laneId: string) => void;
-  onGenerateDirectPlan?: () => Promise<void>;
+  onGeneratePlan: () => Promise<void>;
   onEvidenceClick?: (nodeId: string) => void;
-  onSynthesize?: () => Promise<void>;
   onTalkToPlan?: () => void;
 }
 
-export function PlanPanel({ onGeneratePlan, onGenerateDirectPlan, onEvidenceClick, onSynthesize, onTalkToPlan }: PlanPanelProps) {
-  const lanePlans = useSemanticStore(s => s.lanePlans);
+export function PlanPanel({ onGeneratePlan, onEvidenceClick, onTalkToPlan }: PlanPanelProps) {
   const unifiedPlan = useSemanticStore(s => s.unifiedPlan);
-  const activeLaneId = useSessionStore(s => s.activeLaneId);
-  const sessionStatus = useSessionStore(s => s.session?.status ?? 'exploring');
-  const activePlan = lanePlans.find(p => p.laneId === activeLaneId);
-  const promotionCount = useSemanticStore(s =>
-    s.promotions.filter(p => p.laneId === activeLaneId).length,
-  );
   const totalPromotions = useSemanticStore(s => s.promotions.length);
+  const sessionStatus = useSessionStore(s => s.session?.status ?? 'exploring');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const handleDirectPlan = useCallback(async () => {
-    if (!onGenerateDirectPlan) return;
+  const handleGenerate = useCallback(async () => {
     setIsGenerating(true);
     try {
-      await onGenerateDirectPlan();
+      await onGeneratePlan();
       setIsExpanded(true);
     } finally {
       setIsGenerating(false);
     }
-  }, [onGenerateDirectPlan]);
+  }, [onGeneratePlan]);
 
-  const showSynthesis = SYNTHESIS_STATUSES.has(sessionStatus);
+  const canGenerate = totalPromotions >= MIN_PROMOTIONS;
+  const remaining = MIN_PROMOTIONS - totalPromotions;
 
   return (
     <div className={styles.panel}>
       <div className={styles.tabs}>
-        <span className={styles.tabLabel}>
-          Lane Plans ({lanePlans.length})
-        </span>
+        <span className={styles.tabLabel}>Plan</span>
         {unifiedPlan && (
-          <>
-            <span className={styles.tabLabel}>Unified Plan</span>
-            <button
-              className={styles.expandBtn}
-              onClick={() => setIsExpanded(true)}
-              title="Expand plan to full screen"
-            >
-              Expand
-            </button>
-          </>
+          <button
+            className={styles.expandBtn}
+            onClick={() => setIsExpanded(true)}
+            title="Expand plan to full screen"
+          >
+            Expand
+          </button>
         )}
       </div>
 
-      {activePlan ? (
-        <PlanCard plan={activePlan} onEvidenceClick={onEvidenceClick} />
+      {/* Plan exists: show it */}
+      {unifiedPlan ? (
+        <SynthesisPanel
+          status={sessionStatus}
+          unifiedPlan={unifiedPlan}
+          onEvidenceClick={onEvidenceClick}
+          onTalkToPlan={onTalkToPlan}
+        />
       ) : (
+        /* No plan yet: show generate UI */
         <div className={styles.empty}>
-          {promotionCount === 0 ? (
-            <>
-              <p className={styles.emptyHeading}>Promote nodes to build your plan</p>
-              <p className={styles.emptyHint}>
-                Click the &#x2606; on any resolved node to mark it as evidence for planning.
-              </p>
-            </>
-          ) : (
-            <>
-              <p className={styles.emptyText}>No plan generated for this lane yet.</p>
-              <p className={styles.promotionCount}>
-                {promotionCount} promoted node{promotionCount !== 1 ? 's' : ''} ready
-              </p>
-            </>
-          )}
-          <button
-            className={styles.generateBtn}
-            onClick={() => activeLaneId && onGeneratePlan(activeLaneId)}
-            disabled={promotionCount === 0}
-          >
-            Generate Lane Plan
-          </button>
-        </div>
-      )}
-
-      {/* Show all lane plans summary */}
-      {lanePlans.length > 1 && (
-        <div className={styles.planList}>
-          <h4 className={styles.planListTitle}>All Lane Plans</h4>
-          {lanePlans.map(p => (
-            <div
-              key={p.id}
-              className={`${styles.planListItem} ${p.laneId === activeLaneId ? styles.active : ''}`}
-            >
-              <span className={styles.planListName}>{p.title}</span>
-              <span className={styles.planListConfidence}>
-                {Math.round(p.confidence * 100)}%
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Direct plan generation */}
-      {totalPromotions >= 3 && !unifiedPlan && onGenerateDirectPlan && (
-        <div className={styles.directPlan}>
-          <div className={styles.divider} />
           {isGenerating ? (
             <>
               <div className={styles.spinner} />
-              <p className={styles.directPlanText}>Generating plan...</p>
+              <p className={styles.emptyText}>Generating plan...</p>
             </>
           ) : (
             <>
-              <p className={styles.directPlanText}>
-                {totalPromotions} promoted node{totalPromotions !== 1 ? 's' : ''} across all lanes
+              <p className={styles.emptyHeading}>
+                {canGenerate ? 'Ready to generate your plan' : 'Promote nodes to build your plan'}
+              </p>
+              <p className={styles.emptyHint}>
+                {canGenerate
+                  ? `${totalPromotions} promoted node${totalPromotions !== 1 ? 's' : ''} across all lanes`
+                  : `Promote at least ${MIN_PROMOTIONS} nodes across any lanes. ${remaining} more needed.`}
               </p>
               <button
-                className={styles.directPlanBtn}
-                onClick={() => void handleDirectPlan()}
+                className={styles.generateBtn}
+                onClick={() => void handleGenerate()}
+                disabled={!canGenerate}
               >
                 Generate Plan
               </button>
             </>
           )}
         </div>
-      )}
-
-      {/* Synthesis section */}
-      {showSynthesis && (
-        <>
-          <div className={styles.divider} />
-          <SynthesisPanel
-            status={sessionStatus}
-            lanePlans={lanePlans}
-            unifiedPlan={unifiedPlan}
-            onSynthesize={onSynthesize}
-            onEvidenceClick={onEvidenceClick}
-            onTalkToPlan={onTalkToPlan}
-          />
-        </>
       )}
 
       {/* Fullscreen plan overlay */}
@@ -172,9 +104,7 @@ export function PlanPanel({ onGeneratePlan, onGenerateDirectPlan, onEvidenceClic
             </div>
             <SynthesisPanel
               status={sessionStatus}
-              lanePlans={lanePlans}
               unifiedPlan={unifiedPlan}
-              onSynthesize={onSynthesize}
               onEvidenceClick={onEvidenceClick}
               onTalkToPlan={onTalkToPlan}
             />

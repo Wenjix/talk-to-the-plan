@@ -1,12 +1,11 @@
 import { z } from 'zod';
-import type { UnifiedPlan, ModelLane, LanePlan, PlanSection } from '../core/types';
+import type { UnifiedPlan, ModelLane, PlanSection } from '../core/types';
 import type { PlanningSession, SemanticNode, SemanticEdge, Promotion, DialogueTurn } from '../core/types';
 import { PlanningSessionSchema } from '../core/types/session';
 import { SemanticNodeSchema } from '../core/types/node';
 import { SemanticEdgeSchema } from '../core/types/edge';
 import { PromotionSchema } from '../core/types/promotion';
 import { ModelLaneSchema } from '../core/types/lane';
-import { LanePlanSchema } from '../core/types/plan';
 import { UnifiedPlanSchema } from '../core/types/unified-plan';
 import { DialogueTurnSchema } from '../core/types/dialogue';
 
@@ -22,7 +21,6 @@ export const SessionExportSchema = z.object({
   edges: z.array(SemanticEdgeSchema),
   promotions: z.array(PromotionSchema),
   lanes: z.array(ModelLaneSchema),
-  lanePlans: z.array(LanePlanSchema),
   unifiedPlan: UnifiedPlanSchema.nullable(),
   dialogueTurns: z.array(DialogueTurnSchema),
 });
@@ -61,7 +59,7 @@ function renderCategory(heading: string, sections: PlanSection[], lanes: ModelLa
 
 export function exportUnifiedPlanMarkdown(plan: UnifiedPlan, lanes: ModelLane[]): string {
   const lines: string[] = [
-    '# Unified Plan',
+    '# Plan',
     '',
     ...renderCategory('Goals', plan.sections.goals, lanes),
     ...renderCategory('Assumptions', plan.sections.assumptions, lanes),
@@ -93,22 +91,6 @@ export function exportUnifiedPlanMarkdown(plan: UnifiedPlan, lanes: ModelLane[])
   return lines.join('\n');
 }
 
-export function exportLanePlanMarkdown(plan: LanePlan, lane: ModelLane): string {
-  const lanes = [lane];
-  const lines: string[] = [
-    `# ${lane.label} Lane Plan`,
-    '',
-    ...renderCategory('Goals', plan.sections.goals, lanes),
-    ...renderCategory('Assumptions', plan.sections.assumptions, lanes),
-    ...renderCategory('Strategy', plan.sections.strategy, lanes),
-    ...renderCategory('Milestones', plan.sections.milestones, lanes),
-    ...renderCategory('Risks', plan.sections.risks, lanes),
-    ...renderCategory('Next Actions', plan.sections.nextActions, lanes),
-  ];
-
-  return lines.join('\n');
-}
-
 // ---------------------------------------------------------------------------
 // JSON export / import
 // ---------------------------------------------------------------------------
@@ -120,7 +102,6 @@ export function exportSessionJSON(
     edges: SemanticEdge[];
     promotions: Promotion[];
     lanes: ModelLane[];
-    lanePlans: LanePlan[];
     unifiedPlan: UnifiedPlan | null;
     dialogueTurns: DialogueTurn[];
   },
@@ -133,7 +114,6 @@ export function exportSessionJSON(
     edges: semanticState.edges,
     promotions: semanticState.promotions,
     lanes: semanticState.lanes,
-    lanePlans: semanticState.lanePlans,
     unifiedPlan: semanticState.unifiedPlan,
     dialogueTurns: semanticState.dialogueTurns,
   };

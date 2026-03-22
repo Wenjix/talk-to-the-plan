@@ -4,8 +4,7 @@ import type { ViewNodeState } from './view-store';
 import { getDescendantIds } from './view-store';
 
 export type ExplorationCardNode = Node<SemanticNode, 'explorationCard'>;
-export type PlanCardNode = Node<SemanticNode, 'planCard'>;
-export type RFNode = ExplorationCardNode | PlanCardNode;
+export type RFNode = ExplorationCardNode;
 export type FudaEdgeData = { pathType?: string; pathAccent?: string };
 export type RFEdge = Edge<FudaEdgeData>;
 
@@ -22,10 +21,8 @@ export function getComponentType(nodeType: NodeType): string {
   switch (nodeType) {
     case 'root':
     case 'exploration':
-      return 'explorationCard';
-    case 'lane_plan':
     case 'unified_plan':
-      return 'planCard';
+      return 'explorationCard';
   }
 }
 

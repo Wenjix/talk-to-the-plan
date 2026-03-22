@@ -14,7 +14,6 @@ import {
   EvidenceRefSchema,
   PlanSectionSchema,
   StructuredPlanSchema,
-  LanePlanSchema,
 } from '../../../core/types/plan'
 import { GenerationJobSchema } from '../../../core/types/job'
 import { CompiledContextSchema } from '../../../core/types/context'
@@ -122,10 +121,10 @@ describe('PlanningSessionSchema', () => {
     const result = PlanningSessionSchema.parse({
       ...validSession,
       challengeDepth: 'intense',
-      status: 'synthesis_ready',
+      status: 'synthesized',
     })
     expect(result.challengeDepth).toBe('intense')
-    expect(result.status).toBe('synthesis_ready')
+    expect(result.status).toBe('synthesized')
   })
 })
 
@@ -353,39 +352,6 @@ describe('StructuredPlanSchema', () => {
   it('rejects plan missing a required section group', () => {
     const { risks: _risks, ...incomplete } = makeStructuredPlan()
     expect(() => StructuredPlanSchema.parse(incomplete)).toThrow()
-  })
-})
-
-describe('LanePlanSchema', () => {
-  const validLanePlan = {
-    id: VALID_UUID,
-    sessionId: VALID_UUID_2,
-    laneId: VALID_UUID_3,
-    title: 'Lane Plan Title',
-    sections: makeStructuredPlan(),
-    sourcePromotionIds: [VALID_UUID_4],
-    confidence: 0.85,
-    createdAt: VALID_ISO,
-    updatedAt: VALID_ISO_2,
-  }
-
-  it('parses a valid lane plan', () => {
-    const result = LanePlanSchema.parse(validLanePlan)
-    expect(result.title).toBe('Lane Plan Title')
-    expect(result.confidence).toBe(0.85)
-    expect(result.sourcePromotionIds).toHaveLength(1)
-  })
-
-  it('rejects confidence out of range', () => {
-    expect(() =>
-      LanePlanSchema.parse({ ...validLanePlan, confidence: 1.5 }),
-    ).toThrow()
-  })
-
-  it('rejects empty sourcePromotionIds', () => {
-    expect(() =>
-      LanePlanSchema.parse({ ...validLanePlan, sourcePromotionIds: [] }),
-    ).toThrow()
   })
 })
 

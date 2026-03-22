@@ -13,9 +13,7 @@ import styles from './Toolbar.module.css';
 
 const STATUS_META: Record<SessionStatus, { className: string; hint: string }> = {
   exploring: { className: styles.statusExploring, hint: 'Explore and resolve nodes, then promote key findings' },
-  lane_planning: { className: styles.statusLanePlanning, hint: 'Generate more lane plans to unlock synthesis' },
-  synthesis_ready: { className: styles.statusSynthesisReady, hint: 'Lane plans ready \u2014 open Plan panel to synthesize' },
-  synthesized: { className: styles.statusSynthesized, hint: 'Unified plan created' },
+  synthesized: { className: styles.statusSynthesized, hint: 'Plan generated' },
 };
 
 export function Toolbar() {
@@ -83,7 +81,7 @@ export function Toolbar() {
           )}
           {session && uiMode === 'exploring' && (
             <button
-              className={`${styles.planToggle} ${planPanelOpen ? styles.planToggleActive : ''} ${session.status === 'synthesis_ready' && !planPanelOpen ? styles.planTogglePulse : ''}`}
+              className={`${styles.planToggle} ${planPanelOpen ? styles.planToggleActive : ''}`}
               onClick={togglePlanPanel}
               type="button"
               aria-label={planPanelOpen ? 'Close plan panel' : 'Open plan panel'}

@@ -17,8 +17,6 @@ export const JobTypeSchema = z.enum([
   'lane_plan',
   'unified_plan',
   'path_questions',
-  'pairwise_map',
-  'reduce',
 ]);
 export type JobType = z.infer<typeof JobTypeSchema>;
 

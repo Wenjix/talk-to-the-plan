@@ -290,7 +290,6 @@ describe('loadSessionEnvelope', () => {
     expect(envelope.edges).toHaveLength(1)
     expect(envelope.edges[0]).toEqual(edge)
     expect(envelope.promotions).toEqual([])
-    expect(envelope.lanePlans).toEqual([])
     expect(envelope.unifiedPlans).toEqual([])
     expect(envelope.dialogueTurns).toEqual([])
   })

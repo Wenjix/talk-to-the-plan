@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { buildLanePlanPrompt } from '../../generation/prompts/lane-plan'
-import type { SemanticNode, Promotion, PersonaId } from '../../core/types'
+import { buildDirectPlanPrompt } from '../../generation/prompts/lane-plan'
+import type { SemanticNode, Promotion } from '../../core/types'
 
 const now = '2026-03-01T00:00:00.000+00:00'
 const sessionId = '00000000-0000-4000-a000-000000000000'
@@ -70,69 +70,69 @@ const promotedNodes = [
 
 const sessionTopic = 'Migrating monolith to microservices architecture'
 
-describe('buildLanePlanPrompt', () => {
+describe('buildDirectPlanPrompt', () => {
   it('produces non-empty output', () => {
-    const result = buildLanePlanPrompt(promotedNodes, 'analytical', sessionTopic)
+    const result = buildDirectPlanPrompt(promotedNodes, sessionTopic)
     expect(result.length).toBeGreaterThan(100)
   })
 
   it('contains SYSTEM marker', () => {
-    const result = buildLanePlanPrompt(promotedNodes, 'analytical', sessionTopic)
+    const result = buildDirectPlanPrompt(promotedNodes, sessionTopic)
     expect(result).toContain('[SYSTEM]')
   })
 
   it('contains PLANNING CONTEXT marker', () => {
-    const result = buildLanePlanPrompt(promotedNodes, 'analytical', sessionTopic)
+    const result = buildDirectPlanPrompt(promotedNodes, sessionTopic)
     expect(result).toContain('[PLANNING CONTEXT]')
   })
 
   it('contains TASK marker', () => {
-    const result = buildLanePlanPrompt(promotedNodes, 'analytical', sessionTopic)
+    const result = buildDirectPlanPrompt(promotedNodes, sessionTopic)
     expect(result).toContain('[TASK]')
   })
 
   it('contains session topic', () => {
-    const result = buildLanePlanPrompt(promotedNodes, 'analytical', sessionTopic)
+    const result = buildDirectPlanPrompt(promotedNodes, sessionTopic)
     expect(result).toContain(sessionTopic)
   })
 
   it('contains promoted node questions', () => {
-    const result = buildLanePlanPrompt(promotedNodes, 'analytical', sessionTopic)
+    const result = buildDirectPlanPrompt(promotedNodes, sessionTopic)
     expect(result).toContain(node1.question)
     expect(result).toContain(node2.question)
   })
 
   it('contains answer summaries from promoted nodes', () => {
-    const result = buildLanePlanPrompt(promotedNodes, 'analytical', sessionTopic)
+    const result = buildDirectPlanPrompt(promotedNodes, sessionTopic)
     expect(result).toContain('Deployment coupling is the main risk.')
     expect(result).toContain('Incremental migration with dual-write.')
   })
 
   it('contains answer bullets from promoted nodes', () => {
-    const result = buildLanePlanPrompt(promotedNodes, 'analytical', sessionTopic)
+    const result = buildDirectPlanPrompt(promotedNodes, sessionTopic)
     expect(result).toContain('Zero-downtime deploys require blue-green setup')
     expect(result).toContain('Dual-write pattern minimizes downtime')
   })
 
   it('contains promotion reason', () => {
-    const result = buildLanePlanPrompt(promotedNodes, 'analytical', sessionTopic)
+    const result = buildDirectPlanPrompt(promotedNodes, sessionTopic)
     expect(result).toContain('risk_identification')
     expect(result).toContain('actionable_detail')
   })
 
   it('contains promotion note when present', () => {
-    const result = buildLanePlanPrompt(promotedNodes, 'analytical', sessionTopic)
+    const result = buildDirectPlanPrompt(promotedNodes, sessionTopic)
     expect(result).toContain('Critical deployment risk')
   })
 
   it('contains node IDs for evidence referencing', () => {
-    const result = buildLanePlanPrompt(promotedNodes, 'analytical', sessionTopic)
+    const result = buildDirectPlanPrompt(promotedNodes, sessionTopic)
     expect(result).toContain(node1.id)
     expect(result).toContain(node2.id)
   })
 
   it('requests JSON schema in output', () => {
-    const result = buildLanePlanPrompt(promotedNodes, 'analytical', sessionTopic)
+    const result = buildDirectPlanPrompt(promotedNodes, sessionTopic)
     expect(result).toContain('"goals"')
     expect(result).toContain('"assumptions"')
     expect(result).toContain('"strategy"')
@@ -144,20 +144,13 @@ describe('buildLanePlanPrompt', () => {
   })
 
   it('includes promoted node count', () => {
-    const result = buildLanePlanPrompt(promotedNodes, 'analytical', sessionTopic)
-    expect(result).toContain('Promoted Evidence (2 nodes)')
+    const result = buildDirectPlanPrompt(promotedNodes, sessionTopic)
+    expect(result).toContain('Promoted Evidence (2 nodes from all lanes)')
   })
 
-  describe('persona preambles', () => {
-    it.each([
-      ['expansive', 'Expansive Planner'],
-      ['analytical', 'Analytical Planner'],
-      ['pragmatic', 'Pragmatic Planner'],
-      ['socratic', 'Socratic Questioner'],
-    ] as [PersonaId, string][])('uses %s persona preamble', (personaId, expected) => {
-      const result = buildLanePlanPrompt(promotedNodes, personaId, sessionTopic)
-      expect(result).toContain(expected)
-    })
+  it('uses strategic planner preamble', () => {
+    const result = buildDirectPlanPrompt(promotedNodes, sessionTopic)
+    expect(result).toContain('Strategic Planner')
   })
 
   it('handles nodes without answers', () => {
@@ -170,9 +163,8 @@ describe('buildLanePlanPrompt', () => {
       nodeNoAnswer.id,
       'actionable_detail',
     )
-    const result = buildLanePlanPrompt(
+    const result = buildDirectPlanPrompt(
       [{ node: nodeNoAnswer, promotion: promo }],
-      'analytical',
       sessionTopic,
     )
     expect(result).toContain('What about testing strategy?')
@@ -180,12 +172,11 @@ describe('buildLanePlanPrompt', () => {
   })
 
   it('handles single promoted node', () => {
-    const result = buildLanePlanPrompt(
+    const result = buildDirectPlanPrompt(
       [{ node: node1, promotion: promotion1 }],
-      'pragmatic',
       sessionTopic,
     )
-    expect(result).toContain('Promoted Evidence (1 nodes)')
+    expect(result).toContain('Promoted Evidence (1 nodes from all lanes)')
     expect(result).toContain(node1.question)
     expect(result).not.toContain(node2.question)
   })

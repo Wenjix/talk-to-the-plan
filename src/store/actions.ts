@@ -581,10 +581,8 @@ export async function runJob(
         case 'dialogue_turn':
         case 'lane_plan':
         case 'unified_plan':
-        case 'pairwise_map':
-        case 'reduce':
           // These are handled by their own action modules
-          // (dialogue-actions.ts, plan-actions.ts, synthesis-actions.ts)
+          // (dialogue-actions.ts, plan-actions.ts)
           break;
       }
     }

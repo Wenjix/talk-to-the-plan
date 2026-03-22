@@ -97,49 +97,6 @@ function buildStructuredPlan(_prompt: string): object {
   };
 }
 
-function buildPairwiseMap(_prompt: string): object {
-  return {
-    contradictions: [
-      {
-        description: 'The two perspectives disagree on the appropriate level of centralization.',
-        planAPosition: 'Favors distributed decision-making with local autonomy.',
-        planBPosition: 'Recommends centralized coordination to ensure consistency.',
-      },
-    ],
-    synergies: [
-      {
-        description: 'Both approaches emphasize the importance of rapid feedback loops.',
-        sharedInsight: 'Iterative validation reduces risk regardless of governance model.',
-      },
-    ],
-    gaps: [
-      {
-        description: 'Neither plan adequately addresses the change management required for adoption.',
-        coveredBy: 'planA',
-        missingFrom: 'planB',
-      },
-    ],
-  };
-}
-
-function buildReduce(_prompt: string): object {
-  return {
-    conflictsResolved: [
-      {
-        description: 'Centralization vs. autonomy tension',
-        laneAId: '00000000-0000-4000-a000-000000000010',
-        laneBId: '00000000-0000-4000-a000-000000000011',
-        resolution: 'Adopt a federated model: central standards with local implementation flexibility.',
-        tradeoff: 'Slightly slower initial rollout in exchange for better long-term adaptability.',
-      },
-    ],
-    unresolvedQuestions: [
-      'How should we handle edge cases where local needs genuinely conflict with central standards?',
-      'What governance mechanism ensures the federated model does not drift toward either extreme?',
-    ],
-  };
-}
-
 function buildPlanReflection(_prompt: string): object {
   const fakeId = () => crypto.randomUUID();
   return {
@@ -215,9 +172,6 @@ function detectJobType(prompt: string): string {
   if (lower.includes('follow-up questions') || lower.includes('"branches"')) return 'branch';
   if (lower.includes('dialogue_turn') || lower.includes('dialogue turn') || lower.includes('dialectic')) return 'dialogue_turn';
   if (lower.includes('unified_plan') || (lower.includes('unified') && lower.includes('plan'))) return 'unified_plan';
-  if (lower.includes('lane_plan') || (lower.includes('lane') && lower.includes('plan'))) return 'lane_plan';
-  if (lower.includes('pairwise_map') || lower.includes('pairwise')) return 'pairwise_map';
-  if (lower.includes('reduce_prompt') || lower.includes('merge plans') || lower.includes('conflictsresolved')) return 'reduce';
   if (lower.includes('plan reflection') || lower.includes('plan_reflection') || lower.includes('reflection transcript')) return 'plan_reflection';
   return 'answer';
 }
@@ -233,10 +187,6 @@ function generateResponseForType(jobType: string, prompt: string): string {
     case 'lane_plan':
     case 'unified_plan':
       return JSON.stringify(buildStructuredPlan(prompt));
-    case 'pairwise_map':
-      return JSON.stringify(buildPairwiseMap(prompt));
-    case 'reduce':
-      return JSON.stringify(buildReduce(prompt));
     case 'plan_reflection':
       return JSON.stringify(buildPlanReflection(prompt));
     default:

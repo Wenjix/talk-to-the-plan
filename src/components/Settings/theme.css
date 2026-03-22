@@ -70,8 +70,6 @@
   --session-card-border: #e0e0e0;
   --session-card-border-hover: #b0b0c0;
   --session-meta-text: #888899;
-  --progress-bg: #eaeaea;
-  --progress-fill: #6366f1;
 
   /* Dialogue */
   --dialogue-bg: #ffffff;
@@ -150,10 +148,6 @@
   /* Session status colors */
   --status-exploring-bg: #e3f2fd;
   --status-exploring-text: #1976d2;
-  --status-lane-planning-bg: #fff8e1;
-  --status-lane-planning-text: #f57f17;
-  --status-synthesis-ready-bg: #e8f5e9;
-  --status-synthesis-ready-text: #2e7d32;
   --status-synthesized-bg: #f3e8ff;
   --status-synthesized-text: #7c3aed;
 
@@ -269,8 +263,6 @@
   --session-card-border: #2a2a3a;
   --session-card-border-hover: #4a4a6a;
   --session-meta-text: #6a6a8a;
-  --progress-bg: #1a1a2e;
-  --progress-fill: #7b4fbf;
 
   /* Dialogue */
   --dialogue-bg: #12121a;
@@ -349,10 +341,6 @@
   /* Session status colors */
   --status-exploring-bg: #1a2a3a;
   --status-exploring-text: #4a90d9;
-  --status-lane-planning-bg: #2a2a1a;
-  --status-lane-planning-text: #d9a84f;
-  --status-synthesis-ready-bg: #1a3a2a;
-  --status-synthesis-ready-text: #3daa6d;
   --status-synthesized-bg: #2a1a3a;
   --status-synthesized-text: #9b6fd0;
 

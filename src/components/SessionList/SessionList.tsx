@@ -81,7 +81,6 @@ export function SessionList({
               status={session.status}
               createdAt={session.createdAt}
               nodeCount={session.nodeCount}
-              lanePlanCount={session.lanePlanCount}
               onOpen={onOpenSession}
               onDelete={handleDelete}
             />

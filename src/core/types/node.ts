@@ -13,7 +13,6 @@ export type NodeFSMState = z.infer<typeof NodeFSMStateSchema>;
 export const NodeTypeSchema = z.enum([
   'root',
   'exploration',
-  'lane_plan',
   'unified_plan',
 ]);
 export type NodeType = z.infer<typeof NodeTypeSchema>;

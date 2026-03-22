@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { propagateStaleness, propagateCrossLayerStaleness } from '../../../core/graph/staleness'
-import type { SemanticNode, SemanticEdge, Promotion, LanePlan, UnifiedPlan } from '../../../core/types'
+import type { SemanticNode, SemanticEdge, Promotion, UnifiedPlan } from '../../../core/types'
 
 const now = '2026-03-01T00:00:00.000+00:00'
 const sessionId = '00000000-0000-4000-a000-000000000000'
@@ -131,27 +131,6 @@ describe('propagateCrossLayerStaleness', () => {
     }
   }
 
-  function makeLanePlan(id: string, sourcePromotionIds: string[]): LanePlan {
-    return {
-      id,
-      sessionId,
-      laneId,
-      title: `Plan ${id}`,
-      sections: {
-        goals: [{ heading: 'G', content: ['g1'], evidence: [{ nodeId: 'A', laneId, quote: 'q', relevance: 'primary' }] }],
-        assumptions: [{ heading: 'A', content: ['a1'], evidence: [{ nodeId: 'A', laneId, quote: 'q', relevance: 'primary' }] }],
-        strategy: [{ heading: 'S', content: ['s1'], evidence: [{ nodeId: 'A', laneId, quote: 'q', relevance: 'primary' }] }],
-        milestones: [{ heading: 'M', content: ['m1'], evidence: [{ nodeId: 'A', laneId, quote: 'q', relevance: 'primary' }] }],
-        risks: [{ heading: 'R', content: ['r1'], evidence: [{ nodeId: 'A', laneId, quote: 'q', relevance: 'primary' }] }],
-        nextActions: [{ heading: 'N', content: ['n1'], evidence: [{ nodeId: 'A', laneId, quote: 'q', relevance: 'primary' }] }],
-      },
-      sourcePromotionIds,
-      confidence: 0.8,
-      createdAt: now,
-      updatedAt: now,
-    }
-  }
-
   function makeUnifiedPlan(sourcePlanIds: string[]): UnifiedPlan {
     return {
       id: 'unified-1',
@@ -174,86 +153,72 @@ describe('propagateCrossLayerStaleness', () => {
     }
   }
 
-  it('marks lane plans stale when promoted node is affected', () => {
+  it('marks stale nodes when promoted node is affected', () => {
     const promotions = [makePromotion('promo-B', 'B')]
-    const lanePlans = [makeLanePlan('plan-1', ['promo-B'])]
 
-    const result = propagateCrossLayerStaleness('A', nodes, edges, promotions, lanePlans, null)
+    const result = propagateCrossLayerStaleness('A', nodes, edges, promotions, null)
 
     expect(result.staleNodeIds).toContain('B')
-    expect(result.staleLanePlanIds).toContain('plan-1')
   })
 
-  it('marks unified plan stale when a source lane plan is stale', () => {
+  it('marks unified plan stale when a promoted node is stale', () => {
     const promotions = [makePromotion('promo-B', 'B')]
-    const lanePlans = [makeLanePlan('plan-1', ['promo-B'])]
     const unified = makeUnifiedPlan(['plan-1', 'plan-2', 'plan-3'])
 
-    const result = propagateCrossLayerStaleness('A', nodes, edges, promotions, lanePlans, unified)
+    const result = propagateCrossLayerStaleness('A', nodes, edges, promotions, unified)
 
-    expect(result.staleLanePlanIds).toContain('plan-1')
     expect(result.unifiedPlanStale).toBe(true)
   })
 
-  it('does not mark lane plans stale when no promoted nodes are affected', () => {
+  it('does not mark unified plan stale when no promoted nodes are affected', () => {
     const promotions = [makePromotion('promo-C', 'C')]
-    const lanePlans = [makeLanePlan('plan-1', ['promo-C'])]
 
     // Change node B - C is a sibling, not downstream of B
-    const result = propagateCrossLayerStaleness('B', nodes, edges, promotions, lanePlans, null)
+    const result = propagateCrossLayerStaleness('B', nodes, edges, promotions, null)
 
     // B's downstream is only D; C is not affected
     expect(result.staleNodeIds).toContain('D')
     expect(result.staleNodeIds).not.toContain('C')
-    expect(result.staleLanePlanIds).toEqual([])
   })
 
   it('includes changed node itself in promotion check', () => {
     // Promoted node IS the changed node
     const promotions = [makePromotion('promo-A', 'A')]
-    const lanePlans = [makeLanePlan('plan-1', ['promo-A'])]
 
-    const result = propagateCrossLayerStaleness('A', nodes, edges, promotions, lanePlans, null)
+    const result = propagateCrossLayerStaleness('A', nodes, edges, promotions, null)
 
-    expect(result.staleLanePlanIds).toContain('plan-1')
+    expect(result.staleNodeIds).toContain('B')
   })
 
-  it('does not mark unified plan stale when no lane plans are stale', () => {
+  it('does not mark unified plan stale when no promotions exist', () => {
     const promotions: Promotion[] = []
-    const lanePlans: LanePlan[] = []
     const unified = makeUnifiedPlan(['plan-1', 'plan-2', 'plan-3'])
 
-    const result = propagateCrossLayerStaleness('A', nodes, edges, promotions, lanePlans, unified)
+    const result = propagateCrossLayerStaleness('A', nodes, edges, promotions, unified)
 
-    expect(result.staleLanePlanIds).toEqual([])
     expect(result.unifiedPlanStale).toBe(false)
   })
 
   it('returns false for unifiedPlanStale when no unified plan exists', () => {
     const promotions = [makePromotion('promo-B', 'B')]
-    const lanePlans = [makeLanePlan('plan-1', ['promo-B'])]
 
-    const result = propagateCrossLayerStaleness('A', nodes, edges, promotions, lanePlans, null)
+    const result = propagateCrossLayerStaleness('A', nodes, edges, promotions, null)
 
-    expect(result.staleLanePlanIds).toContain('plan-1')
     expect(result.unifiedPlanStale).toBe(false)
   })
 
-  it('handles multiple promotions across plans', () => {
+  it('handles multiple promotions', () => {
     const promotions = [
       makePromotion('promo-B', 'B'),
       makePromotion('promo-D', 'D'),
       makePromotion('promo-C', 'C'),
     ]
-    const lanePlans = [
-      makeLanePlan('plan-1', ['promo-B', 'promo-D']),
-      makeLanePlan('plan-2', ['promo-C']),
-    ]
 
     // Change A: B, C, D are all downstream
-    const result = propagateCrossLayerStaleness('A', nodes, edges, promotions, lanePlans, null)
+    const result = propagateCrossLayerStaleness('A', nodes, edges, promotions, null)
 
-    expect(result.staleLanePlanIds).toContain('plan-1')
-    expect(result.staleLanePlanIds).toContain('plan-2')
+    expect(result.staleNodeIds).toContain('B')
+    expect(result.staleNodeIds).toContain('C')
+    expect(result.staleNodeIds).toContain('D')
   })
 })

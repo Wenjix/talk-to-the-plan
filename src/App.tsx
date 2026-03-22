@@ -1,11 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useSessionStore } from './store/session-store';
-import { useSemanticStore } from './store/semantic-store';
 import { useViewStore } from './store/view-store';
 import { switchSession, deleteSession, listSessions } from './store/workspace-actions';
-import { generateLanePlan, generateDirectPlan } from './store/plan-actions';
+import { generateDirectPlan } from './store/plan-actions';
 import { useToastStore } from './store/toast-store';
-import { triggerSynthesis } from './store/synthesis-actions';
 import { toggleTerminal } from './store/terminal-actions';
 import { addUserTurn, generateDialogueResponse, concludeDialogue } from './store/dialogue-actions';
 import { usePlanTalkStore } from './store/plan-talk-store';
@@ -69,38 +67,16 @@ function App() {
     });
   }, []);
 
-  const handleGeneratePlan = useCallback((laneId: string) => {
-    const lanes = useSemanticStore.getState().lanes;
-    const lane = lanes.find(l => l.id === laneId);
-    const personaId = lane?.personaId ?? 'analytical';
-    generateLanePlan(laneId, personaId).catch((err) => {
-      console.error('Failed to generate lane plan:', err);
-      useToastStore.getState().addToast(
-        `Plan generation failed: ${err.message}`,
-        'error',
-        5000,
-      );
-    });
-  }, []);
-
-  const handleGenerateDirectPlan = useCallback(async () => {
+  const handleGeneratePlan = useCallback(async () => {
     try {
       await generateDirectPlan();
     } catch (err) {
-      console.error('Failed to generate direct plan:', err);
+      console.error('Failed to generate plan:', err);
       useToastStore.getState().addToast(
         `Plan generation failed: ${(err as Error).message}`,
         'error',
         5000,
       );
-    }
-  }, []);
-
-  const handleSynthesize = useCallback(async () => {
-    try {
-      await triggerSynthesis();
-    } catch (err) {
-      console.error('Failed to trigger synthesis:', err);
     }
   }, []);
 
@@ -162,8 +138,6 @@ function App() {
               <div className="plan-panel-container">
                 <PlanPanel
                   onGeneratePlan={handleGeneratePlan}
-                  onGenerateDirectPlan={handleGenerateDirectPlan}
-                  onSynthesize={handleSynthesize}
                   onTalkToPlan={handleTalkToPlan}
                 />
               </div>

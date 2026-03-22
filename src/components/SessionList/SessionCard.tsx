@@ -9,27 +9,19 @@ interface SessionCardProps {
   status: SessionStatus;
   createdAt: string;
   nodeCount: number;
-  lanePlanCount: number;
   onOpen: (sessionId: string) => void;
   onDelete: (sessionId: string) => void;
 }
 
 const STATUS_LABELS: Record<SessionStatus, string> = {
   exploring: 'Exploring',
-  lane_planning: 'Lane Planning',
-  synthesis_ready: 'Synthesis Ready',
   synthesized: 'Synthesized',
 };
 
 const STATUS_STYLES: Record<SessionStatus, string> = {
   exploring: styles.statusExploring,
-  lane_planning: styles.statusLanePlanning,
-  synthesis_ready: styles.statusSynthesisReady,
   synthesized: styles.statusSynthesized,
 };
-
-/** Total number of lane plan slots (4 lanes) */
-const TOTAL_LANES = 4;
 
 export function SessionCard({
   id,
@@ -37,7 +29,6 @@ export function SessionCard({
   status,
   createdAt,
   nodeCount,
-  lanePlanCount,
   onOpen,
   onDelete,
 }: SessionCardProps) {
@@ -60,11 +51,6 @@ export function SessionCard({
     setConfirming(false);
   }, []);
 
-  const progressPercent = Math.min(
-    Math.round((lanePlanCount / TOTAL_LANES) * 100),
-    100,
-  );
-
   return (
     <article className={styles.card}>
       <div className={styles.cardHeader}>
@@ -81,16 +67,6 @@ export function SessionCard({
         <span className={styles.metaItem}>
           {nodeCount} {nodeCount === 1 ? 'node' : 'nodes'}
         </span>
-        <span className={styles.metaItem}>
-          {lanePlanCount}/{TOTAL_LANES} lanes planned
-        </span>
-      </div>
-
-      <div className={styles.progressBar}>
-        <div
-          className={styles.progressFill}
-          style={{ width: `${progressPercent}%` }}
-        />
       </div>
 
       {confirming ? (

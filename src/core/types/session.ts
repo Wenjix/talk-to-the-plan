@@ -3,8 +3,6 @@ import { UUIDSchema, ISODateTimeSchema, ChallengeDepthSchema } from './primitive
 
 export const SessionStatusSchema = z.enum([
   'exploring',
-  'lane_planning',
-  'synthesis_ready',
   'synthesized',
 ]);
 export type SessionStatus = z.infer<typeof SessionStatusSchema>;

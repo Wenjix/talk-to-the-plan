@@ -189,7 +189,6 @@ describe('semantic-store', () => {
       edges: newEdges,
       promotions: newPromotions,
       lanes: [],
-      lanePlans: [],
       unifiedPlan: null,
       dialogueTurns: [],
     });
@@ -197,7 +196,6 @@ describe('semantic-store', () => {
     expect(useSemanticStore.getState().nodes).toEqual(newNodes);
     expect(useSemanticStore.getState().edges).toEqual(newEdges);
     expect(useSemanticStore.getState().promotions).toEqual(newPromotions);
-    expect(useSemanticStore.getState().lanePlans).toEqual([]);
     expect(useSemanticStore.getState().unifiedPlan).toBeNull();
   });
 
@@ -212,7 +210,6 @@ describe('semantic-store', () => {
     expect(state.nodes).toEqual([]);
     expect(state.edges).toEqual([]);
     expect(state.promotions).toEqual([]);
-    expect(state.lanePlans).toEqual([]);
     expect(state.unifiedPlan).toBeNull();
   });
 });

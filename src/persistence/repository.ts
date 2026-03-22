@@ -50,6 +50,13 @@ export function getDB(): Promise<IDBPDatabase<FudaDB>> {
           planTalkTurns.createIndex('by-session', 'sessionId');
           planTalkTurns.createIndex('by-unified-plan', 'unifiedPlanId');
         }
+
+        if (oldVersion < 3) {
+          // Remove deprecated lanePlans store
+          if (db.objectStoreNames.contains('lanePlans')) {
+            db.deleteObjectStore('lanePlans');
+          }
+        }
       },
     });
   }
@@ -118,7 +125,6 @@ export interface SessionEnvelope {
   nodes: StoreValue<FudaDB, 'nodes'>[];
   edges: StoreValue<FudaDB, 'edges'>[];
   promotions: StoreValue<FudaDB, 'promotions'>[];
-  lanePlans: StoreValue<FudaDB, 'lanePlans'>[];
   unifiedPlans: StoreValue<FudaDB, 'unifiedPlans'>[];
   dialogueTurns: StoreValue<FudaDB, 'dialogueTurns'>[];
   planTalkTurns: StoreValue<FudaDB, 'planTalkTurns'>[];
@@ -133,14 +139,13 @@ export async function loadSessionEnvelope(
 ): Promise<SessionEnvelope> {
   const db = await getDB();
 
-  const [session, lanes, nodes, edges, promotions, lanePlans, unifiedPlans, dialogueTurns, planTalkTurns] =
+  const [session, lanes, nodes, edges, promotions, unifiedPlans, dialogueTurns, planTalkTurns] =
     await Promise.all([
       db.get('sessions', sessionId),
       db.getAllFromIndex('lanes', 'by-session', sessionId),
       db.getAllFromIndex('nodes', 'by-session', sessionId),
       db.getAllFromIndex('edges', 'by-session', sessionId),
       db.getAllFromIndex('promotions', 'by-session', sessionId),
-      db.getAllFromIndex('lanePlans', 'by-session', sessionId),
       db.getAllFromIndex('unifiedPlans', 'by-session', sessionId),
       db.getAllFromIndex('dialogueTurns', 'by-session', sessionId),
       db.getAllFromIndex('planTalkTurns', 'by-session', sessionId),
@@ -150,5 +155,5 @@ export async function loadSessionEnvelope(
     throw new Error(`Session not found: ${sessionId}`);
   }
 
-  return { session, lanes, nodes, edges, promotions, lanePlans, unifiedPlans, dialogueTurns, planTalkTurns };
+  return { session, lanes, nodes, edges, promotions, unifiedPlans, dialogueTurns, planTalkTurns };
 }
