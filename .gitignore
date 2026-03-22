@@ -33,6 +33,7 @@ dist-ssr
 .env
 
 # Tool configs
-.beads/
+.beads/*
+!.beads/issues.jsonl
 .serena/
 .claude/
