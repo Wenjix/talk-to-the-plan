@@ -32,6 +32,9 @@ dist-ssr
 # Secrets
 .env
 
+# Lock files (pnpm only)
+package-lock.json
+
 # Tool configs
 .beads/*
 !.beads/issues.jsonl

@@ -1,0 +1,18 @@
+{
+  "buildCommand": "pnpm install --ignore-scripts && pnpm run build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    {
+      "source": "/api/eigen/:path*",
+      "destination": "https://api-web.eigenai.com/:path*"
+    },
+    {
+      "source": "/api/boson/:path*",
+      "destination": "https://hackathon.boson.ai/:path*"
+    },
+    {
+      "source": "/((?!assets|vite\\.svg|pcm-processor\\.js).*)",
+      "destination": "/index.html"
+    }
+  ]
+}
