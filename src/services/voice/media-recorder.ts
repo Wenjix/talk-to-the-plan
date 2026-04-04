@@ -193,6 +193,7 @@ export class BufferedPCMRecorder {
   stop(): Float32Array {
     this.workletNode?.disconnect();
     this.source?.disconnect();
+    this.stream?.getTracks().forEach((t) => t.stop());
 
     let totalSamples = 0;
     for (const chunk of this.chunks) {

@@ -49,7 +49,7 @@ export function VoicePane() {
     audioPlayback.onEnd(() => {
       setPlayingTurnId(null);
     });
-    return () => audioPlayback.onEnd(() => {});
+    return () => audioPlayback.onEnd(null);
   }, []);
 
   // Cleanup recorder on unmount
@@ -99,7 +99,7 @@ export function VoicePane() {
       recorderRef.current?.destroy();
       recorderRef.current = null;
     }
-  }, [isRecording, eigenApiKey]);
+  }, [isRecording, eigenApiKey, voiceLanguage]);
 
   const handleReplay = useCallback(
     async (turnId: string) => {

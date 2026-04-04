@@ -41,7 +41,7 @@ export class AudioPlayback {
     return this.audio !== null && !this.audio.paused && !this.audio.ended;
   }
 
-  onEnd(callback: () => void): void {
+  onEnd(callback: (() => void) | null): void {
     this.endCallback = callback;
   }
 

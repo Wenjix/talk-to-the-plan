@@ -26,8 +26,12 @@ export async function fetchWithRetry(
 
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     const { controller, clear } = createTimeoutController(timeoutMs);
+    // Combine per-attempt timeout with any caller-provided signal (e.g. hard ceiling)
+    const signal = init.signal
+      ? AbortSignal.any([controller.signal, init.signal])
+      : controller.signal;
     try {
-      const response = await fetch(url, { ...init, signal: controller.signal });
+      const response = await fetch(url, { ...init, signal });
       clear();
 
       if (response.status === 429 || response.status >= 500) {

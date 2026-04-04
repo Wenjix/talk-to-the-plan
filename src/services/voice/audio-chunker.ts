@@ -57,7 +57,7 @@ function writeWavHeader(view: DataView, sampleRate: number, dataSize: number): v
   view.setUint32(40, dataSize, true);
 }
 
-function encodeWavChunk(pcm: Int16Array, sampleRate: number, chunkIndex: number): string {
+function encodeWavChunk(pcm: Int16Array, sampleRate: number): string {
   const dataSize = pcm.length * 2;
   const buffer = new ArrayBuffer(WAV_HEADER_SIZE + dataSize);
   const view = new DataView(buffer);
@@ -77,7 +77,7 @@ function encodeWavChunk(pcm: Int16Array, sampleRate: number, chunkIndex: number)
   }
   const base64 = btoa(binary);
 
-  return `data:audio/wav_${chunkIndex};base64,${base64}`;
+  return `data:audio/wav;base64,${base64}`;
 }
 
 export function chunkPcmBuffer(samples: Float32Array, sampleRate: number): ChunkResult {
@@ -94,7 +94,7 @@ export function chunkPcmBuffer(samples: Float32Array, sampleRate: number): Chunk
     if (rmsEnergy(segment) < RMS_SILENCE_THRESHOLD) continue;
     const chunkIndex = chunks.length;
     const pcm = float32ToInt16(segment);
-    const dataUrl = encodeWavChunk(pcm, sampleRate, chunkIndex);
+    const dataUrl = encodeWavChunk(pcm, sampleRate);
     chunks.push({ index: chunkIndex, dataUrl });
   }
 

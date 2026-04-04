@@ -15,11 +15,12 @@ interface VoiceChatState {
   ttsBlobs: Record<string, Blob>;
   ttsTurnStatus: Record<string, 'loading' | 'ready' | 'failed'>;
   activePanelNodeId: string | null;
+  panelPosition: { x: number; y: number };
 
   addTurn(turn: Omit<VoiceChatTurn, 'id' | 'createdAt'>): string;
   setTtsBlob(turnId: string, blob: Blob): void;
   setTtsTurnStatus(turnId: string, status: 'loading' | 'ready' | 'failed'): void;
-  openPanel(nodeId: string): void;
+  openPanel(nodeId: string, position: { x: number; y: number }): void;
   closePanel(): void;
   clearNodeHistory(nodeId: string): void;
 }
@@ -31,6 +32,7 @@ export const useVoiceChatStore = create<VoiceChatState>()((set) => ({
   ttsBlobs: {},
   ttsTurnStatus: {},
   activePanelNodeId: null,
+  panelPosition: { x: 0, y: 0 },
 
   addTurn: (partial) => {
     const id = generateId();
@@ -49,7 +51,7 @@ export const useVoiceChatStore = create<VoiceChatState>()((set) => ({
   setTtsTurnStatus: (turnId, status) =>
     set((s) => ({ ttsTurnStatus: { ...s.ttsTurnStatus, [turnId]: status } })),
 
-  openPanel: (nodeId) => set({ activePanelNodeId: nodeId }),
+  openPanel: (nodeId, position) => set({ activePanelNodeId: nodeId, panelPosition: position }),
 
   closePanel: () => set({ activePanelNodeId: null }),
 

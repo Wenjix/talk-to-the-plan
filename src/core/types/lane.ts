@@ -28,6 +28,9 @@ export const DEFAULT_LANES: Array<{
   colorToken: string;
 }> = [
   { personaId: 'expansive', label: 'Expansive', colorToken: '#7B4FBF' },
+  { personaId: 'analytical', label: 'Analytical', colorToken: '#4A90D9' },
+  { personaId: 'pragmatic', label: 'Pragmatic', colorToken: '#3DAA6D' },
+  { personaId: 'socratic', label: 'Socratic', colorToken: '#D94F4F' },
 ];
 
 export const PERSONA_META: Record<PersonaId, { label: string; colorToken: string }> = {

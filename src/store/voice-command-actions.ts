@@ -11,6 +11,7 @@ import { executeToolCall } from '../services/voice/tool-executor';
 import { textToSpeech } from '../services/voice/eigen-client';
 import { audioPlayback } from '../services/voice/audio-playback';
 import { useVoiceChatStore } from './voice-chat-store';
+import { useRadialMenuStore } from './radial-menu-store';
 import { stripMarkdown } from '../utils/strip-markdown';
 
 let activeRecorder: BufferedPCMRecorder | null = null;
@@ -118,7 +119,8 @@ export async function stopAndProcessVoiceCommand(): Promise<void> {
       text: result.message,
       toolName: result.toolName,
     });
-    chatStore.openPanel(targetNodeId);
+    const radialPos = useRadialMenuStore.getState().position;
+    chatStore.openPanel(targetNodeId, radialPos);
 
     // Non-blocking TTS with blob storage for replay
     const eigenKey = resolveEigenApiKey(settings);

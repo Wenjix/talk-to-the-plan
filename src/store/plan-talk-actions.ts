@@ -1,7 +1,7 @@
 import { useSessionStore } from './session-store';
 import { useSemanticStore } from './semantic-store';
 import { usePlanTalkStore } from './plan-talk-store';
-import { loadSettings, resolveApiKeys } from '../persistence/settings-store';
+import { loadSettings, resolveApiKeys, resolveEigenApiKey } from '../persistence/settings-store';
 import { getDefaultProvider } from '../generation/providers';
 import { buildPlanReflectionPrompt } from '../generation/prompts/plan-reflection';
 import { PlanReflectionResponseSchema } from '../core/types';
@@ -148,6 +148,7 @@ export async function analyzeReflection(transcriptText: string, source: 'voice' 
       settings.voiceLanguage,
     );
 
+    const eigenKey = resolveEigenApiKey(settings);
     let accumulated = '';
     let ttsStarted = false;
 
@@ -167,8 +168,8 @@ export async function analyzeReflection(transcriptText: string, source: 'voice' 
           ttsStarted = true;
           usePlanTalkStore.getState().setUnderstanding(understanding);
           // Start TTS immediately without waiting for gap cards/edits
-          if (settings.voiceTtsEnabled && settings.eigenApiKey) {
-            generateTts(aiTurnId, understanding, settings.eigenApiKey, settings.voiceTtsVoiceId, settings.voiceAutoPlayAi);
+          if (settings.voiceTtsEnabled && eigenKey) {
+            generateTts(aiTurnId, understanding, eigenKey, settings.voiceTtsVoiceId, settings.voiceAutoPlayAi);
           }
         }
       }
@@ -183,6 +184,10 @@ export async function analyzeReflection(transcriptText: string, source: 'voice' 
     if (!result.success) {
       console.warn('[PlanTalk] schema validation failed:', result.error.issues);
       console.warn('[PlanTalk] parsed response:', JSON.stringify(parsed).slice(0, 500));
+      // Clean up phantom TTS state if it was started during streaming
+      if (ttsStarted) {
+        usePlanTalkStore.getState().setTtsTurnStatus(aiTurnId, 'failed');
+      }
       usePlanTalkStore.getState().setError('Could not generate structured edits this turn. Please try again.');
       usePlanTalkStore.getState().setTurnState('error');
       usePlanTalkStore.getState().setStreamingResponse('');
@@ -218,8 +223,8 @@ export async function analyzeReflection(transcriptText: string, source: 'voice' 
     telemetry.track('voice_turn_completed', { source, turnId: aiTurn.id });
 
     // If TTS wasn't started during streaming (understanding extraction failed), start it now
-    if (!ttsStarted && settings.voiceTtsEnabled && settings.eigenApiKey) {
-      generateTts(aiTurn.id, data.understanding, settings.eigenApiKey, settings.voiceTtsVoiceId, settings.voiceAutoPlayAi);
+    if (!ttsStarted && settings.voiceTtsEnabled && eigenKey) {
+      generateTts(aiTurn.id, data.understanding, eigenKey, settings.voiceTtsVoiceId, settings.voiceAutoPlayAi);
     }
   } catch (err) {
     usePlanTalkStore.getState().setError(err instanceof Error ? err.message : 'Analysis failed');

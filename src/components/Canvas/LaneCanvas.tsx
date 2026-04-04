@@ -71,10 +71,10 @@ export function LaneCanvas({ laneId }: LaneCanvasProps) {
     );
   }, []);
 
-  // Re-layout when lane has all nodes at origin
-  const prevLaneRef = useRef(laneId);
+  // Re-layout when lane changes or on first mount
+  const prevLaneRef = useRef<string | undefined>(undefined);
   useEffect(() => {
-    if (prevLaneRef.current === laneId && prevLaneRef.current !== undefined) return;
+    if (prevLaneRef.current === laneId) return;
     prevLaneRef.current = laneId;
 
     const currentViewStates = useViewStore.getState().viewNodes;
