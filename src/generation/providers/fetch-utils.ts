@@ -25,6 +25,11 @@ export async function fetchWithRetry(
   let lastError: Error | null = null;
 
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    // If the caller's signal (e.g. hard ceiling) has already aborted, there is
+    // no point in making a request or sleeping between retries.
+    if (init.signal?.aborted) {
+      throw new Error(`${label} aborted by caller`);
+    }
     const { controller, clear } = createTimeoutController(timeoutMs);
     // Combine per-attempt timeout with any caller-provided signal (e.g. hard ceiling)
     const signal = init.signal
@@ -51,6 +56,10 @@ export async function fetchWithRetry(
     } catch (err) {
       clear();
       if (err instanceof DOMException && err.name === 'AbortError') {
+        // Distinguish caller-signal abort from per-attempt timeout
+        if (init.signal?.aborted) {
+          throw new Error(`${label} aborted by caller`);
+        }
         lastError = new Error(`${label} timeout after ${timeoutMs}ms`);
       } else if (err instanceof Error) {
         lastError = err;

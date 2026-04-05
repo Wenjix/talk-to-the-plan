@@ -1,4 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { Readable } from 'stream';
+import type { ReadableStream as WebReadableStream } from 'stream/web';
 
 const TARGET = 'https://hackathon.boson.ai';
 
@@ -17,11 +19,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
     res.status(upstream.status);
-    const contentType = upstream.headers.get('content-type');
-    if (contentType) res.setHeader('Content-Type', contentType);
+    upstream.headers.forEach((value, key) => {
+      if (key === 'content-encoding' || key === 'content-length' || key === 'transfer-encoding') return;
+      res.setHeader(key, value);
+    });
 
-    const body = await upstream.arrayBuffer();
-    res.send(Buffer.from(body));
+    if (upstream.body) {
+      Readable.fromWeb(upstream.body as WebReadableStream<Uint8Array>).pipe(res);
+    } else {
+      res.end();
+    }
   } catch (err) {
     res.status(502).json({ error: err instanceof Error ? err.message : 'Proxy error' });
   }

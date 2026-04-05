@@ -33,6 +33,12 @@ export function VoiceChatPanel({ position }: Props) {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [turns.length, isRecording, isProcessing]);
 
+  // Clear the audioPlayback singleton callback on unmount so it does not
+  // close over a stale setPlayingTurnId after this panel is destroyed.
+  useEffect(() => {
+    return () => audioPlayback.onEnd(null);
+  }, []);
+
   if (!nodeId) return null;
 
   function handleReplay(turnId: string) {

@@ -191,10 +191,6 @@ export class BufferedPCMRecorder {
   }
 
   stop(): Float32Array {
-    this.workletNode?.disconnect();
-    this.source?.disconnect();
-    this.stream?.getTracks().forEach((t) => t.stop());
-
     let totalSamples = 0;
     for (const chunk of this.chunks) {
       totalSamples += chunk.length;
@@ -208,7 +204,9 @@ export class BufferedPCMRecorder {
       }
     }
 
-    this.chunks = [];
+    // Fully release mic, audio nodes, and AudioContext so stop() leaves the
+    // recorder in a clean state without requiring a follow-up destroy() call.
+    this.releaseResources();
     return buffer;
   }
 
@@ -218,11 +216,15 @@ export class BufferedPCMRecorder {
   }
 
   destroy(): void {
+    this.releaseResources();
+  }
+
+  private releaseResources(): void {
     this.workletNode?.disconnect();
     this.source?.disconnect();
     this.stream?.getTracks().forEach((t) => t.stop());
-    if (this.context?.state !== 'closed') {
-      this.context?.close().catch(() => {});
+    if (this.context && this.context.state !== 'closed') {
+      this.context.close().catch(() => {});
     }
     this.context = null;
     this.source = null;
