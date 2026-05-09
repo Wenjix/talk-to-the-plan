@@ -3,7 +3,7 @@ import { proxyRequest } from '../_proxy';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   return proxyRequest(req, res, {
-    target: 'https://api-web.eigenai.com',
-    forwardHeaders: ['authorization'],
+    target: 'https://api.cartesia.ai',
+    forwardHeaders: ['authorization', 'x-api-key', 'cartesia-version'],
   });
 }
