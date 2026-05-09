@@ -30,7 +30,7 @@ export async function transcribeAudio(
   apiKey: string,
   language: string = 'English',
 ): Promise<string> {
-  log('ASR', `starting — blob size=${audioBlob.size} type=${audioBlob.type} lang=${language} keyLen=${apiKey.length}`);
+  log('ASR', `starting — blob size=${audioBlob.size} type=${audioBlob.type} lang=${language}`);
 
   const controller = new AbortController();
   const timeout = setTimeout(() => {
@@ -104,7 +104,7 @@ export async function textToSpeech(
   voiceId?: string,
 ): Promise<Blob> {
   const voice = voiceId || DEFAULT_VOICE;
-  log('TTS', `starting — text=${text.length} chars, voice=${voice}, keyLen=${apiKey.length}`);
+  log('TTS', `starting — text=${text.length} chars, voice=${voice}`);
 
   const controller = new AbortController();
   const timeout = setTimeout(() => {

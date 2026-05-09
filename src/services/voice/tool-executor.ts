@@ -43,8 +43,8 @@ function parseToolCall(responseText: string): ParsedToolCall | null {
     .replace(/<\/?tool_call>/g, '')
     .trim();
 
-  // Extract JSON object from mixed text
-  const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+  // Extract JSON object from mixed text (non-greedy to handle multiple objects)
+  const jsonMatch = cleaned.match(/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/s);
   if (!jsonMatch) return null;
 
   try {

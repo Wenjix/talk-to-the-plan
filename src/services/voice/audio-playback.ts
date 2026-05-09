@@ -2,6 +2,8 @@ export class AudioPlayback {
   private audio: HTMLAudioElement | null = null;
   private objectUrl: string | null = null;
   private endCallback: (() => void) | null = null;
+  private boundOnEnded: (() => void) | null = null;
+  private boundOnError: (() => void) | null = null;
 
   async play(audioBlob: Blob): Promise<void> {
     this.stop();
@@ -9,15 +11,19 @@ export class AudioPlayback {
     this.objectUrl = URL.createObjectURL(audioBlob);
     this.audio = new Audio(this.objectUrl);
 
-    this.audio.addEventListener('ended', () => {
+    this.boundOnEnded = () => {
       const cb = this.endCallback;
       this.cleanup();
       cb?.();
-    });
-
-    this.audio.addEventListener('error', () => {
+    };
+    this.boundOnError = () => {
+      const cb = this.endCallback;
       this.cleanup();
-    });
+      cb?.();
+    };
+
+    this.audio.addEventListener('ended', this.boundOnEnded);
+    this.audio.addEventListener('error', this.boundOnError);
 
     try {
       await this.audio.play();
@@ -46,6 +52,12 @@ export class AudioPlayback {
   }
 
   private cleanup(): void {
+    if (this.audio) {
+      if (this.boundOnEnded) this.audio.removeEventListener('ended', this.boundOnEnded);
+      if (this.boundOnError) this.audio.removeEventListener('error', this.boundOnError);
+    }
+    this.boundOnEnded = null;
+    this.boundOnError = null;
     if (this.objectUrl) {
       URL.revokeObjectURL(this.objectUrl);
       this.objectUrl = null;

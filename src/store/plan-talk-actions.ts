@@ -169,17 +169,22 @@ export async function analyzeReflection(transcriptText: string, source: 'voice' 
           usePlanTalkStore.getState().setUnderstanding(understanding);
           // Start TTS immediately without waiting for gap cards/edits
           if (settings.voiceTtsEnabled && eigenKey) {
-            generateTts(aiTurnId, understanding, eigenKey, settings.voiceTtsVoiceId, settings.voiceAutoPlayAi);
+            void generateTts(aiTurnId, understanding, eigenKey, settings.voiceTtsVoiceId, settings.voiceAutoPlayAi);
           }
         }
       }
     });
 
     // Parse full JSON from completed response
-    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    const jsonMatch = raw.match(/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/s);
     if (!jsonMatch) throw new Error('No JSON found in AI response');
 
-    const parsed = JSON.parse(jsonMatch[0]);
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(jsonMatch[0]);
+    } catch (err) {
+      throw new Error(`Invalid JSON in AI response: ${err instanceof Error ? err.message : 'parse error'}`);
+    }
     const result = PlanReflectionResponseSchema.safeParse(parsed);
     if (!result.success) {
       console.warn('[PlanTalk] schema validation failed:', result.error.issues);
@@ -224,7 +229,7 @@ export async function analyzeReflection(transcriptText: string, source: 'voice' 
 
     // If TTS wasn't started during streaming (understanding extraction failed), start it now
     if (!ttsStarted && settings.voiceTtsEnabled && eigenKey) {
-      generateTts(aiTurn.id, data.understanding, eigenKey, settings.voiceTtsVoiceId, settings.voiceAutoPlayAi);
+      void generateTts(aiTurn.id, data.understanding, eigenKey, settings.voiceTtsVoiceId, settings.voiceAutoPlayAi);
     }
   } catch (err) {
     usePlanTalkStore.getState().setError(err instanceof Error ? err.message : 'Analysis failed');
@@ -373,7 +378,11 @@ function applyMutation(
   edit: { targetHeading?: string; draftHeading?: string; draftContent?: string[] },
 ): UnifiedPlan {
   const sections = structuredClone(plan.sections) as StructuredPlan;
-  const sectionArray: PlanSection[] = sections[sectionKey];
+  const sectionArray: PlanSection[] | undefined = sections[sectionKey];
+  if (!sectionArray || !Array.isArray(sectionArray)) {
+    console.warn(`applyMutation: unknown section key "${sectionKey}", skipping`);
+    return plan;
+  }
   let mutated = false;
 
   switch (operation) {
