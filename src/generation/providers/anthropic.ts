@@ -87,6 +87,7 @@ export class AnthropicProvider implements GenerationProvider {
 
     const decoder = new TextDecoder();
     let accumulated = '';
+    let partialLine = '';
 
     try {
       while (true) {
@@ -101,7 +102,10 @@ export class AnthropicProvider implements GenerationProvider {
         if (done) break;
 
         const text = decoder.decode(value, { stream: true });
-        const lines = text.split('\n');
+        const fullText = partialLine + text;
+        const lines = fullText.split('\n');
+        // Last element may be a partial line — save for next chunk
+        partialLine = lines.pop() ?? '';
 
         for (const line of lines) {
           if (!line.startsWith('data: ')) continue;
@@ -123,6 +127,7 @@ export class AnthropicProvider implements GenerationProvider {
       }
     } finally {
       hardCeiling.clear();
+      reader.cancel().catch(() => {});
     }
 
     return stripCodeFences(accumulated);

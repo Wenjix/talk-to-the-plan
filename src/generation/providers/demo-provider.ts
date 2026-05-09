@@ -36,13 +36,16 @@ const DEMO_ANSWERS: Record<string, { summary: string; bullets: string[] }> = {
 
 function pickAnswer(prompt: string): { summary: string; bullets: string[] } {
   const lower = prompt.toLowerCase();
+  let src: { summary: string; bullets: string[] };
   if (lower.includes('tech') || lower.includes('software') || lower.includes('system') || lower.includes('architecture')) {
-    return DEMO_ANSWERS.technology;
+    src = DEMO_ANSWERS.technology;
+  } else if (lower.includes('strategy') || lower.includes('business') || lower.includes('market') || lower.includes('compete')) {
+    src = DEMO_ANSWERS.strategy;
+  } else {
+    src = DEMO_ANSWERS.default;
   }
-  if (lower.includes('strategy') || lower.includes('business') || lower.includes('market') || lower.includes('compete')) {
-    return DEMO_ANSWERS.strategy;
-  }
-  return DEMO_ANSWERS.default;
+  // Return a deep copy to prevent callers from mutating the templates
+  return { summary: src.summary, bullets: [...src.bullets] };
 }
 
 function buildPathQuestions(prompt: string): object {
@@ -210,7 +213,8 @@ export class DemoProvider implements GenerationProvider {
   }
 
   async generateStream(prompt: string, onChunk: (delta: string) => void): Promise<string> {
-    const full = await this.generate(prompt);
+    const jobType = detectJobType(prompt);
+    const full = generateResponseForType(jobType, prompt);
     const chunks = chunkText(full, 20);
     for (const chunk of chunks) {
       await new Promise<void>(r => setTimeout(r, 50));
