@@ -2,7 +2,7 @@ import { useSemanticStore } from '../store/semantic-store';
 import { useSessionStore } from '../store/session-store';
 import { usePlanTalkStore } from '../store/plan-talk-store';
 import { useVoiceNoteStore } from '../store/voice-note-store';
-import { putEntity, loadSessionEnvelope } from './repository';
+import { putEntity, deleteEntity, loadSessionEnvelope, getAllByIndex } from './repository';
 import {
   PlanningSessionSchema,
   ModelLaneSchema,
@@ -21,17 +21,57 @@ let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 /**
  * Save current session state to IDB.
  * Writes all entities from the semantic and session stores.
+ * Removes stale entities that were deleted from in-memory stores.
  */
 export async function saveSession(): Promise<void> {
   const session = useSessionStore.getState().session;
   if (!session) return;
 
   const { nodes, edges, promotions, lanes, unifiedPlan, dialogueTurns } = useSemanticStore.getState();
+  const planTalkTurns = usePlanTalkStore.getState().turns;
+  const voiceNotes = useVoiceNoteStore.getState().notes;
+
+  // Build sets of current entity IDs for stale-deletion
+  const currentNodeIds = new Set(nodes.map(n => n.id));
+  const currentEdgeIds = new Set(edges.map(e => e.id));
+  const currentLaneIds = new Set(lanes.map(l => l.id));
+  const currentPromotionIds = new Set(promotions.map(p => p.id));
+  const currentDialogueTurnIds = new Set(dialogueTurns.map(dt => dt.id));
+  const currentPlanTalkTurnIds = new Set(planTalkTurns.map(t => t.id));
+  const currentVoiceNoteIds = new Set(voiceNotes.map(n => n.id));
+
+  // Load persisted entities to detect stale ones
+  const [
+    persistedNodes, persistedEdges, persistedLanes, persistedPromotions,
+    persistedDialogueTurns, persistedPlanTalkTurns, persistedVoiceNotes,
+    persistedVoiceNoteBlobs,
+  ] = await Promise.all([
+    getAllByIndex('nodes', 'by-session', session.id),
+    getAllByIndex('edges', 'by-session', session.id),
+    getAllByIndex('lanes', 'by-session', session.id),
+    getAllByIndex('promotions', 'by-session', session.id),
+    getAllByIndex('dialogueTurns', 'by-session', session.id),
+    getAllByIndex('planTalkTurns', 'by-session', session.id),
+    getAllByIndex('voiceNotes', 'by-session', session.id),
+    getAllByIndex('voiceNoteBlobs', 'by-session', session.id),
+  ]);
+
+  // Delete stale entities
+  const staleDeletions = [
+    ...persistedNodes.filter(n => !currentNodeIds.has(n.id)).map(n => deleteEntity('nodes', n.id)),
+    ...persistedEdges.filter(e => !currentEdgeIds.has(e.id)).map(e => deleteEntity('edges', e.id)),
+    ...persistedLanes.filter(l => !currentLaneIds.has(l.id)).map(l => deleteEntity('lanes', l.id)),
+    ...persistedPromotions.filter(p => !currentPromotionIds.has(p.id)).map(p => deleteEntity('promotions', p.id)),
+    ...persistedDialogueTurns.filter(dt => !currentDialogueTurnIds.has(dt.id)).map(dt => deleteEntity('dialogueTurns', dt.id)),
+    ...persistedPlanTalkTurns.filter(t => !currentPlanTalkTurnIds.has(t.id)).map(t => deleteEntity('planTalkTurns', t.id)),
+    ...persistedVoiceNotes.filter(n => !currentVoiceNoteIds.has(n.id)).map(n => deleteEntity('voiceNotes', n.id)),
+    ...persistedVoiceNoteBlobs.filter(b => !currentVoiceNoteIds.has(b.id)).map(b => deleteEntity('voiceNoteBlobs', b.id)),
+  ];
 
   // Save session
   await putEntity('sessions', session);
 
-  // Save all entities in parallel
+  // Upsert all current entities + delete stale ones
   await Promise.all([
     ...lanes.map(l => putEntity('lanes', l)),
     ...nodes.map(n => putEntity('nodes', n)),
@@ -39,8 +79,9 @@ export async function saveSession(): Promise<void> {
     ...promotions.map(p => putEntity('promotions', p)),
     ...(unifiedPlan ? [putEntity('unifiedPlans', unifiedPlan)] : []),
     ...dialogueTurns.map(dt => putEntity('dialogueTurns', dt)),
-    ...usePlanTalkStore.getState().turns.map(t => putEntity('planTalkTurns', t)),
-    ...useVoiceNoteStore.getState().notes.map(n => putEntity('voiceNotes', n)),
+    ...planTalkTurns.map(t => putEntity('planTalkTurns', t)),
+    ...voiceNotes.map(n => putEntity('voiceNotes', n)),
+    ...staleDeletions,
   ]);
 }
 
@@ -63,12 +104,29 @@ export function startAutoSave(): () => void {
   const unsub2 = useSessionStore.subscribe(debouncedSave);
   const unsub3 = usePlanTalkStore.subscribe(debouncedSave);
   const unsub4 = useVoiceNoteStore.subscribe(debouncedSave);
+
+  // Flush pending debounced save when the tab is closing
+  const handleBeforeUnload = () => {
+    if (debounceTimer) {
+      clearTimeout(debounceTimer);
+      debounceTimer = null;
+      saveSession().catch(err => console.warn('Flush-on-unload save failed:', err));
+    }
+  };
+  window.addEventListener('beforeunload', handleBeforeUnload);
+
   return () => {
     unsub1();
     unsub2();
     unsub3();
     unsub4();
-    if (debounceTimer) clearTimeout(debounceTimer);
+    window.removeEventListener('beforeunload', handleBeforeUnload);
+    // Flush any pending debounced save instead of discarding it
+    if (debounceTimer) {
+      clearTimeout(debounceTimer);
+      debounceTimer = null;
+      saveSession().catch(err => console.warn('Flush-on-unsubscribe save failed:', err));
+    }
   };
 }
 
@@ -126,7 +184,11 @@ export async function restoreSession(sessionId: string): Promise<boolean> {
 
     // Hydrate session store
     useSessionStore.getState().setSession(session);
-    useSessionStore.getState().setActiveLane(session.activeLaneId);
+    // Only set active lane if it still exists in the validated lanes
+    const validLaneId = lanes.some(l => l.id === session.activeLaneId)
+      ? session.activeLaneId
+      : (lanes[0]?.id ?? null);
+    useSessionStore.getState().setActiveLane(validLaneId);
     useSessionStore.getState().setUIMode('exploring');
 
     // Auto-open plan panel for sessions that have a synthesized plan

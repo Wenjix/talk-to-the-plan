@@ -64,10 +64,11 @@ export interface ParallaxDB extends DBSchema {
   };
   voiceNoteBlobs: {
     key: string;
-    value: { id: string; blob: Blob };
+    value: { id: string; sessionId: string; blob: Blob };
+    indexes: { 'by-session': string };
   };
 }
 
 // Preserved as 'fuda-plan' for IndexedDB backward compatibility — renaming would lose existing user data
 export const DB_NAME = 'fuda-plan';
-export const DB_VERSION = 4;
+export const DB_VERSION = 5;

@@ -61,7 +61,19 @@ export function getDB(): Promise<IDBPDatabase<ParallaxDB>> {
 
           db.createObjectStore('voiceNoteBlobs', { keyPath: 'id' });
         }
+
+        if (oldVersion < 5) {
+          // Add by-session index to voiceNoteBlobs for efficient deletion
+          // Store already exists from v4 — access via transaction, not createObjectStore
+          const txn = db.transaction('voiceNoteBlobs', 'versionchange');
+          const store = txn.objectStore('voiceNoteBlobs');
+          store.createIndex('by-session', 'sessionId');
+        }
       },
+    }).catch((err) => {
+      // Reset the promise on failure so subsequent calls can retry
+      dbPromise = null;
+      throw err;
     });
   }
   return dbPromise;
