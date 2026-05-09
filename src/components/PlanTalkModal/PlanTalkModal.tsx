@@ -34,19 +34,27 @@ export function PlanTalkModal() {
   })();
 
   const handleClose = useCallback(() => {
+    if (pendingEdits.length > 0) {
+      const ok = window.confirm('You have pending edits that will be discarded. Continue?');
+      if (!ok) return;
+    }
     audioPlayback.stop();
     telemetry.track('modal_closed');
     close();
     clear();
-  }, [close, clear]);
+  }, [close, clear, pendingEdits.length]);
 
   const handleApply = useCallback(() => {
     applyAllAccepted();
   }, []);
 
   const handleDiscard = useCallback(() => {
+    if (pendingEdits.length > 0) {
+      const ok = window.confirm('Discard all pending edits?');
+      if (!ok) return;
+    }
     setPendingEdits([]);
-  }, [setPendingEdits]);
+  }, [setPendingEdits, pendingEdits.length]);
 
   // Focus modal on open + track telemetry
   useEffect(() => {
@@ -73,7 +81,10 @@ export function PlanTalkModal() {
         const focusable = modal.querySelectorAll<HTMLElement>(
           'button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), a[href], [contenteditable], [tabindex]:not([tabindex="-1"])'
         );
-        if (focusable.length === 0) return;
+        if (focusable.length === 0) {
+          e.preventDefault();
+          return;
+        }
 
         const first = focusable[0];
         const last = focusable[focusable.length - 1];

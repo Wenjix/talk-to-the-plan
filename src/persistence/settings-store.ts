@@ -14,6 +14,7 @@ export const AppSettingsSchema = z.object({
   anthropicApiKey: z.string().default(''),
   eigenApiKey: z.string().default(''),
   bosonApiKey: z.string().default(''),
+  cartesiaApiKey: z.string().default(''),
   challengeDepth: z.enum(['gentle', 'balanced', 'intense']).default('balanced'),
   autoSaveEnabled: z.boolean().default(true),
   animationsEnabled: z.boolean().default(true),
@@ -23,6 +24,9 @@ export const AppSettingsSchema = z.object({
   voiceTtsEnabled: z.boolean().default(true),
   voiceAutoPlayAi: z.boolean().default(true),
   voiceTtsVoiceId: z.string().default(''),
+  companionModeEnabled: z.boolean().default(false),
+  companionListenerModel: z.string().default('claude-haiku-4-5'),
+  companionMaxBranchesPerMinute: z.number().int().positive().default(8),
   personaModelConfig: z.record(
     z.string(),
     z.object({
@@ -57,6 +61,9 @@ function getSettingsDB(): Promise<IDBPDatabase<SettingsDB>> {
       upgrade(db) {
         db.createObjectStore('settings');
       },
+    }).catch((err) => {
+      dbPromise = null;
+      throw err;
     });
   }
   return dbPromise;
@@ -116,6 +123,10 @@ export function resolveEigenApiKey(settings: AppSettings): string {
 
 export function resolveBosonApiKey(settings: AppSettings): string {
   return settings.bosonApiKey || ((import.meta.env?.VITE_BOSON_API_KEY as string) ?? '');
+}
+
+export function resolveCartesiaApiKey(settings: AppSettings): string {
+  return settings.cartesiaApiKey || ((import.meta.env?.VITE_CARTESIA_API_KEY as string) ?? '');
 }
 
 /**

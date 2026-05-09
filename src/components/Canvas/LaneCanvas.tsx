@@ -4,8 +4,10 @@ import '@xyflow/react/dist/style.css';
 import { useSemanticStore } from '../../store/semantic-store';
 import { useViewStore } from '../../store/view-store';
 import { useRadialMenuStore } from '../../store/radial-menu-store';
+import { useCompanionStore } from '../../store/companion-store';
 import { projectToReactFlow } from '../../store/view-projection';
 import { nodeTypes, edgeTypes } from './shared-types';
+import { AutoCamera } from './AutoCamera';
 import { useMemo, useCallback, useEffect, useRef, useState } from 'react';
 
 interface LaneCanvasProps {
@@ -71,6 +73,11 @@ export function LaneCanvas({ laneId }: LaneCanvasProps) {
     );
   }, []);
 
+  const onNodeClick = useCallback<NodeMouseHandler>((_event, node) => {
+    if (node.type !== 'explorationCard') return;
+    useCompanionStore.getState().setLastFocusedNodeId(node.id);
+  }, []);
+
   // Re-layout when lane changes or on first mount
   const prevLaneRef = useRef<string | undefined>(undefined);
   useEffect(() => {
@@ -79,7 +86,7 @@ export function LaneCanvas({ laneId }: LaneCanvasProps) {
 
     const currentViewStates = useViewStore.getState().viewNodes;
     const laneNodes = semanticNodes.filter(n => n.laneId === laneId);
-    const needsLayout = laneNodes.length > 1 && laneNodes.every(n => {
+    const needsLayout = laneNodes.length > 1 && laneNodes.some(n => {
       const view = currentViewStates.get(n.id);
       return !view || (view.position.x === 0 && view.position.y === 0);
     });
@@ -96,11 +103,19 @@ export function LaneCanvas({ laneId }: LaneCanvasProps) {
     }
   }, [laneId, semanticNodes, semanticEdges]);
 
-  // Auto-fit view when new nodes appear
+  // Auto-fit view when new nodes appear — skip during companion mode so
+  // AutoCamera's focused follow doesn't race with a global fitView.
   const prevNodeCount = useRef(nodes.length);
   useEffect(() => {
-    if (nodes.length > prevNodeCount.current && rfInstanceRef.current) {
-      rfInstanceRef.current.fitView({ padding: 0.2, duration: 300 });
+    const companionStatus = useCompanionStore.getState().status;
+    const companionActive =
+      companionStatus === 'listening' || companionStatus === 'reconnecting';
+    if (
+      nodes.length > prevNodeCount.current &&
+      rfInstanceRef.current &&
+      !companionActive
+    ) {
+      void rfInstanceRef.current.fitView({ padding: 0.2, duration: 300 });
     }
     prevNodeCount.current = nodes.length;
   }, [nodes.length]);
@@ -114,6 +129,7 @@ export function LaneCanvas({ laneId }: LaneCanvasProps) {
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
       onNodeContextMenu={onNodeContextMenu}
+      onNodeClick={onNodeClick}
       onInit={onInit}
       minZoom={0.5}
       defaultEdgeOptions={{ type: 'parallaxConnector' }}
@@ -121,6 +137,7 @@ export function LaneCanvas({ laneId }: LaneCanvasProps) {
     >
       <Background color="var(--canvas-dot, #1a1a2e)" gap={20} />
       <Controls />
+      <AutoCamera />
     </ReactFlow>
   );
 }

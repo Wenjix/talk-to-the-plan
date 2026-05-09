@@ -288,7 +288,95 @@ export async function branchFromNode(
 }
 
 // ---------------------------------------------------------------------------
-// 5. runJob (internal)
+// 5. exploreFromVoice (companion mode)
+// ---------------------------------------------------------------------------
+
+/**
+ * Companion-mode entry point. Creates a child node under `anchor` whose
+ * question is the voice-inferred seed, then fires an 'answer' job so the
+ * node lands with user-visible content (summary + bullets).
+ *
+ * Unlike branchFromNode, this does NOT generate further sub-questions —
+ * it answers the seed directly. This closes the audio → canvas loop:
+ * every spoken intent becomes a resolved node with legible content.
+ */
+export async function exploreFromVoice(
+  anchorId: string,
+  pathType: PathType,
+  seedQuestion: string,
+): Promise<void> {
+  const anchor = useSemanticStore.getState().getNode(anchorId);
+  if (!anchor) {
+    throw new Error(`Anchor node not found: ${anchorId}`);
+  }
+  if (anchor.fsmState !== 'resolved') {
+    throw new Error(
+      `Anchor must be resolved; is "${anchor.fsmState}"`,
+    );
+  }
+  if (anchor.depth >= MAX_BRANCH_DEPTH) {
+    throw new Error(`Depth limit reached (${MAX_BRANCH_DEPTH})`);
+  }
+
+  const session = useSessionStore.getState().session;
+  if (!session) {
+    throw new Error('No active session');
+  }
+
+  const timestamp = now();
+
+  const childNode: SemanticNode = {
+    id: generateId(),
+    sessionId: session.id,
+    laneId: anchor.laneId,
+    parentId: anchor.id,
+    nodeType: 'exploration',
+    pathType,
+    question: seedQuestion,
+    fsmState: 'generating',
+    promoted: false,
+    depth: anchor.depth + 1,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  };
+
+  const edge: SemanticEdge = {
+    id: generateId(),
+    sessionId: session.id,
+    laneId: anchor.laneId,
+    sourceNodeId: anchor.id,
+    targetNodeId: childNode.id,
+    createdAt: timestamp,
+  };
+
+  useSemanticStore.getState().addNode(childNode);
+  useSemanticStore.getState().addEdge(edge);
+
+  const parentView = useViewStore.getState().viewNodes.get(anchor.id);
+  const parentPos = parentView?.position ?? { x: 0, y: 0 };
+  const existingSiblings = useSemanticStore
+    .getState()
+    .edges.filter((e) => e.sourceNodeId === anchor.id);
+  const siblingCount = existingSiblings.length;
+
+  const viewNode: ViewNodeState = {
+    semanticId: childNode.id,
+    position: getNewChildPosition(parentPos, siblingCount, siblingCount - 1),
+    isCollapsed: false,
+    isAnswerVisible: false,
+    isNew: true,
+    spawnIndex: 0,
+  };
+  useViewStore.getState().setViewNode(childNode.id, viewNode);
+
+  const job = makeJob(session.id, childNode.id, 'answer');
+
+  // Fire and forget — runJob handles FSM transitions + result routing.
+  void runJob(job, session);
+}
+
+// ---------------------------------------------------------------------------
+// 6. runJob (internal)
 // ---------------------------------------------------------------------------
 
 /**
@@ -300,6 +388,10 @@ function processBranchResult(
   targetNode: SemanticNode,
   session: PlanningSession,
 ): void {
+  if (!data || typeof data !== 'object' || !Array.isArray((data as Record<string, unknown>).branches)) {
+    console.warn('processBranchResult: unexpected data shape', data);
+    return;
+  }
   const result = data as {
     branches: Array<{
       question: string;
@@ -387,6 +479,10 @@ function processPathQuestionsResult(
   targetNode: SemanticNode,
   session: PlanningSession,
 ): void {
+  if (!data || typeof data !== 'object' || typeof (data as Record<string, unknown>).paths !== 'object') {
+    console.warn('processPathQuestionsResult: unexpected data shape', data);
+    return;
+  }
   const result = data as {
     paths: Record<string, string>;
   };
@@ -480,7 +576,10 @@ export async function runJob(
     // Load API keys from persisted settings
     const settings = await loadSettings();
     const apiKeys = resolveApiKeys(settings);
-    const personaModelConfig = settings.personaModelConfig as unknown as PersonaModelConfig;
+    const personaModelConfig: PersonaModelConfig | undefined =
+      settings.personaModelConfig && typeof settings.personaModelConfig === 'object'
+        ? (settings.personaModelConfig as PersonaModelConfig)
+        : undefined;
 
     // Check online status before attempting generation
     if (!isOnline()) {
@@ -525,6 +624,15 @@ export async function runJob(
 
     if (!result.success) {
       throw new Error(result.feedback || result.error || 'Generation failed');
+    }
+
+    // Liveness guard: if the job was cancelled (or otherwise moved off
+    // 'running') during the generate() await, skip the write-back. The
+    // canceller owns any FSM cleanup; we just leave the store untouched.
+    const liveJob = useJobStore.getState().getJob(job.id);
+    if (!liveJob || liveJob.fsmState !== 'running') {
+      useViewStore.getState().clearStream(job.targetNodeId);
+      return;
     }
 
     // Transition job: running -> succeeded

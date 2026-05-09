@@ -29,7 +29,9 @@ export function addUserTurn(nodeId: string, content: string, mode: DialecticMode
 
   // Dialogue turn cap: auto-conclude at the limit
   if (turns.length >= MAX_DIALOGUE_TURNS) {
-    void concludeDialogue(nodeId);
+    void concludeDialogue(nodeId).catch((err) => {
+      console.error('Auto-conclude failed:', err);
+    });
     throw new Error(
       `Dialogue turn cap reached (${MAX_DIALOGUE_TURNS}). Dialogue has been auto-concluded.`,
     );
@@ -145,7 +147,8 @@ export async function generateDialogueResponse(
     id: generateId(),
     sessionId: session.id,
     nodeId,
-    turnIndex: turns.length,
+    // Read fresh — `turns` was captured before the streaming await
+    turnIndex: useSemanticStore.getState().getDialogueTurnsByNode(nodeId).length,
     speaker: 'ai',
     dialecticMode: mode,
     turnType: data.turnType as DialogueTurn['turnType'],
@@ -173,20 +176,35 @@ export async function generateDialogueResponse(
 
 /** TTS blob cache for dialogue turns, keyed by turn ID. Bounded to last 20 entries. */
 const MAX_TTS_CACHE = 20;
-export const dialogueTtsBlobs = new Map<string, Blob>();
+const _dialogueTtsBlobs = new Map<string, Blob>();
+
+/** Read-only view of TTS blobs for components. */
+export function getDialogueTtsBlob(turnId: string): Blob | undefined {
+  return _dialogueTtsBlobs.get(turnId);
+}
+
+/** Check if a TTS blob exists for a turn. Reactive via Zustand store. */
+export function hasDialogueTtsBlob(turnId: string): boolean {
+  return useSemanticStore.getState().ttsBlobTurnIds.has(turnId);
+}
 
 function boundedTtsSet(key: string, blob: Blob): void {
-  dialogueTtsBlobs.set(key, blob);
-  if (dialogueTtsBlobs.size > MAX_TTS_CACHE) {
+  _dialogueTtsBlobs.set(key, blob);
+  // Update Zustand store so components re-render
+  useSemanticStore.getState()._addTtsBlobTurnId(key);
+  if (_dialogueTtsBlobs.size > MAX_TTS_CACHE) {
     // Remove oldest entry (first key in insertion order)
-    const oldest = dialogueTtsBlobs.keys().next().value;
-    if (oldest !== undefined) dialogueTtsBlobs.delete(oldest);
+    const oldest = _dialogueTtsBlobs.keys().next().value;
+    if (oldest !== undefined) {
+      _dialogueTtsBlobs.delete(oldest);
+      useSemanticStore.getState()._removeTtsBlobTurnIds([oldest]);
+    }
   }
 }
 
 /** Replay TTS for a dialogue turn. */
 export function replayDialogueTts(turnId: string): void {
-  const blob = dialogueTtsBlobs.get(turnId);
+  const blob = _dialogueTtsBlobs.get(turnId);
   if (blob) {
     audioPlayback.play(blob).catch(() => {});
   }
@@ -194,7 +212,8 @@ export function replayDialogueTts(turnId: string): void {
 
 /** Clear TTS cache (call on session switch or dialogue panel close). */
 export function clearDialogueTtsCache(): void {
-  dialogueTtsBlobs.clear();
+  _dialogueTtsBlobs.clear();
+  useSemanticStore.getState()._clearTtsBlobTurnIds();
 }
 
 /**

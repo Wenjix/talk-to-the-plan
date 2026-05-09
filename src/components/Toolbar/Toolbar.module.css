@@ -192,3 +192,34 @@
   background: var(--btn-accent-bg-hover);
 }
 
+.companionToggle {
+  background: none;
+  border: 1px solid var(--toolbar-border);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 12px;
+  line-height: 1;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  white-space: nowrap;
+}
+
+.companionToggle:hover {
+  color: var(--text-primary);
+  border-color: var(--card-border-hover);
+}
+
+.companionToggleActive {
+  color: #3DAA6D;
+  border-color: #3DAA6D;
+  background: rgba(61, 170, 109, 0.12);
+}
+
+.companionToggleError {
+  color: #D94F4F;
+  border-color: #D94F4F;
+  background: rgba(217, 79, 79, 0.08);
+}
+

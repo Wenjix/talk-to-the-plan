@@ -6,6 +6,20 @@ import { useSessionStore } from './session-store';
 import { useViewStore } from './view-store';
 import { useJobStore } from './job-store';
 import { useVoiceNoteStore } from './voice-note-store';
+import { usePlanTalkStore } from './plan-talk-store';
+import { useVoiceChatStore } from './voice-chat-store';
+import { useCompanionStore } from './companion-store';
+import { useQuadrantStore } from './quadrant-store';
+import { useTranscriptStore } from './transcript-store';
+import { useTerminalStore } from './terminal-store';
+import { useVoiceNoteRecordingStore } from './voice-note-recording-store';
+import { useVoiceCommandStore } from './voice-command-store';
+import { clearDialogueTtsCache } from './dialogue-actions';
+import { clearSchedulerQueue } from './branch-scheduler';
+import { stopCompanionMode } from './companion-actions';
+import { audioPlayback } from '../services/voice/audio-playback';
+import { cancelVoiceNoteRecording } from './voice-note-actions';
+import { cancelVoiceCommand } from './voice-command-actions';
 
 // ---------------------------------------------------------------------------
 // Concurrency guard — serializes session mutations to prevent interleaving
@@ -31,6 +45,35 @@ export interface SessionSummary {
 }
 
 // ---------------------------------------------------------------------------
+// Full store cleanup — clears all stores and cancels in-flight operations
+// ---------------------------------------------------------------------------
+
+function clearAllStores(): void {
+  // Cancel in-flight async operations first
+  try { stopCompanionMode(); } catch { /* companion may not be running */ }
+  try { cancelVoiceNoteRecording(); } catch { /* no active recording */ }
+  try { cancelVoiceCommand(); } catch { /* no active command */ }
+  try { audioPlayback.stop(); } catch { /* no audio playing */ }
+  try { clearSchedulerQueue(); } catch { /* scheduler may be empty */ }
+
+  // Clear Zustand stores
+  useSemanticStore.getState().clear();
+  useViewStore.getState().clear();
+  useJobStore.getState().clear();
+  useSessionStore.getState().clear();
+  useVoiceNoteStore.getState().clear();
+  usePlanTalkStore.getState().clear();
+  useVoiceChatStore.getState().clear();
+  useCompanionStore.getState().reset();
+  useQuadrantStore.getState().clear();
+  useTranscriptStore.getState().clear();
+  useTerminalStore.getState().clear();
+  useVoiceNoteRecordingStore.getState().clear();
+  useVoiceCommandStore.getState().clear();
+  clearDialogueTtsCache();
+}
+
+// ---------------------------------------------------------------------------
 // Actions
 // ---------------------------------------------------------------------------
 
@@ -49,13 +92,10 @@ export async function switchSession(sessionId: string): Promise<void> {
       await saveSession();
     }
 
-    // Clear all stores to prepare for the new session
-    useSemanticStore.getState().clear();
-    useViewStore.getState().clear();
-    useJobStore.getState().clear();
-    useSessionStore.getState().clear();
+    // Clear all stores and cancel in-flight operations
+    clearAllStores();
 
-    // Restore the target session
+    // Restore the target session (this replaces semantic + session store contents)
     const ok = await restoreSession(sessionId);
     if (!ok) {
       throw new Error(`Failed to restore session: ${sessionId}`);
@@ -75,13 +115,9 @@ export async function deleteSession(sessionId: string): Promise<void> {
   return serialized(async () => {
     const current = useSessionStore.getState().session;
 
-    // If deleting the active session, clear all stores
+    // If deleting the active session, clear all stores and in-flight operations
     if (current && current.id === sessionId) {
-      useSemanticStore.getState().clear();
-      useViewStore.getState().clear();
-      useJobStore.getState().clear();
-      useSessionStore.getState().clear();
-      useVoiceNoteStore.getState().clear();
+      clearAllStores();
     }
 
     // Delete the session envelope from IDB
@@ -106,10 +142,10 @@ export async function deleteSession(sessionId: string): Promise<void> {
 
     await Promise.all(deletions);
 
-    // Delete voice note blobs (not indexed by session, so use the voice note IDs)
-    const voiceNotes = await getAllByIndex('voiceNotes', 'by-session', sessionId);
+    // Delete voice note blobs (now indexed by session)
+    const voiceNoteBlobs = await getAllByIndex('voiceNoteBlobs', 'by-session', sessionId);
     await Promise.all(
-      voiceNotes.map((n) => deleteEntity('voiceNoteBlobs', (n as { id: string }).id)),
+      voiceNoteBlobs.map((b) => deleteEntity('voiceNoteBlobs', (b as { id: string }).id)),
     );
 
     // Finally delete the session itself

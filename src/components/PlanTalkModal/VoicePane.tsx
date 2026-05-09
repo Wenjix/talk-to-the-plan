@@ -30,7 +30,7 @@ export function VoicePane() {
 
   // Load settings on mount
   useEffect(() => {
-    loadSettings().then((settings: AppSettings) => {
+    void loadSettings().then((settings: AppSettings) => {
       setEigenApiKey(resolveEigenApiKey(settings));
       setVoiceLanguage(settings.voiceLanguage);
       setVoiceInputMode(settings.voiceInputMode);
@@ -78,7 +78,7 @@ export function VoicePane() {
       }
     })();
     startPromiseRef.current = promise;
-    promise.finally(() => { startPromiseRef.current = null; });
+    void promise.finally(() => { startPromiseRef.current = null; });
   }, [isBusy, isRecording, eigenApiKey]);
 
   const stopRecordingAndSubmit = useCallback(async () => {
@@ -151,16 +151,16 @@ export function VoicePane() {
     const pending = startPromiseRef.current;
     if (pending) {
       // Start is still in-flight (e.g. mic permission prompt) — wait then stop
-      pending.then(() => { void stopRecordingAndSubmit(); });
+      void pending.then(() => { stopRecordingAndSubmit().catch(() => {}); });
     } else if (isRecording) {
-      stopRecordingAndSubmit();
+      void stopRecordingAndSubmit();
     }
   }, [voiceInputMode, isRecording, stopRecordingAndSubmit]);
 
   const handleMicClick = useCallback(() => {
     if (voiceInputMode === 'toggle') {
       if (isRecording) {
-        stopRecordingAndSubmit();
+        void stopRecordingAndSubmit();
       } else {
         startRecording();
       }
@@ -211,7 +211,7 @@ export function VoicePane() {
             {turn.speaker === 'ai' && ttsTurnStatus[turn.id] === 'ready' && (
               <button
                 className={`${styles.replayBtn} ${playingTurnId === turn.id ? styles.replayBtnPlaying : ''}`}
-                onClick={() => playingTurnId === turn.id ? handleStopPlayback() : handleReplay(turn.id)}
+                onClick={() => playingTurnId === turn.id ? handleStopPlayback() : void handleReplay(turn.id)}
                 type="button"
                 aria-label={playingTurnId === turn.id ? 'Stop playback' : 'Replay AI response'}
               >

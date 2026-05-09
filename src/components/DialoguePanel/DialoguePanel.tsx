@@ -1,8 +1,9 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import type { DialecticMode, DialogueTurn } from '../../core/types';
 import { useSemanticStore } from '../../store/semantic-store';
 import { useViewStore } from '../../store/view-store';
-import { dialogueTtsBlobs, replayDialogueTts } from '../../store/dialogue-actions';
+import { replayDialogueTts } from '../../store/dialogue-actions';
+import { useShallow } from 'zustand/react/shallow';
 import { VoiceRecorder, MicPermissionError } from '../../services/voice/media-recorder';
 import { transcribeAudio } from '../../services/voice/eigen-client';
 import { loadSettings, resolveEigenApiKey } from '../../persistence/settings-store';
@@ -33,14 +34,23 @@ export function DialoguePanel({ nodeId, onClose, onSendMessage, onConclude, isGe
   const recorderRef = useRef<VoiceRecorder | null>(null);
   const elapsedTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Get dialogue turns from semantic store
-  // NOTE: The semantic store may not have getDialogueTurnsByNode yet (it's being added by another agent).
-  // Use a safe accessor that filters the dialogueTurns array.
-  const dialogueTurns = useSemanticStore(s => {
-    // Safely access dialogueTurns (may not exist yet)
-    const turns = (s as unknown as Record<string, unknown>).dialogueTurns as DialogueTurn[] | undefined;
-    return (turns ?? []).filter((t: DialogueTurn) => t.nodeId === nodeId);
-  });
+  const allDialogueTurns = useSemanticStore(useShallow(s => s.dialogueTurns));
+  const ttsBlobTurnIds = useSemanticStore(s => s.ttsBlobTurnIds);
+
+  // Filter turns for this node with stable memoization
+  const dialogueTurns = useMemo(
+    () => allDialogueTurns.filter((t: DialogueTurn) => t.nodeId === nodeId),
+    [allDialogueTurns, nodeId],
+  );
+
+  // Memoize the set of turn IDs that have TTS blobs for reactive rendering
+  const ttsReadyIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const turn of dialogueTurns) {
+      if (ttsBlobTurnIds.has(turn.id)) ids.add(turn.id);
+    }
+    return ids;
+  }, [dialogueTurns, ttsBlobTurnIds]);
 
   // Get streaming buffer for dialogue
   const streamBuffer = useViewStore(s => s.streamBuffers.get(`dialogue-${nodeId}`) ?? '');
@@ -151,7 +161,7 @@ export function DialoguePanel({ nodeId, onClose, onSendMessage, onConclude, isGe
     <div className={styles.panel}>
       <div className={styles.header}>
         <h3 className={styles.title}>Dialogue</h3>
-        <button className={styles.closeBtn} onClick={onClose}>×</button>
+        <button className={styles.closeBtn} onClick={onClose} aria-label="Close dialogue">×</button>
       </div>
 
       {/* Mode selector */}
@@ -162,6 +172,7 @@ export function DialoguePanel({ nodeId, onClose, onSendMessage, onConclude, isGe
             className={`${styles.modeBtn} ${mode === m.id ? styles.modeBtnActive : ''}`}
             onClick={() => setMode(m.id)}
             title={m.desc}
+            aria-pressed={mode === m.id}
           >
             {m.label}
           </button>
@@ -178,7 +189,7 @@ export function DialoguePanel({ nodeId, onClose, onSendMessage, onConclude, isGe
             </div>
             <div className={styles.turnContent}>{turn.content}</div>
             {/* TTS replay button for AI turns */}
-            {turn.speaker === 'ai' && dialogueTtsBlobs.has(turn.id) && (
+            {turn.speaker === 'ai' && ttsReadyIds.has(turn.id) && (
               <button
                 className={styles.replayBtn}
                 onClick={() => replayDialogueTts(turn.id)}
@@ -190,9 +201,9 @@ export function DialoguePanel({ nodeId, onClose, onSendMessage, onConclude, isGe
             {/* Suggested responses after AI turns */}
             {turn.speaker === 'ai' && turn.suggestedResponses && turn.suggestedResponses.length > 0 && (
               <div className={styles.suggestions}>
-                {turn.suggestedResponses.map((sr, i) => (
+                {turn.suggestedResponses.map((sr) => (
                   <button
-                    key={i}
+                    key={sr.text}
                     className={styles.suggestionChip}
                     onClick={() => handleSuggestedClick(sr.text)}
                     disabled={isGenerating}
@@ -225,7 +236,9 @@ export function DialoguePanel({ nodeId, onClose, onSendMessage, onConclude, isGe
 
       {/* Input area */}
       <div className={styles.inputArea}>
+        <label htmlFor="dialogue-input" className={styles.srOnly}>Your response</label>
         <textarea
+          id="dialogue-input"
           className={styles.input}
           value={input}
           onChange={e => setInput(e.target.value)}
@@ -245,12 +258,13 @@ export function DialoguePanel({ nodeId, onClose, onSendMessage, onConclude, isGe
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <button
               className={`${styles.micBtn} ${isVoiceRecording ? styles.micBtnRecording : ''}`}
-              onClick={handleMicToggle}
+              onClick={() => void handleMicToggle()}
               disabled={isGenerating || isTranscribing}
               title={isVoiceRecording ? `Recording ${voiceTimerLabel} — click to stop` : 'Speak your response'}
             >
               {isTranscribing ? '...' : isVoiceRecording ? `\u25A0 ${voiceTimerLabel}` : '\uD83C\uDF99'}
             </button>
+            <span className={styles.srOnly}>{isTranscribing ? 'Transcribing' : isVoiceRecording ? `Recording ${voiceTimerLabel}` : 'Microphone'}</span>
             <button
               className={styles.sendBtn}
               onClick={handleSend}

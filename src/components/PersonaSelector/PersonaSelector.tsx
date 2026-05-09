@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import type { PersonaId } from '../../core/types';
 import { PersonaIdSchema, PERSONA_META } from '../../core/types/lane';
 import { useSessionStore } from '../../store/session-store';
@@ -16,7 +16,8 @@ export function PersonaSelector({ onOpenPersonaSettings }: PersonaSelectorProps)
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   const activeLaneId = useSessionStore(s => s.activeLaneId);
-  const activeLane = useSemanticStore(s => s.lanes.find(l => l.id === activeLaneId));
+  const lanes = useSemanticStore(s => s.lanes);
+  const activeLane = useMemo(() => lanes.find(l => l.id === activeLaneId), [lanes, activeLaneId]);
   const updateLanePersona = useSemanticStore(s => s.updateLanePersona);
 
   const currentPersona = activeLane?.personaId ?? 'expansive';

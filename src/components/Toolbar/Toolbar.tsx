@@ -4,6 +4,8 @@ import { useSessionStore } from '../../store/session-store.ts';
 import { useSemanticStore } from '../../store/semantic-store.ts';
 import { useViewStore } from '../../store/view-store.ts';
 import { usePlanTalkStore } from '../../store/plan-talk-store.ts';
+import { useCompanionStore } from '../../store/companion-store.ts';
+import { toggleCompanionMode } from '../../store/companion-actions.ts';
 import { toggleTerminal } from '../../store/terminal-actions.ts';
 import { saveSession } from '../../persistence/hooks.ts';
 import { Settings } from '../Settings/Settings.tsx';
@@ -28,7 +30,19 @@ export function Toolbar() {
   const unifiedPlan = useSemanticStore(s => s.unifiedPlan);
   const openPlanTalk = usePlanTalkStore(s => s.open);
   const terminalOpen = useViewStore(s => s.terminalOpen);
+  const companionStatus = useCompanionStore(s => s.status);
   const [settingsState, setSettingsState] = useState<{ open: boolean; initialTab?: TabId }>({ open: false });
+
+  const companionActive =
+    companionStatus === 'listening' ||
+    companionStatus === 'starting' ||
+    companionStatus === 'reconnecting';
+  const companionLabel =
+    companionStatus === 'starting' ? 'Starting…' :
+    companionStatus === 'listening' ? 'Companion On' :
+    companionStatus === 'reconnecting' ? 'Reconnecting…' :
+    companionStatus === 'error' ? 'Companion ⚠' :
+    'Companion';
 
   const handleWorkspaceClick = useCallback(() => {
     saveSession().catch(() => {});
@@ -67,6 +81,17 @@ export function Toolbar() {
             <span className={styles.nodeCount}>
               {nodeCount} nodes{generatingCount > 0 ? ` (${generatingCount} generating)` : ''}
             </span>
+          )}
+          {session && uiMode === 'exploring' && (
+            <button
+              className={`${styles.companionToggle} ${companionActive ? styles.companionToggleActive : ''} ${companionStatus === 'error' ? styles.companionToggleError : ''}`}
+              onClick={() => { void toggleCompanionMode(); }}
+              type="button"
+              aria-label={companionActive ? 'Stop Companion' : 'Start Companion'}
+              title="Continuous voice brainstorming — the canvas branches as you talk"
+            >
+              {companionLabel}
+            </button>
           )}
           {session && uiMode === 'exploring' && (
             <button

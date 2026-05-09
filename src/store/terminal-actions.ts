@@ -55,7 +55,7 @@ export function openTerminal(cols: number, rows: number, events?: TerminalBacken
 
   const backend = prepareTerminal();
 
-  backend.connect({
+  void backend.connect({
     cols,
     rows,
     events: events ?? {
@@ -69,6 +69,11 @@ export function openTerminal(cols: number, rows: number, events?: TerminalBacken
         activeBackend = null;
       },
     },
+  }).catch((err) => {
+    useTerminalStore.getState().setErrorMessage(
+      err instanceof Error ? err.message : 'Terminal connection failed',
+    );
+    useTerminalStore.getState().setConnectionState('error');
   });
 
   return backend;
@@ -132,10 +137,13 @@ export function sendNodeToVibe(nodeId: string): void {
         if (b) writeVibeCommand(b, content);
       }
     });
+    // Safety: unsubscribe after 30s even if connection never reaches 'ready'
+    setTimeout(unsub, 30_000);
   }
 }
 
 function writeVibeCommand(backend: ITerminalBackend, content: string): void {
+  // Inside single quotes, only ' itself needs escaping. $, `, \, etc. are literal.
   const escaped = content.replace(/'/g, "'\\''");
   backend.write(`echo '${escaped}' | vibe\r`);
 }

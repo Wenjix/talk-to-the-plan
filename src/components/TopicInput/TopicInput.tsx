@@ -29,7 +29,7 @@ export function TopicInput() {
 
   // Check for Eigen API key on mount
   useEffect(() => {
-    loadSettings().then(settings => {
+    void loadSettings().then(settings => {
       setHasEigenKey(!!resolveEigenApiKey(settings));
     });
   }, []);
@@ -51,7 +51,7 @@ export function TopicInput() {
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSubmit();
+      void handleSubmit();
     }
   }, [handleSubmit]);
 
@@ -181,7 +181,7 @@ export function TopicInput() {
             {error && <span className={styles.error}>{error}</span>}
             <button
               className={styles.exploreBtn}
-              onClick={handleSubmit}
+              onClick={() => void handleSubmit()}
               disabled={!isValid || loading}
             >
               {loading ? 'Starting...' : 'Explore \u2192'}

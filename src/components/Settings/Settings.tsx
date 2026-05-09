@@ -32,7 +32,7 @@ export function Settings({ onClose, initialTab }: SettingsProps) {
 
   useEffect(() => {
     let cancelled = false;
-    loadSettings().then((s) => {
+    void loadSettings().then((s) => {
       if (!cancelled) setSettings(s);
     });
     return () => { cancelled = true; };
@@ -50,7 +50,11 @@ export function Settings({ onClose, initialTab }: SettingsProps) {
     (partial: Partial<AppSettings>) => {
       setSettings((prev) => {
         const next = { ...prev, ...partial };
-        updateSettings(partial);
+        void updateSettings(partial).catch((err) => {
+          console.warn('Failed to persist settings update:', err);
+          // Revert to persisted state on failure
+          void loadSettings().then((s) => setSettings(s));
+        });
         if (partial.challengeDepth) {
           setChallengeDepth(partial.challengeDepth);
         }

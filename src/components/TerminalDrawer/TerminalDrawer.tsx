@@ -215,7 +215,14 @@ export function TerminalDrawer() {
   return (
     <div className={styles.drawer} style={{ height: terminalHeightPx }}>
       {/* Resize handle */}
-      <div className={styles.resizeHandle} onMouseDown={handleMouseDown} />
+      <div
+        className={styles.resizeHandle}
+        onMouseDown={handleMouseDown}
+        role="separator"
+        aria-orientation="horizontal"
+        aria-label="Resize terminal"
+        tabIndex={0}
+      />
 
       {/* Header */}
       <div className={styles.header}>
@@ -254,7 +261,7 @@ export function TerminalDrawer() {
       {vibeReadiness !== 'ready' && vibeReadiness !== 'unknown' && <TerminalSetupNotice />}
 
       {/* Terminal */}
-      <div ref={containerRef} className={styles.terminalContainer} />
+      <div ref={containerRef} className={styles.terminalContainer} role="application" aria-label="Terminal emulator" />
     </div>
   );
 }
