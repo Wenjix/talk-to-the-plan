@@ -27,4 +27,24 @@ export default defineConfig([
       }],
     },
   },
+  // Type-aware rules scoped to src/ so the project service has a clean
+  // tsconfig graph (avoids parse errors on stray config files / server code).
+  // Surfaces fire-and-forget hazards on throwing async functions like
+  // generateDialogueResponse / concludeDialogue / generateDirectPlan;
+  // `void` and `.catch()` callers are already permitted.
+  // Set to 'warn' so existing patterns stay visible in review without
+  // breaking CI; ratchet to 'error' once the existing violations are addressed.
+  {
+    files: ['src/**/*.{ts,tsx}'],
+    languageOptions: {
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-floating-promises': 'warn',
+      '@typescript-eslint/no-misused-promises': 'warn',
+    },
+  },
 ])
