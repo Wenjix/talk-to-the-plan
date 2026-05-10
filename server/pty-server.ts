@@ -212,17 +212,16 @@ const PORT = parseInt(process.env.PTY_PORT || '3001', 10);
 const MAX_CONNECTIONS = 10;
 let activeConnections = 0;
 
-// Allowed cwd paths — restrict to user home and temp
-const ALLOWED_CWD_PREFIXES: string[] = [];
-function getAllowedCwdPrefixes(): string[] {
-  if (ALLOWED_CWD_PREFIXES.length > 0) return ALLOWED_CWD_PREFIXES;
+// Allowed cwd paths — restrict to user home and temp. Computed once at module
+// load (the previous mutable-array "cache" was never populated, so the check
+// `if (length > 0)` was always false and the function recomputed on every call).
+const ALLOWED_CWD_PREFIXES: readonly string[] = (() => {
   const home = process.env.HOME || process.env.USERPROFILE || '/tmp';
   return [home, '/tmp'];
-}
+})();
 
 function isAllowedCwd(cwd: string): boolean {
-  const prefixes = getAllowedCwdPrefixes();
-  return prefixes.some(p => cwd === p || cwd.startsWith(p + '/'));
+  return ALLOWED_CWD_PREFIXES.some((p) => cwd === p || cwd.startsWith(p + '/'));
 }
 
 // Build a sanitized env for PTY — only pass through safe variables

@@ -105,22 +105,27 @@ export function startAutoSave(): () => void {
   const unsub3 = usePlanTalkStore.subscribe(debouncedSave);
   const unsub4 = useVoiceNoteStore.subscribe(debouncedSave);
 
-  // Flush pending debounced save when the tab is closing
-  const handleBeforeUnload = () => {
+  // Best-effort flush of pending debounced save when the page is going away.
+  // `pagehide` is the spec-recommended event for this (more reliable than
+  // `beforeunload` and fires for bfcache transitions too); but neither event
+  // can guarantee an async IDB write completes — browsers may suspend the
+  // page before microtasks drain. The 1s autosave debounce keeps the worst-
+  // case loss small enough that this best-effort save is acceptable.
+  const handlePageHide = () => {
     if (debounceTimer) {
       clearTimeout(debounceTimer);
       debounceTimer = null;
-      saveSession().catch(err => console.warn('Flush-on-unload save failed:', err));
+      saveSession().catch(err => console.warn('Flush-on-pagehide save failed:', err));
     }
   };
-  window.addEventListener('beforeunload', handleBeforeUnload);
+  window.addEventListener('pagehide', handlePageHide);
 
   return () => {
     unsub1();
     unsub2();
     unsub3();
     unsub4();
-    window.removeEventListener('beforeunload', handleBeforeUnload);
+    window.removeEventListener('pagehide', handlePageHide);
     // Flush any pending debounced save instead of discarding it
     if (debounceTimer) {
       clearTimeout(debounceTimer);

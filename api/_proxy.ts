@@ -46,8 +46,10 @@ export async function proxyRequest(
   for (const headerName of config.forwardHeaders) {
     const value = req.headers[headerName];
     if (value) {
-      headers[headerName.charAt(0).toUpperCase() + headerName.slice(1)] =
-        typeof value === 'string' ? value : value[0];
+      // HTTP/2 normalizes header names to lowercase and HTTP/1.1 treats them
+      // as case-insensitive (RFC 7230 §3.2). Pass through lowercase to avoid
+      // the misleading half-capitalization (`X-api-key`) of the previous code.
+      headers[headerName.toLowerCase()] = typeof value === 'string' ? value : value[0];
     }
   }
 
