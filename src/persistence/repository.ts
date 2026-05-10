@@ -11,7 +11,7 @@ let dbPromise: Promise<IDBPDatabase<ParallaxDB>> | null = null;
 export function getDB(): Promise<IDBPDatabase<ParallaxDB>> {
   if (!dbPromise) {
     dbPromise = openDB<ParallaxDB>(DB_NAME, DB_VERSION, {
-      upgrade(db, oldVersion) {
+      async upgrade(db, oldVersion, _newVersion, transaction) {
         if (oldVersion < 1) {
           // v1 stores
           db.createObjectStore('sessions', { keyPath: 'id' });
@@ -63,11 +63,36 @@ export function getDB(): Promise<IDBPDatabase<ParallaxDB>> {
         }
 
         if (oldVersion < 5) {
-          // Add by-session index to voiceNoteBlobs for efficient deletion
-          // Store already exists from v4 — access via transaction, not createObjectStore
-          const txn = db.transaction('voiceNoteBlobs', 'versionchange');
-          const store = txn.objectStore('voiceNoteBlobs');
-          store.createIndex('by-session', 'sessionId');
+          // Add by-session index to voiceNoteBlobs (store exists from v4).
+          // Use the upgrade transaction passed in by idb — db.transaction(name,
+          // 'versionchange') is invalid; only 'readonly'/'readwrite' are valid
+          // modes and a new transaction can't be opened during a versionchange.
+          const blobsStore = transaction.objectStore('voiceNoteBlobs');
+          blobsStore.createIndex('by-session', 'sessionId');
+
+          // Backfill sessionId on pre-v5 blobs by looking up the matching
+          // voiceNote (same id is used as the primary key for both rows).
+          // Without this, legacy rows never appear in the by-session index
+          // and become permanent orphans that session-deletion can't reach.
+          const notesStore = transaction.objectStore('voiceNotes');
+          let cursor = await blobsStore.openCursor();
+          while (cursor) {
+            const blob = cursor.value as { id: string; sessionId?: string; blob: Blob };
+            if (!blob.sessionId) {
+              const note = await notesStore.get(blob.id);
+              if (note) {
+                await cursor.update({
+                  id: blob.id,
+                  sessionId: note.sessionId,
+                  blob: blob.blob,
+                });
+              }
+              // No matching note → blob is already orphaned. Leave it: a
+              // migration that silently deletes data is more dangerous than
+              // a small permanent leak that explicit cleanup tooling can fix.
+            }
+            cursor = await cursor.continue();
+          }
         }
       },
     }).catch((err) => {
