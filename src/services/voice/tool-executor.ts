@@ -1,6 +1,7 @@
 import { branchFromNode } from '../../store/actions';
 import { promoteNode } from '../../store/promotion-actions';
 import { addUserTurn, generateDialogueResponse } from '../../store/dialogue-actions';
+import { extractJSON } from '../../generation/streaming';
 import { PathTypeSchema } from '../../core/types/primitives';
 import { PromotionReasonSchema } from '../../core/types/promotion';
 import { DialecticModeSchema } from '../../core/types/dialogue';
@@ -43,13 +44,15 @@ function parseToolCall(responseText: string): ParsedToolCall | null {
     .replace(/<\/?tool_call>/g, '')
     .trim();
 
-  // Extract JSON object from mixed text (non-greedy to handle multiple objects)
-  const jsonMatch = cleaned.match(/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/s);
-  if (!jsonMatch) return null;
+  // Use the shared balanced-brace extractor — handles arbitrary nesting
+  // (e.g., nested tool argument objects), unlike the previous one-level regex.
+  const extracted = extractJSON(cleaned);
 
   try {
-    const parsed = JSON.parse(jsonMatch[0]);
-    if (typeof parsed.name !== 'string') return null;
+    const parsed = JSON.parse(extracted);
+    if (!parsed || typeof parsed !== 'object' || typeof parsed.name !== 'string') {
+      return null;
+    }
 
     // Support both OpenAI-style { name, arguments: {...} } and flat-field
     // format { name, field1, field2, ... } that Boson may return

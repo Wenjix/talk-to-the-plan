@@ -4,6 +4,7 @@ import { usePlanTalkStore } from './plan-talk-store';
 import { loadSettings, resolveApiKeys, resolveEigenApiKey } from '../persistence/settings-store';
 import { getDefaultProvider } from '../generation/providers';
 import { buildPlanReflectionPrompt } from '../generation/prompts/plan-reflection';
+import { extractJSON } from '../generation/streaming';
 import { PlanReflectionResponseSchema } from '../core/types';
 import type { PlanTalkTurn, PlanSectionKey, StructuredPlan, PlanSection, UnifiedPlan } from '../core/types';
 import { generateId } from '../utils/ids';
@@ -175,13 +176,13 @@ export async function analyzeReflection(transcriptText: string, source: 'voice' 
       }
     });
 
-    // Parse full JSON from completed response
-    const jsonMatch = raw.match(/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/s);
-    if (!jsonMatch) throw new Error('No JSON found in AI response');
-
+    // Parse full JSON from completed response. Use the shared balanced-brace
+    // extractor so deeply-nested payloads (gapCards/proposedEdits with nested
+    // fields) parse correctly — the previous regex only handled one level.
+    const extracted = extractJSON(raw);
     let parsed: unknown;
     try {
-      parsed = JSON.parse(jsonMatch[0]);
+      parsed = JSON.parse(extracted);
     } catch (err) {
       throw new Error(`Invalid JSON in AI response: ${err instanceof Error ? err.message : 'parse error'}`);
     }
