@@ -6,13 +6,23 @@ import { useCompanionStore } from '../../store/companion-store';
 const USER_PAN_GRACE_MS = 3000;
 const ANIMATE_DURATION_MS = 600;
 
+interface AutoCameraProps {
+  /**
+   * Lane this AutoCamera follows. Required because AutoCamera is mounted
+   * once per LaneCanvas (one per lane) — without filtering, every instance
+   * would try to follow the globally-newest node, calling fitView with an
+   * id that exists in only one of the four ReactFlow instances.
+   */
+  laneId: string;
+}
+
 /**
  * Follows newly added nodes with a smooth camera pan — but backs off if the
  * user has manually panned recently. Mount inside <ReactFlow> while companion
  * mode is active. Uses fitView({nodes:[id]}) so centering respects each
  * node's actual measured dimensions rather than a hardcoded offset.
  */
-export function AutoCamera() {
+export function AutoCamera({ laneId }: AutoCameraProps) {
   const rf = useReactFlow();
   const companionStatus = useCompanionStore((s) => s.status);
 
@@ -36,11 +46,13 @@ export function AutoCamera() {
   const nodes = useSemanticStore((s) => s.nodes);
 
   const newestNode = useMemo(() => {
-    if (nodes.length === 0) return null;
-    return [...nodes].sort((a, b) =>
-      a.createdAt < b.createdAt ? 1 : -1,
-    )[0];
-  }, [nodes]);
+    let candidate = null;
+    for (const n of nodes) {
+      if (n.laneId !== laneId) continue;
+      if (!candidate || n.createdAt > candidate.createdAt) candidate = n;
+    }
+    return candidate;
+  }, [nodes, laneId]);
 
   useEffect(() => {
     if (companionStatus !== 'listening') return;

@@ -137,7 +137,7 @@ export function LaneCanvas({ laneId }: LaneCanvasProps) {
     >
       <Background color="var(--canvas-dot, #1a1a2e)" gap={20} />
       <Controls />
-      <AutoCamera />
+      <AutoCamera laneId={laneId} />
     </ReactFlow>
   );
 }
