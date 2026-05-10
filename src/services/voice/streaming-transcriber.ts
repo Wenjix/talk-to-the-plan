@@ -165,15 +165,13 @@ export class StreamingTranscriber {
     try {
       token = await this.ensureToken();
     } catch (err) {
+      // Mark stopped + invalidate token, but don't emit a fatal event or
+      // release media here — let the awaiter (start()'s outer catch, or the
+      // reconnect path's .catch below) drive cleanup. Emitting fatal here
+      // duplicated the error path with start()'s rejection.
       this.stopped = true;
-      const isAuth = err instanceof CartesiaAuthError;
-      this.onEvent({
-        type: 'fatal',
-        error: err instanceof Error ? err.message : 'Token mint failed',
-      });
-      if (isAuth) this.invalidateToken();
-      this.releaseMedia();
-      return;
+      if (err instanceof CartesiaAuthError) this.invalidateToken();
+      throw err;
     }
 
     const url = buildWsUrl(this.language, token, this.maxSilenceSec);
@@ -280,7 +278,16 @@ export class StreamingTranscriber {
     this.onEvent({ type: 'reconnecting', error: `attempt ${this.reconnectAttempt}` });
     window.setTimeout(() => {
       if (this.stopped) return;
-      void this.openSocket();
+      // openSocket can now throw on token-mint failure; surface it as fatal
+      // here since there's no awaiting caller during a reconnect.
+      this.openSocket().catch((err) => {
+        this.stopped = true;
+        this.onEvent({
+          type: 'fatal',
+          error: err instanceof Error ? err.message : 'Reconnect failed',
+        });
+        this.releaseMedia();
+      });
     }, delay);
   }
 

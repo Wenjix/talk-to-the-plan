@@ -63,30 +63,30 @@ export async function startCompanionMode(): Promise<void> {
   // Set status BEFORE any async work to prevent double-entry race
   useCompanionStore.getState().setStatus('starting');
 
-  const settings = await loadSettings();
-  const cartesiaKey = resolveCartesiaApiKey(settings);
-  const apiKeys = resolveApiKeys(settings);
-  const anthropicKey = apiKeys.anthropic;
-
-  if (!cartesiaKey) {
-    store.setStatus('error', 'Cartesia API key not configured (Settings → voice)');
-    return;
-  }
-  if (!anthropicKey) {
-    store.setStatus('error', 'Anthropic API key required for companion listener');
-    return;
-  }
-
-  configureScheduler({ perMinuteCap: settings.companionMaxBranchesPerMinute });
-  useTranscriptStore.getState().start();
-
-  activeTranscriber = new StreamingTranscriber({
-    apiKey: cartesiaKey,
-    language: settings.voiceLanguage,
-    onEvent: handleTranscriberEvent,
-  });
-
   try {
+    const settings = await loadSettings();
+    const cartesiaKey = resolveCartesiaApiKey(settings);
+    const apiKeys = resolveApiKeys(settings);
+    const anthropicKey = apiKeys.anthropic;
+
+    if (!cartesiaKey) {
+      store.setStatus('error', 'Cartesia API key not configured (Settings → voice)');
+      return;
+    }
+    if (!anthropicKey) {
+      store.setStatus('error', 'Anthropic API key required for companion listener');
+      return;
+    }
+
+    configureScheduler({ perMinuteCap: settings.companionMaxBranchesPerMinute });
+    useTranscriptStore.getState().start();
+
+    activeTranscriber = new StreamingTranscriber({
+      apiKey: cartesiaKey,
+      language: settings.voiceLanguage,
+      onEvent: handleTranscriberEvent,
+    });
+
     await activeTranscriber.start();
     startListener({
       anthropicKey,
@@ -97,6 +97,8 @@ export async function startCompanionMode(): Promise<void> {
       maxDeferralMs: 4000,
     });
   } catch (err) {
+    // Catch widened to wrap loadSettings — without it, an IDB failure during
+    // settings load would leave the store stuck on 'starting' forever.
     activeTranscriber?.stop();
     activeTranscriber = null;
     stopListener();
