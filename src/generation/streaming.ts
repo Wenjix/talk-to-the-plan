@@ -142,24 +142,12 @@ function extractBalancedJSON(text: string): string | null {
 
         if (inString) continue;
 
-        if (ch === openChar || ch === '{' || ch === '[') {
-          // Only count matching open brace types toward depth
-          if (ch === openChar || (openChar === '{' && ch === '{') || (openChar === '[' && ch === '[')) {
-            depth++;
-          } else if (openChar === '{') {
-            // Nested array inside object — just track outer braces
-            if (ch === '{') depth++;
-          } else if (openChar === '[') {
-            if (ch === '[') depth++;
-          }
-        } else if (ch === closeChar || ch === '}' || ch === ']') {
-          if (ch === closeChar) {
-            depth--;
-          } else if (openChar === '{' && ch === '}') {
-            depth--;
-          } else if (openChar === '[' && ch === ']') {
-            depth--;
-          }
+        // Only matching brace type affects depth — the other type
+        // (e.g. brackets inside an object) can't unbalance the outer scope.
+        if (ch === openChar) {
+          depth++;
+        } else if (ch === closeChar) {
+          depth--;
         }
 
         if (depth === 0) {
