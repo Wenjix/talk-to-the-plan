@@ -65,6 +65,9 @@ export async function startCompanionMode(): Promise<void> {
 
   try {
     const settings = await loadSettings();
+    // If stop was called during loadSettings, bail before doing any setup.
+    if (useCompanionStore.getState().status !== 'starting') return;
+
     const cartesiaKey = resolveCartesiaApiKey(settings);
     const apiKeys = resolveApiKeys(settings);
     const anthropicKey = apiKeys.anthropic;
@@ -88,6 +91,16 @@ export async function startCompanionMode(): Promise<void> {
     });
 
     await activeTranscriber.start();
+    // If stop was called during transcriber.start(), tear down what we just
+    // brought up. stopCompanionMode may have already stopped the transcriber
+    // and nulled activeTranscriber — stop() is idempotent so this is safe.
+    if (useCompanionStore.getState().status !== 'starting') {
+      activeTranscriber?.stop();
+      activeTranscriber = null;
+      useTranscriptStore.getState().clear();
+      return;
+    }
+
     startListener({
       anthropicKey,
       model: settings.companionListenerModel,

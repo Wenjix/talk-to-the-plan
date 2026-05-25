@@ -181,6 +181,10 @@ async function maybeFire(): Promise<void> {
     // Clean up the timeout if provider won the race
     if (timeoutId !== null) window.clearTimeout(timeoutId);
 
+    // Listener may have been stopped while we awaited the model — bail before
+    // enqueueing intents against a cleared/switched session.
+    if (!active) return;
+
     const jsonText = extractJSON(raw);
     const jsonResult = parseJSON(jsonText);
     if (!jsonResult.success || !jsonResult.data) {
