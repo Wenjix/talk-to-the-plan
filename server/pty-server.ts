@@ -3,6 +3,7 @@ import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import { spawn as ptySpawn, type IPty } from 'node-pty';
 import { execFileSync } from 'child_process';
+import path from 'path';
 
 // ---------------------------------------------------------------------------
 // Tool status types (duplicated from src/services/terminal-tool-types.ts to
@@ -213,15 +214,19 @@ const MAX_CONNECTIONS = 10;
 let activeConnections = 0;
 
 // Allowed cwd paths — restrict to user home and temp. Computed once at module
-// load (the previous mutable-array "cache" was never populated, so the check
-// `if (length > 0)` was always false and the function recomputed on every call).
+// load and resolved to absolute paths so the prefix check operates on
+// canonical paths (string-prefix matching alone would let `/tmp/../etc` slip
+// through and node-pty would happily spawn the shell in `/etc`).
 const ALLOWED_CWD_PREFIXES: readonly string[] = (() => {
   const home = process.env.HOME || process.env.USERPROFILE || '/tmp';
-  return [home, '/tmp'];
+  return [home, '/tmp'].map((p) => path.resolve(p));
 })();
 
 function isAllowedCwd(cwd: string): boolean {
-  return ALLOWED_CWD_PREFIXES.some((p) => cwd === p || cwd.startsWith(p + '/'));
+  const resolved = path.resolve(cwd);
+  return ALLOWED_CWD_PREFIXES.some(
+    (p) => resolved === p || resolved.startsWith(p + path.sep),
+  );
 }
 
 // Build a sanitized env for PTY — only pass through safe variables
