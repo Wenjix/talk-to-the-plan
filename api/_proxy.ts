@@ -34,8 +34,15 @@ export async function proxyRequest(
     return;
   }
 
-  // Preserve query string
-  const search = req.url?.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+  // Preserve query string, but strip any `path` param the Vercel catch-all
+  // route can inject — we already extracted the segment via req.query.path
+  // and don't want it leaking to the upstream API.
+  let search = '';
+  if (req.url) {
+    const parsed = new URL(req.url, 'http://placeholder');
+    parsed.searchParams.delete('path');
+    search = parsed.search;
+  }
   const url = `${config.target}/${normalizedPath}${search}`;
 
   // Build headers: forward only allowed headers
