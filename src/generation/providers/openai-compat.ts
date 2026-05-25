@@ -89,6 +89,22 @@ export class OpenAICompatibleProvider implements GenerationProvider {
     let accumulated = '';
     let partialLine = '';
 
+    const processLine = (line: string) => {
+      if (!line.startsWith('data: ')) return;
+      const json = line.slice(6);
+      if (json === '[DONE]') return;
+      try {
+        const parsed = JSON.parse(json);
+        const delta = parsed.choices?.[0]?.delta?.content ?? '';
+        if (delta) {
+          accumulated += delta;
+          onChunk(delta);
+        }
+      } catch {
+        // Skip malformed SSE lines
+      }
+    };
+
     try {
       while (true) {
         const inactivityTimer = setTimeout(
@@ -99,7 +115,13 @@ export class OpenAICompatibleProvider implements GenerationProvider {
         const { done, value } = await reader.read();
         clearTimeout(inactivityTimer);
 
-        if (done) break;
+        if (done) {
+          // Drain any buffered tail — well-formed SSE ends with \n\n so this
+          // is usually empty, but a truncated upstream stream could leave a
+          // final data: event in the buffer.
+          if (partialLine) processLine(partialLine);
+          break;
+        }
 
         const text = decoder.decode(value, { stream: true });
         const fullText = partialLine + text;
@@ -107,21 +129,7 @@ export class OpenAICompatibleProvider implements GenerationProvider {
         // Last element may be a partial line — save for next chunk
         partialLine = lines.pop() ?? '';
 
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue;
-          const json = line.slice(6);
-          if (json === '[DONE]') continue;
-          try {
-            const parsed = JSON.parse(json);
-            const delta = parsed.choices?.[0]?.delta?.content ?? '';
-            if (delta) {
-              accumulated += delta;
-              onChunk(delta);
-            }
-          } catch {
-            // Skip malformed SSE lines
-          }
-        }
+        for (const line of lines) processLine(line);
       }
     } finally {
       hardCeiling.clear();
