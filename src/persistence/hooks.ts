@@ -18,12 +18,25 @@ import type { z } from 'zod';
 
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
+// Serialize overlapping saves. Debounced auto-save, toolbar save, pagehide
+// flush, and unsubscribe flush can all race; without a queue, a slower older
+// save's stale-deletion pass can wipe entities that a newer save just wrote.
+let saveQueue: Promise<void> = Promise.resolve();
+
 /**
  * Save current session state to IDB.
  * Writes all entities from the semantic and session stores.
  * Removes stale entities that were deleted from in-memory stores.
+ * Serialized: concurrent calls run sequentially, in FIFO order.
  */
-export async function saveSession(): Promise<void> {
+export function saveSession(): Promise<void> {
+  // Run regardless of prior failure; surface the next save's own outcome.
+  const next = saveQueue.then(doSave, doSave);
+  saveQueue = next.catch(() => {});
+  return next;
+}
+
+async function doSave(): Promise<void> {
   const session = useSessionStore.getState().session;
   if (!session) return;
 
@@ -44,7 +57,7 @@ export async function saveSession(): Promise<void> {
   const [
     persistedNodes, persistedEdges, persistedLanes, persistedPromotions,
     persistedDialogueTurns, persistedPlanTalkTurns, persistedVoiceNotes,
-    persistedVoiceNoteBlobs,
+    persistedVoiceNoteBlobs, persistedUnifiedPlans,
   ] = await Promise.all([
     getAllByIndex('nodes', 'by-session', session.id),
     getAllByIndex('edges', 'by-session', session.id),
@@ -54,9 +67,12 @@ export async function saveSession(): Promise<void> {
     getAllByIndex('planTalkTurns', 'by-session', session.id),
     getAllByIndex('voiceNotes', 'by-session', session.id),
     getAllByIndex('voiceNoteBlobs', 'by-session', session.id),
+    getAllByIndex('unifiedPlans', 'by-session', session.id),
   ]);
 
-  // Delete stale entities
+  // Delete stale entities. unifiedPlan is at most one per session: drop any
+  // persisted row whose id doesn't match the current in-memory plan (or drop
+  // all when there's no plan in memory).
   const staleDeletions = [
     ...persistedNodes.filter(n => !currentNodeIds.has(n.id)).map(n => deleteEntity('nodes', n.id)),
     ...persistedEdges.filter(e => !currentEdgeIds.has(e.id)).map(e => deleteEntity('edges', e.id)),
@@ -66,6 +82,7 @@ export async function saveSession(): Promise<void> {
     ...persistedPlanTalkTurns.filter(t => !currentPlanTalkTurnIds.has(t.id)).map(t => deleteEntity('planTalkTurns', t.id)),
     ...persistedVoiceNotes.filter(n => !currentVoiceNoteIds.has(n.id)).map(n => deleteEntity('voiceNotes', n.id)),
     ...persistedVoiceNoteBlobs.filter(b => !currentVoiceNoteIds.has(b.id)).map(b => deleteEntity('voiceNoteBlobs', b.id)),
+    ...persistedUnifiedPlans.filter(p => !unifiedPlan || p.id !== unifiedPlan.id).map(p => deleteEntity('unifiedPlans', p.id)),
   ];
 
   // Save session
