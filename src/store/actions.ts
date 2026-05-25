@@ -699,9 +699,17 @@ export async function runJob(
     // Clear the stream buffer now that generation is done
     useViewStore.getState().clearStream(job.targetNodeId);
   } catch {
+    // Liveness guard: same logic as the success path. If the job was
+    // cancelled (or otherwise moved off 'running') during the generate()
+    // await, the canceller owns FSM cleanup. Skip the FAIL/RETRY transitions
+    // and the node-state mutation below so we don't fight the cancellation.
     const currentJob = useJobStore.getState().getJob(job.id);
-    const canRetry =
-      !!currentJob && currentJob.attempts + 1 < currentJob.maxAttempts;
+    if (!currentJob || currentJob.fsmState !== 'running') {
+      useViewStore.getState().clearStream(job.targetNodeId);
+      return;
+    }
+
+    const canRetry = currentJob.attempts + 1 < currentJob.maxAttempts;
 
     // Transition job: running -> retrying or failed
     useJobStore.getState().updateJobState(job.id, {
