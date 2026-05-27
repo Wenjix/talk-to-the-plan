@@ -1,5 +1,5 @@
 import type { SessionStatus } from '../core/types/session';
-import { saveSession, restoreSession, listSavedSessions } from '../persistence/hooks';
+import { saveSession, restoreSession, listSavedSessions, flushPendingSave } from '../persistence/hooks';
 import { deleteEntity, getAllByIndex } from '../persistence/repository';
 import { useSemanticStore } from './semantic-store';
 import { useSessionStore } from './session-store';
@@ -117,6 +117,10 @@ export async function deleteSession(sessionId: string): Promise<void> {
 
     // If deleting the active session, clear all stores and in-flight operations
     if (current && current.id === sessionId) {
+      // Wait for any in-flight save (with a stale snapshot) to finish
+      // BEFORE clearing/deleting. Otherwise its Promise.all of writes can
+      // resurrect entities after the IDB deletions below run.
+      await flushPendingSave();
       clearAllStores();
     }
 

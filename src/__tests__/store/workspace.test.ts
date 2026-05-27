@@ -12,11 +12,13 @@ import type { PlanningSession, SemanticNode } from '../../core/types';
 const mockSaveSession = vi.fn<() => Promise<void>>();
 const mockRestoreSession = vi.fn<(id: string) => Promise<boolean>>();
 const mockListSavedSessions = vi.fn<() => Promise<Array<{ id: string; topic: string; updatedAt: string }>>>();
+const mockFlushPendingSave = vi.fn<() => Promise<void>>();
 
 vi.mock('../../persistence/hooks', () => ({
   saveSession: (...args: unknown[]) => mockSaveSession(...(args as [])),
   restoreSession: (id: string) => mockRestoreSession(id),
   listSavedSessions: (...args: unknown[]) => mockListSavedSessions(...(args as [])),
+  flushPendingSave: (...args: unknown[]) => mockFlushPendingSave(...(args as [])),
 }));
 
 const mockDeleteEntity = vi.fn<(store: string, key: string) => Promise<void>>();

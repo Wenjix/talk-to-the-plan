@@ -120,6 +120,21 @@ export function debouncedSave(): void {
 }
 
 /**
+ * Cancel any pending debounced save and await all queued saves.
+ *
+ * Use before an operation that mutates IDB outside the save path (e.g.
+ * deleteSession), so an in-flight save's stale-snapshot writes can't
+ * undo the upcoming mutation.
+ */
+export async function flushPendingSave(): Promise<void> {
+  if (debounceTimer !== null) {
+    clearTimeout(debounceTimer);
+    debounceTimer = null;
+  }
+  await saveQueue;
+}
+
+/**
  * Subscribe to store changes for auto-save.
  * Returns an unsubscribe function.
  */
