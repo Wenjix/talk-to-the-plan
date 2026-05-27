@@ -40,20 +40,13 @@ async function doSave(): Promise<void> {
   const session = useSessionStore.getState().session;
   if (!session) return;
 
-  const { nodes, edges, promotions, lanes, unifiedPlan, dialogueTurns } = useSemanticStore.getState();
-  const planTalkTurns = usePlanTalkStore.getState().turns;
-  const voiceNotes = useVoiceNoteStore.getState().notes;
-
-  // Build sets of current entity IDs for stale-deletion
-  const currentNodeIds = new Set(nodes.map(n => n.id));
-  const currentEdgeIds = new Set(edges.map(e => e.id));
-  const currentLaneIds = new Set(lanes.map(l => l.id));
-  const currentPromotionIds = new Set(promotions.map(p => p.id));
-  const currentDialogueTurnIds = new Set(dialogueTurns.map(dt => dt.id));
-  const currentPlanTalkTurnIds = new Set(planTalkTurns.map(t => t.id));
-  const currentVoiceNoteIds = new Set(voiceNotes.map(n => n.id));
-
-  // Load persisted entities to detect stale ones
+  // Load persisted entities FIRST so the in-memory snapshot below is captured
+  // as close to the write batch as possible. Snapshotting before the IDB
+  // reads opened a window where a deletion during the await would be missed:
+  // the diff used the stale snapshot, so the deleted entity got upserted
+  // back. Reading first narrows the race to just snapshot → Promise.all
+  // writes, and the saveQueue catches anything that slips through by
+  // running a follow-up save with fresh state.
   const [
     persistedNodes, persistedEdges, persistedLanes, persistedPromotions,
     persistedDialogueTurns, persistedPlanTalkTurns, persistedVoiceNotes,
@@ -69,6 +62,20 @@ async function doSave(): Promise<void> {
     getAllByIndex('voiceNoteBlobs', 'by-session', session.id),
     getAllByIndex('unifiedPlans', 'by-session', session.id),
   ]);
+
+  // Snapshot in-memory state AFTER the IDB reads complete.
+  const { nodes, edges, promotions, lanes, unifiedPlan, dialogueTurns } = useSemanticStore.getState();
+  const planTalkTurns = usePlanTalkStore.getState().turns;
+  const voiceNotes = useVoiceNoteStore.getState().notes;
+
+  // Build sets of current entity IDs for stale-deletion
+  const currentNodeIds = new Set(nodes.map(n => n.id));
+  const currentEdgeIds = new Set(edges.map(e => e.id));
+  const currentLaneIds = new Set(lanes.map(l => l.id));
+  const currentPromotionIds = new Set(promotions.map(p => p.id));
+  const currentDialogueTurnIds = new Set(dialogueTurns.map(dt => dt.id));
+  const currentPlanTalkTurnIds = new Set(planTalkTurns.map(t => t.id));
+  const currentVoiceNoteIds = new Set(voiceNotes.map(n => n.id));
 
   // Delete stale entities. unifiedPlan is at most one per session: drop any
   // persisted row whose id doesn't match the current in-memory plan (or drop
