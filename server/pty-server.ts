@@ -124,8 +124,8 @@ wss.on('connection', (ws: WebSocket) => {
             return;
           }
           const shell = process.env.SHELL || '/bin/zsh';
-          const requestedCwd = msg.cwd || process.env.HOME || '/';
-          const cwd = isAllowedCwd(requestedCwd) ? requestedCwd : (process.env.HOME || '/');
+          const requestedCwd = msg.cwd || DEFAULT_CWD;
+          const cwd = isAllowedCwd(requestedCwd) ? requestedCwd : DEFAULT_CWD;
           const cols = Math.max(1, Math.min(300, msg.cols ?? 80));
           const rows = Math.max(1, Math.min(100, msg.rows ?? 24));
           const ptyEnv = buildPtyEnv();
@@ -221,6 +221,12 @@ const ALLOWED_CWD_PREFIXES: readonly string[] = (() => {
   const home = process.env.HOME || process.env.USERPROFILE || '/tmp';
   return [home, '/tmp'].map((p) => path.resolve(p));
 })();
+
+// Default cwd for the fallback branch — must itself be in the allowlist,
+// so reuse the first allowed prefix (already resolved). Falling back to
+// `process.env.HOME || '/'` would let an unset HOME spawn the shell in `/`,
+// which is outside the allowlist.
+const DEFAULT_CWD = ALLOWED_CWD_PREFIXES[0];
 
 function isAllowedCwd(cwd: string): boolean {
   const resolved = path.resolve(cwd);
