@@ -29,6 +29,10 @@ const SAMPLE_RATE = 16000;
 const CARTESIA_WS_BASE = 'wss://api.cartesia.ai/stt/websocket';
 const MAX_RECONNECT_DELAY_MS = 8000;
 const MAX_RECONNECT_ATTEMPTS = 6;
+// Browsers normally fire onopen or onclose within a few seconds of a WS
+// construction. If neither fires, the companion UI would sit on "Starting…"
+// forever with the mic active. Treat that as fatal after this many ms.
+const HANDSHAKE_TIMEOUT_MS = 10000;
 
 function buildWsUrl(language: 'English' | 'Chinese', token: string, maxSilenceSec: number): string {
   const params = new URLSearchParams({
@@ -69,6 +73,7 @@ export class StreamingTranscriber {
   private stopped = false;
   private hasEverConnected = false;
   private startedAt = 0;
+  private handshakeTimer: number | null = null;
 
   constructor(options: StreamingTranscriberOptions) {
     this.apiKey = options.apiKey;
@@ -112,6 +117,7 @@ export class StreamingTranscriber {
 
   stop(): void {
     this.stopped = true;
+    this.clearHandshakeTimer();
 
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       try {
@@ -124,6 +130,13 @@ export class StreamingTranscriber {
     this.ws = null;
 
     this.releaseMedia();
+  }
+
+  private clearHandshakeTimer(): void {
+    if (this.handshakeTimer !== null) {
+      window.clearTimeout(this.handshakeTimer);
+      this.handshakeTimer = null;
+    }
   }
 
   isRunning(): boolean {
@@ -179,7 +192,22 @@ export class StreamingTranscriber {
     ws.binaryType = 'arraybuffer';
     this.ws = ws;
 
+    // start() resolves after WS construction, not after onopen. If neither
+    // onopen nor onclose ever fires (silent network black-hole), the
+    // companion UI would stay on "Starting…" with the mic active. Bound it.
+    this.clearHandshakeTimer();
+    this.handshakeTimer = window.setTimeout(() => {
+      this.handshakeTimer = null;
+      if (this.stopped || this.ws !== ws) return;
+      this.stopped = true;
+      try { ws.close(); } catch { /* ignore */ }
+      this.ws = null;
+      this.onEvent({ type: 'fatal', error: 'Connection timeout' });
+      this.releaseMedia();
+    }, HANDSHAKE_TIMEOUT_MS);
+
     ws.onopen = () => {
+      this.clearHandshakeTimer();
       this.reconnectAttempt = 0;
       this.hasEverConnected = true;
       this.onEvent({ type: 'open' });
@@ -192,6 +220,7 @@ export class StreamingTranscriber {
     };
 
     ws.onclose = (event) => {
+      this.clearHandshakeTimer();
       this.ws = null;
       this.onEvent({ type: 'close', error: event.reason || undefined });
 
