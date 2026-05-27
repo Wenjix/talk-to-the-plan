@@ -75,52 +75,55 @@ export async function stopVoiceNoteRecording(): Promise<void> {
   // Capture duration BEFORE stop (getElapsedMs returns 0 after stop)
   const durationMs = recorder.getElapsedMs();
 
-  let blob: Blob;
+  let savedNoteId: string | null = null;
   try {
-    blob = await recorder.stop();
-  } catch {
+    let blob: Blob;
+    try {
+      blob = await recorder.stop();
+    } catch {
+      return;
+    }
+
+    // Hide the recording indicator as soon as audio capture is done; the rest
+    // is background persistence work.
+    useVoiceNoteRecordingStore.getState().stopRecording();
+
+    const sessionId = useSessionStore.getState().session?.id;
+    if (!sessionId) return;
+
+    const noteId = crypto.randomUUID();
+    const note: VoiceNote = {
+      id: noteId,
+      sessionId,
+      nodeId,
+      durationMs,
+      mimeType: blob.type || 'audio/webm',
+      transcriptStatus: 'pending',
+      createdAt: new Date().toISOString(),
+    };
+
+    // Persist metadata + blob to IndexedDB
+    useVoiceNoteStore.getState().addNote(note);
+    await Promise.all([
+      putEntity('voiceNotes', note),
+      putEntity('voiceNoteBlobs', { id: noteId, sessionId, blob }),
+    ]);
+    savedNoteId = noteId;
+
+    // Auto-promote the node when a voice note is attached
+    const node = useSemanticStore.getState().getNode(nodeId);
+    if (node && node.fsmState === 'resolved' && !node.promoted) {
+      promoteNode(nodeId, 'actionable_detail', 'Voice note attached');
+    }
+  } finally {
     recorder.destroy();
     useVoiceNoteRecordingStore.getState().clear();
-    return;
-  }
-  recorder.destroy();
-
-  useVoiceNoteRecordingStore.getState().stopRecording();
-
-  const sessionId = useSessionStore.getState().session?.id;
-  if (!sessionId) {
-    useVoiceNoteRecordingStore.getState().clear();
-    return;
   }
 
-  const noteId = crypto.randomUUID();
-  const note: VoiceNote = {
-    id: noteId,
-    sessionId,
-    nodeId,
-    durationMs,
-    mimeType: blob.type || 'audio/webm',
-    transcriptStatus: 'pending',
-    createdAt: new Date().toISOString(),
-  };
-
-  // Persist metadata + blob to IndexedDB
-  useVoiceNoteStore.getState().addNote(note);
-  await Promise.all([
-    putEntity('voiceNotes', note),
-    putEntity('voiceNoteBlobs', { id: noteId, sessionId, blob }),
-  ]);
-
-  useVoiceNoteRecordingStore.getState().clear();
-
-  // Auto-promote the node when a voice note is attached
-  const node = useSemanticStore.getState().getNode(nodeId);
-  if (node && node.fsmState === 'resolved' && !node.promoted) {
-    promoteNode(nodeId, 'actionable_detail', 'Voice note attached');
+  // Background transcription (fire-and-forget) — only if the note actually persisted.
+  if (savedNoteId) {
+    transcribeVoiceNote(savedNoteId).catch(() => {});
   }
-
-  // Background transcription (fire-and-forget)
-  transcribeVoiceNote(noteId).catch(() => {});
 }
 
 let transcriptionCount = 0;

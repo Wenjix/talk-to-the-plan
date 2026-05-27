@@ -19,92 +19,6 @@ export function getSupportedMimeType(): string {
   return ''; // browser default
 }
 
-function arrayBufferToBase64(buffer: ArrayBuffer): string {
-  const bytes = new Uint8Array(buffer);
-  const CHUNK_SIZE = 8192;
-  const parts: string[] = [];
-  for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
-    const slice = bytes.subarray(i, Math.min(i + CHUNK_SIZE, bytes.length));
-    parts.push(String.fromCharCode(...slice));
-  }
-  return btoa(parts.join(''));
-}
-
-/**
- * Captures raw PCM 16-bit audio at 16kHz for streaming to WebSocket STT.
- * Uses AudioContext + AudioWorkletNode for off-main-thread processing.
- */
-export class PCMRecorder {
-  private context: AudioContext | null = null;
-  private source: MediaStreamAudioSourceNode | null = null;
-  private workletNode: AudioWorkletNode | null = null;
-  private stream: MediaStream | null = null;
-  private onChunk: ((pcmBase64: string) => void) | null = null;
-  private startedAt = 0;
-
-  async start(onChunk: (pcmBase64: string) => void): Promise<void> {
-    this.onChunk = onChunk;
-
-    try {
-      this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    } catch {
-      throw new MicPermissionError();
-    }
-
-    try {
-      this.context = new AudioContext({ sampleRate: 16000 });
-      await this.context.audioWorklet.addModule('/pcm-processor.js');
-
-      this.source = this.context.createMediaStreamSource(this.stream);
-      this.workletNode = new AudioWorkletNode(this.context, 'pcm-processor');
-
-      this.workletNode.port.onmessage = (e: MessageEvent<ArrayBuffer>) => {
-        const base64 = arrayBufferToBase64(e.data);
-        this.onChunk?.(base64);
-      };
-
-      this.source.connect(this.workletNode);
-      // Do NOT connect workletNode to destination — this is capture-only
-      this.startedAt = Date.now();
-    } catch (err) {
-      this.stop();
-      throw err;
-    }
-  }
-
-  getElapsedMs(): number {
-    if (!this.startedAt) return 0;
-    return Date.now() - this.startedAt;
-  }
-
-  stop(): void {
-    this.workletNode?.disconnect();
-    this.source?.disconnect();
-    this.stream?.getTracks().forEach((t) => t.stop());
-    if (this.context && this.context.state !== 'closed') {
-      this.context.close().catch(() => {});
-    }
-    this.context = null;
-    this.source = null;
-    this.workletNode = null;
-    this.stream = null;
-    this.onChunk = null;
-  }
-
-  destroy(): void {
-    this.stop();
-    this.stream?.getTracks().forEach((t) => t.stop());
-    if (this.context?.state !== 'closed') {
-      this.context?.close().catch(() => {});
-    }
-    this.context = null;
-    this.source = null;
-    this.workletNode = null;
-    this.stream = null;
-    this.startedAt = 0;
-  }
-}
-
 export class VoiceRecorder {
   private recorder: MediaRecorder | null = null;
   private stream: MediaStream | null = null;
@@ -176,9 +90,8 @@ export class VoiceRecorder {
 }
 
 /**
- * Accumulates PCM audio into a single Float32Array buffer.
- * Uses the same 16kHz AudioWorklet as PCMRecorder but collects
- * all chunks for batch processing (e.g. chunkPcmBuffer).
+ * Accumulates PCM audio into a single Float32Array buffer at 16kHz via
+ * AudioWorklet, collecting all chunks for batch processing (e.g. chunkPcmBuffer).
  */
 export class BufferedPCMRecorder {
   private context: AudioContext | null = null;
@@ -246,6 +159,9 @@ export class BufferedPCMRecorder {
   }
 
   private releaseResources(): void {
+    if (this.workletNode) {
+      this.workletNode.port.onmessage = null;
+    }
     this.workletNode?.disconnect();
     this.source?.disconnect();
     this.stream?.getTracks().forEach((t) => t.stop());
