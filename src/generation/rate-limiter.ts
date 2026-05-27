@@ -75,16 +75,23 @@ export class ConcurrencyController {
       return;
     }
     await new Promise<void>((resolve) => {
-      this.waitQueue.push(resolve);
+      this.waitQueue.push(() => {
+        this.running++;
+        resolve();
+      });
     });
-    this.running++;
   }
 
   /** Release a slot. */
   release(): void {
-    this.running--;
-    const next = this.waitQueue.shift();
-    if (next) next();
+    if (this.running > 0) {
+      this.running--;
+    }
+    // Only dispatch to the next waiter if we actually freed a slot
+    if (this.running < this.maxConcurrent) {
+      const next = this.waitQueue.shift();
+      if (next) next();
+    }
   }
 
   /** Get current running count */

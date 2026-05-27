@@ -46,7 +46,7 @@ export function ApiKeyPrompt({ onSaved }: ApiKeyPromptProps) {
       />
       <div style={{ display: 'flex', gap: 8 }}>
         <button
-          onClick={handleSave}
+          onClick={() => void handleSave()}
           disabled={!apiKey.trim() || saving}
           style={{
             padding: '8px 20px',

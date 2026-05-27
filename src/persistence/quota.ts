@@ -18,11 +18,20 @@ export async function checkStorageQuota(): Promise<QuotaInfo> {
 export const QUOTA_WARNING_THRESHOLD = 50 * 1024 * 1024; // 50MB
 
 export function isNearQuota(info: QuotaInfo): boolean {
+  // Use relative check when quota is finite, absolute fallback otherwise
+  if (info.quota !== Infinity && info.quota > 0) {
+    return info.percentage >= 80;
+  }
   return info.used >= QUOTA_WARNING_THRESHOLD;
 }
 
+export const QUOTA_EXCEEDED_ABSOLUTE = 200 * 1024 * 1024; // 200MB
+
 export function isQuotaExceeded(info: QuotaInfo): boolean {
-  return info.percentage >= 95;
+  if (info.quota !== Infinity && info.quota > 0) {
+    return info.percentage >= 95;
+  }
+  return info.used >= QUOTA_EXCEEDED_ABSOLUTE;
 }
 
 export function formatBytes(bytes: number): string {

@@ -75,7 +75,13 @@ export async function stopAndProcessVoiceCommand(): Promise<void> {
 
   try {
     const buffer = recorder.stop();
+    // BufferedPCMRecorder.stop() returns Float32Array synchronously
     recorder.destroy();
+
+    if (buffer instanceof Promise) {
+      useVoiceCommandStore.getState().setError('Recording stop returned unexpected Promise');
+      return;
+    }
 
     const chunkResult = chunkPcmBuffer(buffer, 16000);
 
@@ -134,7 +140,7 @@ export async function stopAndProcessVoiceCommand(): Promise<void> {
         .then((blob) => {
           chatStore.setTtsBlob(aiTurnId, blob);
           chatStore.setTtsTurnStatus(aiTurnId, 'ready');
-          audioPlayback.play(blob);
+          audioPlayback.play(blob).catch(() => {});
         })
         .catch(() => {
           chatStore.setTtsTurnStatus(aiTurnId, 'failed');

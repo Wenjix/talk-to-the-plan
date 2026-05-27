@@ -31,7 +31,7 @@ export function SessionList({
   }, []);
 
   useEffect(() => {
-    loadSessions();
+    void loadSessions();
   }, [loadSessions]);
 
   const handleDelete = useCallback(

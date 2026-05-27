@@ -21,11 +21,13 @@ export function getSupportedMimeType(): string {
 
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer);
-  let binary = '';
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i]);
+  const CHUNK_SIZE = 8192;
+  const parts: string[] = [];
+  for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
+    const slice = bytes.subarray(i, Math.min(i + CHUNK_SIZE, bytes.length));
+    parts.push(String.fromCharCode(...slice));
   }
-  return btoa(binary);
+  return btoa(parts.join(''));
 }
 
 /**
@@ -49,20 +51,25 @@ export class PCMRecorder {
       throw new MicPermissionError();
     }
 
-    this.context = new AudioContext({ sampleRate: 16000 });
-    await this.context.audioWorklet.addModule('/pcm-processor.js');
+    try {
+      this.context = new AudioContext({ sampleRate: 16000 });
+      await this.context.audioWorklet.addModule('/pcm-processor.js');
 
-    this.source = this.context.createMediaStreamSource(this.stream);
-    this.workletNode = new AudioWorkletNode(this.context, 'pcm-processor');
+      this.source = this.context.createMediaStreamSource(this.stream);
+      this.workletNode = new AudioWorkletNode(this.context, 'pcm-processor');
 
-    this.workletNode.port.onmessage = (e: MessageEvent<ArrayBuffer>) => {
-      const base64 = arrayBufferToBase64(e.data);
-      this.onChunk?.(base64);
-    };
+      this.workletNode.port.onmessage = (e: MessageEvent<ArrayBuffer>) => {
+        const base64 = arrayBufferToBase64(e.data);
+        this.onChunk?.(base64);
+      };
 
-    this.source.connect(this.workletNode);
-    this.workletNode.connect(this.context.destination);
-    this.startedAt = Date.now();
+      this.source.connect(this.workletNode);
+      // Do NOT connect workletNode to destination — this is capture-only
+      this.startedAt = Date.now();
+    } catch (err) {
+      this.stop();
+      throw err;
+    }
   }
 
   getElapsedMs(): number {
@@ -73,6 +80,14 @@ export class PCMRecorder {
   stop(): void {
     this.workletNode?.disconnect();
     this.source?.disconnect();
+    this.stream?.getTracks().forEach((t) => t.stop());
+    if (this.context && this.context.state !== 'closed') {
+      this.context.close().catch(() => {});
+    }
+    this.context = null;
+    this.source = null;
+    this.workletNode = null;
+    this.stream = null;
     this.onChunk = null;
   }
 
@@ -105,13 +120,18 @@ export class VoiceRecorder {
     }
 
     this.chunks = [];
-    const mimeType = getSupportedMimeType();
-    this.recorder = new MediaRecorder(this.stream, mimeType ? { mimeType } : undefined);
-    this.recorder.ondataavailable = (e) => {
-      if (e.data.size > 0) this.chunks.push(e.data);
-    };
-    this.recorder.start();
-    this.startedAt = Date.now();
+    try {
+      const mimeType = getSupportedMimeType();
+      this.recorder = new MediaRecorder(this.stream, mimeType ? { mimeType } : undefined);
+      this.recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) this.chunks.push(e.data);
+      };
+      this.recorder.start();
+      this.startedAt = Date.now();
+    } catch (err) {
+      this.destroy();
+      throw err;
+    }
   }
 
   /** Stop recording and return the captured audio blob. */
@@ -121,13 +141,14 @@ export class VoiceRecorder {
         reject(new Error('Not recording'));
         return;
       }
-      this.recorder.onstop = () => {
-        const mime = this.recorder?.mimeType || 'audio/webm';
+      const currentRecorder = this.recorder;
+      currentRecorder.onstop = () => {
+        const mime = currentRecorder.mimeType || 'audio/webm';
         const blob = new Blob(this.chunks, { type: mime });
         this.chunks = [];
         resolve(blob);
       };
-      this.recorder.stop();
+      currentRecorder.stop();
     });
   }
 
@@ -175,19 +196,24 @@ export class BufferedPCMRecorder {
     }
 
     this.chunks = [];
-    this.context = new AudioContext({ sampleRate: 16000 });
-    await this.context.audioWorklet.addModule('/pcm-processor.js');
+    try {
+      this.context = new AudioContext({ sampleRate: 16000 });
+      await this.context.audioWorklet.addModule('/pcm-processor.js');
 
-    this.source = this.context.createMediaStreamSource(this.stream);
-    this.workletNode = new AudioWorkletNode(this.context, 'pcm-processor');
+      this.source = this.context.createMediaStreamSource(this.stream);
+      this.workletNode = new AudioWorkletNode(this.context, 'pcm-processor');
 
-    this.workletNode.port.onmessage = (e: MessageEvent<ArrayBuffer>) => {
-      this.chunks.push(new Int16Array(e.data));
-    };
+      this.workletNode.port.onmessage = (e: MessageEvent<ArrayBuffer>) => {
+        this.chunks.push(new Int16Array(e.data));
+      };
 
-    this.source.connect(this.workletNode);
-    this.workletNode.connect(this.context.destination);
-    this.startedAt = Date.now();
+      this.source.connect(this.workletNode);
+      // Do NOT connect workletNode to destination — this is capture-only
+      this.startedAt = Date.now();
+    } catch (err) {
+      this.releaseResources();
+      throw err;
+    }
   }
 
   stop(): Float32Array {

@@ -69,19 +69,26 @@ function encodeWavChunk(pcm: Int16Array, sampleRate: number): string {
     view.setInt16(WAV_HEADER_SIZE + i * 2, pcm[i], true);
   }
 
-  // Base64 encode
+  // Base64 encode using chunked String.fromCharCode to avoid O(n²) string concatenation
   const bytes = new Uint8Array(buffer);
-  let binary = '';
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i]);
+  const CHUNK_SIZE = 8192;
+  const parts: string[] = [];
+  for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
+    const slice = bytes.subarray(i, Math.min(i + CHUNK_SIZE, bytes.length));
+    parts.push(String.fromCharCode(...slice));
   }
-  const base64 = btoa(binary);
+  const base64 = btoa(parts.join(''));
 
   return `data:audio/wav;base64,${base64}`;
 }
 
 export function chunkPcmBuffer(samples: Float32Array, sampleRate: number): ChunkResult {
   if (samples.length === 0) {
+    return { chunks: [], durationSec: 0, numChunks: 0 };
+  }
+
+  if (sampleRate <= 0) {
+    console.warn('chunkPcmBuffer: invalid sampleRate, returning empty');
     return { chunks: [], durationSec: 0, numChunks: 0 };
   }
 

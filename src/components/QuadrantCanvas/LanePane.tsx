@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { useSemanticStore } from '../../store/semantic-store';
 import { useSessionStore } from '../../store/session-store';
 import { useQuadrantStore } from '../../store/quadrant-store';
@@ -16,14 +16,17 @@ export function LanePane({ lane, index }: LanePaneProps) {
   const [compact, setCompact] = useState(false);
   const focusedLaneId = useSessionStore(s => s.focusedLaneId);
   const setFocusedLaneId = useSessionStore(s => s.setFocusedLaneId);
-  const pinned = useQuadrantStore(s => s.panes.find(p => p.index === index)?.pinned ?? false);
+  const panes = useQuadrantStore(s => s.panes);
+  const pinned = useMemo(() => panes.find(p => p.index === index)?.pinned ?? false, [panes, index]);
   const setPinned = useQuadrantStore(s => s.setPinned);
 
   const isFocused = focusedLaneId === lane.id;
 
   // Node count for this lane
-  const nodeCount = useSemanticStore(s =>
-    s.nodes.filter(n => n.laneId === lane.id).length,
+  const nodes = useSemanticStore(s => s.nodes);
+  const nodeCount = useMemo(
+    () => nodes.filter(n => n.laneId === lane.id).length,
+    [nodes, lane.id],
   );
 
   // ResizeObserver for compact mode detection

@@ -7,6 +7,8 @@ import { useToastStore } from './store/toast-store';
 import { toggleTerminal } from './store/terminal-actions';
 import { addUserTurn, generateDialogueResponse, concludeDialogue } from './store/dialogue-actions';
 import { usePlanTalkStore } from './store/plan-talk-store';
+import { useCompanionStore } from './store/companion-store';
+import { stopCompanionMode } from './store/companion-actions';
 import { TopicInput } from './components/TopicInput/TopicInput';
 import { ParallaxCanvas } from './components/Canvas/ParallaxCanvas';
 import { PlanPanel } from './components/PlanPanel/PlanPanel';
@@ -105,7 +107,7 @@ function App() {
   // Keyboard shortcut: Ctrl+` toggles terminal
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.key === '`') {
+      if ((e.ctrlKey || e.metaKey) && e.key === '`') {
         e.preventDefault();
         toggleTerminal();
       }
@@ -113,6 +115,13 @@ function App() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  // Stop companion mode if the user leaves the exploring view or clears session
+  useEffect(() => {
+    if (uiMode !== 'exploring' && useCompanionStore.getState().status !== 'off') {
+      stopCompanionMode();
+    }
+  }, [uiMode]);
 
   const showToolbar = session || uiMode === 'workspace';
 

@@ -5,7 +5,7 @@ export const HARD_CEILING_MS = 120_000;
 
 // Exponential backoff: 2s, 4s, 8s
 export const BACKOFF_BASE_MS = 2_000;
-export const MAX_RETRIES = 2;
+export const MAX_RETRIES = 3;
 
 export function createTimeoutController(timeoutMs: number): { controller: AbortController; clear: () => void } {
   const controller = new AbortController();
@@ -41,6 +41,8 @@ export async function fetchWithRetry(
 
       if (response.status === 429 || response.status >= 500) {
         lastError = new Error(`${label} error: ${response.status} ${response.statusText}`);
+        // Drain the response body to free the HTTP connection
+        await response.text().catch(() => {});
         if (attempt < MAX_RETRIES - 1) {
           const delay = BACKOFF_BASE_MS * Math.pow(2, attempt);
           await new Promise((r) => setTimeout(r, delay));
@@ -49,6 +51,8 @@ export async function fetchWithRetry(
       }
 
       if (!response.ok) {
+        // Drain the response body to free the HTTP connection
+        await response.text().catch(() => {});
         throw new Error(`${label} error: ${response.status} ${response.statusText}`);
       }
 

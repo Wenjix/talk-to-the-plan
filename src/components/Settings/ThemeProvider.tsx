@@ -8,7 +8,7 @@ export function useTheme(): void {
 
   useEffect(() => {
     let cancelled = false;
-    loadSettings().then((s) => {
+    void loadSettings().then((s) => {
       if (!cancelled) setTheme(s.theme);
     });
     return () => { cancelled = true; };

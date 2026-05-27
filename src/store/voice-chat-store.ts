@@ -23,6 +23,7 @@ interface VoiceChatState {
   openPanel(nodeId: string, position: { x: number; y: number }): void;
   closePanel(): void;
   clearNodeHistory(nodeId: string): void;
+  clear(): void;
 }
 
 const MAX_TURNS_PER_NODE = 50;
@@ -59,5 +60,14 @@ export const useVoiceChatStore = create<VoiceChatState>()((set) => ({
     set((s) => {
       const { [nodeId]: _, ...rest } = s.turnsByNode;
       return { turnsByNode: rest };
+    }),
+
+  clear: () =>
+    set({
+      turnsByNode: {},
+      ttsBlobs: {},
+      ttsTurnStatus: {},
+      activePanelNodeId: null,
+      panelPosition: { x: 0, y: 0 },
     }),
 }));

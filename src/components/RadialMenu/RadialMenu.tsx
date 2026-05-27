@@ -81,7 +81,7 @@ export function RadialMenu() {
   // Load Boson API key status
   useEffect(() => {
     if (!isOpen) return;
-    loadSettings().then((settings) => {
+    void loadSettings().then((settings) => {
       setHasBosonKey(!!resolveBosonApiKey(settings));
     });
   }, [isOpen]);

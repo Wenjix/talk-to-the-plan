@@ -3,6 +3,7 @@ import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import { spawn as ptySpawn, type IPty } from 'node-pty';
 import { execFileSync } from 'child_process';
+import path from 'path';
 
 // ---------------------------------------------------------------------------
 // Tool status types (duplicated from src/services/terminal-tool-types.ts to
@@ -104,6 +105,12 @@ app.get('/health', (_req, res) => {
 });
 
 wss.on('connection', (ws: WebSocket) => {
+  if (activeConnections >= MAX_CONNECTIONS) {
+    ws.send(JSON.stringify({ type: 'error', message: 'Connection limit reached' }));
+    ws.close();
+    return;
+  }
+  activeConnections++;
   let pty: IPty | null = null;
 
   ws.on('message', (raw) => {
@@ -117,18 +124,16 @@ wss.on('connection', (ws: WebSocket) => {
             return;
           }
           const shell = process.env.SHELL || '/bin/zsh';
-          const cwd = msg.cwd || process.env.HOME || '/';
-          // Build env for the PTY, mapping VITE_MISTRAL_API_KEY → MISTRAL_API_KEY
-          // so that `vibe` CLI can find the key regardless of which name was used
-          const ptyEnv = { ...process.env } as Record<string, string>;
-          if (!ptyEnv.MISTRAL_API_KEY && ptyEnv.VITE_MISTRAL_API_KEY) {
-            ptyEnv.MISTRAL_API_KEY = ptyEnv.VITE_MISTRAL_API_KEY;
-          }
+          const requestedCwd = msg.cwd || DEFAULT_CWD;
+          const cwd = isAllowedCwd(requestedCwd) ? requestedCwd : DEFAULT_CWD;
+          const cols = Math.max(1, Math.min(300, msg.cols ?? 80));
+          const rows = Math.max(1, Math.min(100, msg.rows ?? 24));
+          const ptyEnv = buildPtyEnv();
           try {
             pty = ptySpawn(shell, [], {
               name: 'xterm-256color',
-              cols: msg.cols ?? 80,
-              rows: msg.rows ?? 24,
+              cols,
+              rows,
               cwd,
               env: ptyEnv,
             });
@@ -165,7 +170,9 @@ wss.on('connection', (ws: WebSocket) => {
 
         case 'resize': {
           if (pty && typeof msg.cols === 'number' && typeof msg.rows === 'number') {
-            pty.resize(msg.cols, msg.rows);
+            const resizeCols = Math.max(1, Math.min(300, msg.cols));
+            const resizeRows = Math.max(1, Math.min(100, msg.rows));
+            pty.resize(resizeCols, resizeRows);
           }
           break;
         }
@@ -197,10 +204,52 @@ wss.on('connection', (ws: WebSocket) => {
       pty.kill();
       pty = null;
     }
+    activeConnections--;
   });
 });
 
 const PORT = parseInt(process.env.PTY_PORT || '3001', 10);
+
+const MAX_CONNECTIONS = 10;
+let activeConnections = 0;
+
+// Allowed cwd paths — restrict to user home and temp. Computed once at module
+// load and resolved to absolute paths so the prefix check operates on
+// canonical paths (string-prefix matching alone would let `/tmp/../etc` slip
+// through and node-pty would happily spawn the shell in `/etc`).
+const ALLOWED_CWD_PREFIXES: readonly string[] = (() => {
+  const home = process.env.HOME || process.env.USERPROFILE || '/tmp';
+  return [home, '/tmp'].map((p) => path.resolve(p));
+})();
+
+// Default cwd for the fallback branch — must itself be in the allowlist,
+// so reuse the first allowed prefix (already resolved). Falling back to
+// `process.env.HOME || '/'` would let an unset HOME spawn the shell in `/`,
+// which is outside the allowlist.
+const DEFAULT_CWD = ALLOWED_CWD_PREFIXES[0];
+
+function isAllowedCwd(cwd: string): boolean {
+  const resolved = path.resolve(cwd);
+  return ALLOWED_CWD_PREFIXES.some(
+    (p) => resolved === p || resolved.startsWith(p + path.sep),
+  );
+}
+
+// Build a sanitized env for PTY — only pass through safe variables
+function buildPtyEnv(): Record<string, string> {
+  const safe: Record<string, string> = {};
+  const safeKeys = ['HOME', 'USER', 'SHELL', 'TERM', 'LANG', 'LC_ALL', 'PATH', 'TMPDIR', 'USERPROFILE'];
+  for (const key of safeKeys) {
+    if (process.env[key]) safe[key] = process.env[key]!;
+  }
+  // Map VITE_MISTRAL_API_KEY → MISTRAL_API_KEY for vibe CLI
+  if (process.env.MISTRAL_API_KEY) {
+    safe.MISTRAL_API_KEY = process.env.MISTRAL_API_KEY;
+  } else if (process.env.VITE_MISTRAL_API_KEY) {
+    safe.MISTRAL_API_KEY = process.env.VITE_MISTRAL_API_KEY;
+  }
+  return safe;
+}
 server.listen(PORT, '127.0.0.1', () => {
   console.log(`PTY server listening on 127.0.0.1:${PORT}`);
 });

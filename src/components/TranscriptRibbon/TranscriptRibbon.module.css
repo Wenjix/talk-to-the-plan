@@ -1,0 +1,117 @@
+.ribbon {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 16px;
+  max-width: min(780px, calc(100% - 32px));
+  min-height: 44px;
+  padding: 10px 16px;
+  border-radius: 22px;
+  background: var(--card-bg, rgba(18, 18, 28, 0.88));
+  border: 1px solid var(--card-border, rgba(255, 255, 255, 0.08));
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  z-index: 60;
+  /* Informational only; don't block canvas pan gestures that cross the ribbon. */
+  pointer-events: none;
+  user-select: none;
+  font-size: 0.85rem;
+  color: var(--text-primary, #e7e7ea);
+  animation: ribbonFadeIn 220ms ease-out;
+}
+
+@keyframes ribbonFadeIn {
+  from { opacity: 0; transform: translate(-50%, 8px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-muted, rgba(255, 255, 255, 0.35));
+  flex-shrink: 0;
+}
+
+.dotListening {
+  background: #3DAA6D;
+  box-shadow: 0 0 0 0 rgba(61, 170, 109, 0.5);
+  animation: pulse 1.6s ease-out infinite;
+}
+
+.dotThinking {
+  background: #f5a623;
+  animation: thinkingBlink 600ms ease-in-out infinite;
+}
+
+.dotError {
+  background: #D94F4F;
+}
+
+@keyframes pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(61, 170, 109, 0.5); }
+  70%  { box-shadow: 0 0 0 10px rgba(61, 170, 109, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(61, 170, 109, 0); }
+}
+
+@keyframes thinkingBlink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.35; }
+}
+
+.statusLabel {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted, rgba(255, 255, 255, 0.55));
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.queueBadge {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(74, 144, 217, 0.18);
+  color: #8ab6de;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.transcript {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.3;
+  max-height: 3.9em;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.segment {
+  color: var(--text-primary, #e7e7ea);
+  transition: opacity 400ms linear;
+}
+
+.interim {
+  color: var(--text-muted, rgba(255, 255, 255, 0.55));
+  font-style: italic;
+}
+
+.placeholder {
+  color: var(--text-muted, rgba(255, 255, 255, 0.4));
+  font-style: italic;
+}

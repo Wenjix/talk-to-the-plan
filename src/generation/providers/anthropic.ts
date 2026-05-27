@@ -87,6 +87,25 @@ export class AnthropicProvider implements GenerationProvider {
 
     const decoder = new TextDecoder();
     let accumulated = '';
+    let partialLine = '';
+
+    const processLine = (line: string) => {
+      if (!line.startsWith('data: ')) return;
+      const json = line.slice(6);
+      if (json === '[DONE]') return;
+      try {
+        const parsed = JSON.parse(json);
+        if (parsed.type === 'content_block_delta') {
+          const delta = parsed.delta?.text ?? '';
+          if (delta) {
+            accumulated += delta;
+            onChunk(delta);
+          }
+        }
+      } catch {
+        // Skip malformed SSE lines
+      }
+    };
 
     try {
       while (true) {
@@ -98,31 +117,25 @@ export class AnthropicProvider implements GenerationProvider {
         const { done, value } = await reader.read();
         clearTimeout(inactivityTimer);
 
-        if (done) break;
+        if (done) {
+          // Drain any buffered tail — well-formed SSE ends with \n\n so this
+          // is usually empty, but a truncated upstream stream could leave a
+          // final data: event in the buffer.
+          if (partialLine) processLine(partialLine);
+          break;
+        }
 
         const text = decoder.decode(value, { stream: true });
-        const lines = text.split('\n');
+        const fullText = partialLine + text;
+        const lines = fullText.split('\n');
+        // Last element may be a partial line — save for next chunk
+        partialLine = lines.pop() ?? '';
 
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue;
-          const json = line.slice(6);
-          if (json === '[DONE]') continue;
-          try {
-            const parsed = JSON.parse(json);
-            if (parsed.type === 'content_block_delta') {
-              const delta = parsed.delta?.text ?? '';
-              if (delta) {
-                accumulated += delta;
-                onChunk(delta);
-              }
-            }
-          } catch {
-            // Skip malformed SSE lines
-          }
-        }
+        for (const line of lines) processLine(line);
       }
     } finally {
       hardCeiling.clear();
+      reader.cancel().catch(() => {});
     }
 
     return stripCodeFences(accumulated);

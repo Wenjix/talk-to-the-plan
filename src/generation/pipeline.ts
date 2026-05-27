@@ -36,33 +36,38 @@ export interface GenerateResult {
 export async function generate(
   options: GenerateOptions,
 ): Promise<GenerateResult> {
-  // 1. Compile context from graph
-  const context = compileContext(
-    options.targetNodeId,
-    options.nodes,
-    options.edges,
-  );
+  try {
+    // 1. Compile context from graph
+    const context = compileContext(
+      options.targetNodeId,
+      options.nodes,
+      options.edges,
+    );
 
-  // 2. Resolve persona from the target node's lane (not the active lane)
-  const targetNode = options.nodes.find(n => n.id === options.targetNodeId);
-  const targetLane = options.lanes.find(l => l.id === targetNode?.laneId);
-  const personaId = targetLane?.personaId ?? 'analytical';
+    // 2. Resolve persona from the target node's lane (not the active lane)
+    const targetNode = options.nodes.find(n => n.id === options.targetNodeId);
+    const targetLane = options.lanes.find(l => l.id === targetNode?.laneId);
+    const personaId = targetLane?.personaId ?? 'analytical';
 
-  // 3. Build prompt with context + persona + language
-  const prompt = withLanguage(
-    buildPrompt(options.jobType, context, options.session, personaId),
-    options.language ?? 'English',
-  );
+    // 3. Build prompt with context + persona + language
+    const prompt = withLanguage(
+      buildPrompt(options.jobType, context, options.session, personaId),
+      options.language ?? 'English',
+    );
 
-  // 4. Acquire rate limiter token before calling provider
-  await rateLimiter.acquire();
+    // 4. Acquire rate limiter token before calling provider
+    await rateLimiter.acquire();
 
-  // 5. Call provider (resolved per persona → provider mapping)
-  const provider = getProviderForPersona(personaId, options.apiKeys, options.personaModelConfig);
-  const raw = options.onChunk
-    ? await provider.generateStream(prompt, options.onChunk)
-    : await provider.generate(prompt);
+    // 5. Call provider (resolved per persona → provider mapping)
+    const provider = getProviderForPersona(personaId, options.apiKeys, options.personaModelConfig);
+    const raw = options.onChunk
+      ? await provider.generateStream(prompt, options.onChunk)
+      : await provider.generate(prompt);
 
-  // 6. Parse + validate
-  return parseAndValidate(options.jobType, raw);
+    // 6. Parse + validate
+    return parseAndValidate(options.jobType, raw);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return { success: false, error: message, feedback: `Generation failed: ${message}` };
+  }
 }

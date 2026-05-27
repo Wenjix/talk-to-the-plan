@@ -84,7 +84,7 @@ export function TerminalSetupNotice() {
   const readiness = deriveReadinessState(toolStatus);
 
   const handleRecheck = useCallback(() => {
-    probeVibeToolStatus();
+    void probeVibeToolStatus();
   }, []);
 
   if (readiness === 'ready') {

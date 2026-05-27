@@ -59,7 +59,7 @@ export async function startVoiceNoteRecording(nodeId: string): Promise<void> {
 
   // Auto-stop at max duration
   autoStopTimer = setTimeout(() => {
-    stopVoiceNoteRecording();
+    void stopVoiceNoteRecording();
   }, MAX_RECORDING_MS);
 }
 
@@ -108,7 +108,7 @@ export async function stopVoiceNoteRecording(): Promise<void> {
   useVoiceNoteStore.getState().addNote(note);
   await Promise.all([
     putEntity('voiceNotes', note),
-    putEntity('voiceNoteBlobs', { id: noteId, blob }),
+    putEntity('voiceNoteBlobs', { id: noteId, sessionId, blob }),
   ]);
 
   useVoiceNoteRecordingStore.getState().clear();
@@ -123,7 +123,10 @@ export async function stopVoiceNoteRecording(): Promise<void> {
   transcribeVoiceNote(noteId).catch(() => {});
 }
 
+let transcriptionCount = 0;
+
 export async function transcribeVoiceNote(noteId: string): Promise<void> {
+  transcriptionCount++;
   useVoiceNoteRecordingStore.getState().setTranscribing(true);
 
   try {
@@ -131,8 +134,10 @@ export async function transcribeVoiceNote(noteId: string): Promise<void> {
     const eigenKey = resolveEigenApiKey(settings);
     if (!eigenKey) {
       useVoiceNoteStore.getState().updateNote(noteId, { transcriptStatus: 'failed' });
+      const noteData = useVoiceNoteStore.getState().notes.find((n) => n.id === noteId);
+      if (!noteData) return;
       await putEntity('voiceNotes', {
-        ...useVoiceNoteStore.getState().notes.find((n) => n.id === noteId)!,
+        ...noteData,
         transcriptStatus: 'failed',
       });
       return;
@@ -158,7 +163,11 @@ export async function transcribeVoiceNote(noteId: string): Promise<void> {
       await putEntity('voiceNotes', failed).catch(() => {});
     }
   } finally {
-    useVoiceNoteRecordingStore.getState().setTranscribing(false);
+    transcriptionCount--;
+    if (transcriptionCount <= 0) {
+      transcriptionCount = 0;
+      useVoiceNoteRecordingStore.getState().setTranscribing(false);
+    }
   }
 }
 

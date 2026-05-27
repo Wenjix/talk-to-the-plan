@@ -33,7 +33,7 @@ export function promoteNode(
   };
 
   useSemanticStore.getState().addPromotion(promotion);
-  useSemanticStore.getState().updateNode(nodeId, { promoted: true });
+  useSemanticStore.getState().updateNode(nodeId, { promoted: true, updatedAt: new Date().toISOString() });
   return promotion;
 }
 
@@ -43,7 +43,7 @@ export function unpromoteNode(nodeId: string): void {
   if (!promotion) return;
 
   useSemanticStore.getState().removePromotion(promotion.id);
-  useSemanticStore.getState().updateNode(nodeId, { promoted: false });
+  useSemanticStore.getState().updateNode(nodeId, { promoted: false, updatedAt: new Date().toISOString() });
 }
 
 export function getNodePromotion(nodeId: string): Promotion | undefined {

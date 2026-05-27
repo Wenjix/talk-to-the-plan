@@ -109,8 +109,10 @@ export function ApiTab({ settings, onUpdate }: { settings: AppSettings; onUpdate
   const anthropicStatus = getAnthropicKeyStatus(settings.anthropicApiKey);
   const eigenStatus = getVoiceServiceKeyStatus(settings.eigenApiKey);
   const bosonStatus = getVoiceServiceKeyStatus(settings.bosonApiKey);
+  const cartesiaStatus = getVoiceServiceKeyStatus(settings.cartesiaApiKey);
   const showEigenEnvFallback = !!(import.meta.env?.VITE_EIGEN_API_KEY as string | undefined);
   const showBosonEnvFallback = !!(import.meta.env?.VITE_BOSON_API_KEY as string | undefined);
+  const showCartesiaEnvFallback = !!(import.meta.env?.VITE_CARTESIA_API_KEY as string | undefined);
 
   return (
     <div>
@@ -157,7 +159,18 @@ export function ApiTab({ settings, onUpdate }: { settings: AppSettings; onUpdate
           status={bosonStatus}
           testId="boson-key-status"
           showEnvFallback={showBosonEnvFallback}
-          helpText="Used for voice commands on the exploration canvas."
+          helpText="Used for push-to-talk voice commands on the exploration canvas."
+        />
+        <ApiKeyField
+          legend="Cartesia (Streaming STT)"
+          value={settings.cartesiaApiKey}
+          onChange={(v) => onUpdate({ cartesiaApiKey: v })}
+          placeholder="sk_car_..."
+          ariaLabel="Cartesia API key"
+          status={cartesiaStatus}
+          testId="cartesia-key-status"
+          showEnvFallback={showCartesiaEnvFallback}
+          helpText="Enables Companion Mode: continuous speech streams to Cartesia Ink-Whisper while Claude Haiku generates canvas branches in real time."
         />
       </fieldset>
 

@@ -36,7 +36,10 @@ export function VoiceChatPanel({ position }: Props) {
   // Clear the audioPlayback singleton callback on unmount so it does not
   // close over a stale setPlayingTurnId after this panel is destroyed.
   useEffect(() => {
-    return () => audioPlayback.onEnd(null);
+    return () => {
+      audioPlayback.stop();
+      audioPlayback.onEnd(null);
+    };
   }, []);
 
   if (!nodeId) return null;
@@ -52,7 +55,7 @@ export function VoiceChatPanel({ position }: Props) {
     }
 
     audioPlayback.onEnd(() => setPlayingTurnId(null));
-    audioPlayback.play(blob);
+    audioPlayback.play(blob).catch(() => setPlayingTurnId(null));
     setPlayingTurnId(turnId);
   }
 
@@ -99,6 +102,7 @@ export function VoiceChatPanel({ position }: Props) {
               <button
                 className={`${styles.replayBtn} ${playingTurnId === turn.id ? styles.replayBtnPlaying : ''}`}
                 onClick={() => handleReplay(turn.id)}
+                aria-label={playingTurnId === turn.id ? 'Stop playback' : 'Replay audio'}
               >
                 {playingTurnId === turn.id ? '⏹ Stop' : '🔊 Replay'}
               </button>

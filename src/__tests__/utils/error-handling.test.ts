@@ -23,13 +23,13 @@ describe('Quota management', () => {
     expect(typeof info.percentage).toBe('number');
   });
 
-  it('isNearQuota returns true when usage exceeds 50MB', () => {
-    const info: QuotaInfo = { used: 60 * 1024 * 1024, quota: 200 * 1024 * 1024, percentage: 30 };
+  it('isNearQuota returns true when usage exceeds 80% of quota', () => {
+    const info: QuotaInfo = { used: 170 * 1024 * 1024, quota: 200 * 1024 * 1024, percentage: 85 };
     expect(isNearQuota(info)).toBe(true);
   });
 
-  it('isNearQuota returns false when usage is below 50MB', () => {
-    const info: QuotaInfo = { used: 10 * 1024 * 1024, quota: 200 * 1024 * 1024, percentage: 5 };
+  it('isNearQuota returns false when usage is well below quota', () => {
+    const info: QuotaInfo = { used: 60 * 1024 * 1024, quota: 200 * 1024 * 1024, percentage: 30 };
     expect(isNearQuota(info)).toBe(false);
   });
 
@@ -41,6 +41,13 @@ describe('Quota management', () => {
   it('isQuotaExceeded returns false when percentage < 95', () => {
     const info: QuotaInfo = { used: 100 * 1024 * 1024, quota: 200 * 1024 * 1024, percentage: 50 };
     expect(isQuotaExceeded(info)).toBe(false);
+  });
+
+  it('isQuotaExceeded uses absolute fallback when quota is Infinity', () => {
+    const under: QuotaInfo = { used: 50 * 1024 * 1024, quota: Infinity, percentage: 0 };
+    expect(isQuotaExceeded(under)).toBe(false);
+    const over: QuotaInfo = { used: 250 * 1024 * 1024, quota: Infinity, percentage: 0 };
+    expect(isQuotaExceeded(over)).toBe(true);
   });
 
   it('formatBytes formats bytes correctly', () => {

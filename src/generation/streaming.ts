@@ -90,7 +90,7 @@ export function parseSSEChunk(chunk: string): string[] {
  * Handles:
  *   - ```json ... ``` fenced blocks
  *   - ``` ... ``` fenced blocks (no language tag)
- *   - Raw JSON objects { ... } or arrays [ ... ]
+ *   - Raw JSON objects { ... } or arrays [ ... ] with arbitrary nesting depth
  *   - Plain text (returned as-is for downstream parse error)
  */
 export function extractJSON(raw: string): string {
@@ -100,11 +100,61 @@ export function extractJSON(raw: string): string {
     return fenceMatch[1].trim();
   }
 
-  // Try to find raw JSON object or array
-  const jsonMatch = raw.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
-  if (jsonMatch) {
-    return jsonMatch[1].trim();
+  // Try to find raw JSON object or array using balanced brace counting
+  const jsonStr = extractBalancedJSON(raw);
+  if (jsonStr) {
+    return jsonStr;
   }
 
   return raw.trim();
+}
+
+/**
+ * Find the first complete JSON object or array in text by counting braces.
+ * Handles arbitrary nesting depth.
+ */
+function extractBalancedJSON(text: string): string | null {
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] === '{' || text[i] === '[') {
+      const openChar = text[i];
+      const closeChar = openChar === '{' ? '}' : ']';
+      let depth = 0;
+      let inString = false;
+      let escape = false;
+
+      for (let j = i; j < text.length; j++) {
+        const ch = text[j];
+
+        if (escape) {
+          escape = false;
+          continue;
+        }
+
+        if (ch === '\\' && inString) {
+          escape = true;
+          continue;
+        }
+
+        if (ch === '"') {
+          inString = !inString;
+          continue;
+        }
+
+        if (inString) continue;
+
+        // Only matching brace type affects depth — the other type
+        // (e.g. brackets inside an object) can't unbalance the outer scope.
+        if (ch === openChar) {
+          depth++;
+        } else if (ch === closeChar) {
+          depth--;
+        }
+
+        if (depth === 0) {
+          return text.slice(i, j + 1);
+        }
+      }
+    }
+  }
+  return null;
 }

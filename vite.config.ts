@@ -52,6 +52,13 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api\/mistral/, ''),
         configure: proxyLogger('mistral-proxy'),
       },
+      '/api/cartesia': {
+        target: 'https://api.cartesia.ai',
+        changeOrigin: true,
+        timeout: 60_000,
+        rewrite: (path) => path.replace(/^\/api\/cartesia/, ''),
+        configure: proxyLogger('cartesia-proxy'),
+      },
     },
   },
 })

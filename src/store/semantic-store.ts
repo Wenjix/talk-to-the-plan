@@ -33,6 +33,12 @@ interface SemanticState {
   getDialogueTurnsByNode: (nodeId: string) => DialogueTurn[];
   clearDialogueTurns: (nodeId: string) => void;
 
+  // TTS blob tracking (reactive)
+  ttsBlobTurnIds: Set<string>;
+  _addTtsBlobTurnId: (turnId: string) => void;
+  _removeTtsBlobTurnIds: (turnIds: string[]) => void;
+  _clearTtsBlobTurnIds: () => void;
+
   // Bulk
   loadSession: (data: {
     nodes: SemanticNode[];
@@ -71,6 +77,18 @@ export const useSemanticStore = create<SemanticState>()((set, get) => ({
   clearDialogueTurns: (nodeId) => set((s) => ({
     dialogueTurns: s.dialogueTurns.filter((t) => t.nodeId !== nodeId),
   })),
+  ttsBlobTurnIds: new Set<string>(),
+  _addTtsBlobTurnId: (turnId) => set((s) => {
+    const next = new Set(s.ttsBlobTurnIds);
+    next.add(turnId);
+    return { ttsBlobTurnIds: next };
+  }),
+  _removeTtsBlobTurnIds: (turnIds) => set((s) => {
+    const next = new Set(s.ttsBlobTurnIds);
+    for (const id of turnIds) next.delete(id);
+    return { ttsBlobTurnIds: next };
+  }),
+  _clearTtsBlobTurnIds: () => set({ ttsBlobTurnIds: new Set<string>() }),
   loadSession: (data) => set(data),
-  clear: () => set({ nodes: [], edges: [], promotions: [], lanes: [], unifiedPlan: null, dialogueTurns: [] }),
+  clear: () => set({ nodes: [], edges: [], promotions: [], lanes: [], unifiedPlan: null, dialogueTurns: [], ttsBlobTurnIds: new Set<string>() }),
 }));
