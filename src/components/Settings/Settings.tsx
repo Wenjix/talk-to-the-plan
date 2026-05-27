@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type { AppSettings } from '../../persistence/settings-store.ts';
 import { loadSettings, updateSettings, AppSettingsSchema } from '../../persistence/settings-store.ts';
 import { useSessionStore } from '../../store/session-store.ts';
@@ -29,6 +29,7 @@ export function Settings({ onClose, initialTab }: SettingsProps) {
   );
 
   const setChallengeDepth = useSessionStore((s) => s.setChallengeDepth);
+  const updateSeq = useRef(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -48,18 +49,27 @@ export function Settings({ onClose, initialTab }: SettingsProps) {
 
   const handleUpdate = useCallback(
     (partial: Partial<AppSettings>) => {
-      setSettings((prev) => {
-        const next = { ...prev, ...partial };
-        void updateSettings(partial).catch((err) => {
+      // Sequence number tags this update. On persist failure we only revert
+      // React state if no newer update has been started (otherwise the
+      // revert would clobber the user's subsequent edits).
+      const seq = ++updateSeq.current;
+      setSettings((prev) => ({ ...prev, ...partial }));
+      void updateSettings(partial).then(
+        () => {
+          // Apply side-effecting store mutations only after the IDB write
+          // succeeds, so a failed persist can't leave the session store
+          // running with one challengeDepth and IDB holding another.
+          if (partial.challengeDepth) {
+            setChallengeDepth(partial.challengeDepth);
+          }
+        },
+        (err) => {
           console.warn('Failed to persist settings update:', err);
-          // Revert to persisted state on failure
-          void loadSettings().then((s) => setSettings(s));
-        });
-        if (partial.challengeDepth) {
-          setChallengeDepth(partial.challengeDepth);
-        }
-        return next;
-      });
+          if (seq === updateSeq.current) {
+            void loadSettings().then((s) => setSettings(s));
+          }
+        },
+      );
     },
     [setChallengeDepth]
   );
