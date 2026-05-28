@@ -150,6 +150,8 @@ export async function stopAndProcessVoiceCommand(): Promise<void> {
     useVoiceCommandStore.getState().setError(
       err instanceof Error ? err.message : 'Voice command failed',
     );
+  } finally {
+    useVoiceCommandStore.getState().setProcessing(false);
   }
 }
 
