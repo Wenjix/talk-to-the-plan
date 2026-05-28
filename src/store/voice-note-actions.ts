@@ -104,12 +104,21 @@ export async function stopVoiceNoteRecording(): Promise<void> {
 
     // Persist metadata + blob to IndexedDB
     useVoiceNoteStore.getState().addNote(note);
-    await Promise.all([
-      putEntity('voiceNotes', note),
-      putEntity('voiceNoteBlobs', { id: noteId, sessionId, blob }),
-    ]);
+    try {
+      await Promise.all([
+        putEntity('voiceNotes', note),
+        putEntity('voiceNoteBlobs', { id: noteId, sessionId, blob }),
+      ]);
+    } catch (err) {
+      // Roll back optimistic in-memory update + best-effort cleanup of partial writes.
+      useVoiceNoteStore.getState().removeNote(noteId);
+      await Promise.allSettled([
+        deleteEntity('voiceNotes', noteId),
+        deleteEntity('voiceNoteBlobs', noteId),
+      ]);
+      throw err;
+    }
     savedNoteId = noteId;
-
     // Auto-promote the node when a voice note is attached
     const node = useSemanticStore.getState().getNode(nodeId);
     if (node && node.fsmState === 'resolved' && !node.promoted) {
